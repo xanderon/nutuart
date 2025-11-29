@@ -4,16 +4,17 @@ import { collectionLabels, type CollectionSlug } from "@/data/artworks";
 import { getArtworks } from "@/lib/artworks";
 
 type HomePageProps = {
-  searchParams?: {
+  searchParams: Promise<{
     collection?: string;
-  };
+  }>;
 };
 
 const isCollectionSlug = (value: string): value is CollectionSlug =>
   Object.prototype.hasOwnProperty.call(collectionLabels, value);
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const requestedCollection = searchParams?.collection ?? "toate";
+  const resolvedSearchParams = await searchParams;
+  const requestedCollection = resolvedSearchParams?.collection ?? "toate";
   const initialCollection = isCollectionSlug(requestedCollection)
     ? requestedCollection
     : "toate";
