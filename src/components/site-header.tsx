@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { ThemeSwitcher } from "./theme-switcher";
 
 const navLinks = [
   { href: "/", label: "Galerie" },
@@ -48,10 +49,12 @@ export function SiteHeader() {
           <span className="sr-only">Meniu</span>
           <span className="h-0.5 w-4 bg-white" />
         </button>
-        <div className="hidden md:block" aria-hidden="true" />
+        <div className="hidden items-center gap-3 md:flex">
+          <ThemeSwitcher />
+        </div>
       </div>
       {mobileOpen && (
-        <div className="mt-4 rounded-3xl border border-white/10 bg-black/70 p-6 text-center text-sm uppercase tracking-[0.35em] text-white/70 md:hidden">
+        <div className="mt-4 space-y-4 rounded-3xl border border-white/10 bg-black/70 p-6 text-center text-sm uppercase tracking-[0.35em] text-white/70 md:hidden">
           {navLinks.map((link) => {
             const isActive =
               pathname === link.href ||
@@ -70,6 +73,9 @@ export function SiteHeader() {
               </Link>
             );
           })}
+          <div className="flex justify-center">
+            <ThemeSwitcher />
+          </div>
         </div>
       )}
     </header>
