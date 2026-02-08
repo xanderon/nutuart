@@ -13,6 +13,10 @@ type PeriodDefinition = {
   match: (artwork: Artwork) => boolean;
 };
 
+type PeriodSection = Omit<PeriodDefinition, "match"> & {
+  items: Artwork[];
+};
+
 const getYear = (value: string) => Number.parseInt(value, 10);
 
 const periodDefinitions: PeriodDefinition[] = [
@@ -52,13 +56,14 @@ export default function ExperimentalPage() {
   const periodSections = useMemo(() => {
     const used = new Set<string>();
 
-    const sections = periodDefinitions
+    const sections: PeriodSection[] = periodDefinitions
       .map((definition) => {
+        const { match, ...meta } = definition;
         const items = artworks.filter(
-          (artwork) => !used.has(artwork.id) && definition.match(artwork)
+          (artwork) => !used.has(artwork.id) && match(artwork)
         );
         items.forEach((artwork) => used.add(artwork.id));
-        return { ...definition, items };
+        return { ...meta, items };
       })
       .filter((section) => section.items.length > 0);
 
@@ -112,29 +117,28 @@ export default function ExperimentalPage() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_8%,rgba(252,135,105,0.15),transparent_34%),radial-gradient(circle_at_82%_14%,rgba(251,191,73,0.16),transparent_34%),radial-gradient(circle_at_55%_90%,rgba(118,132,255,0.14),transparent_34%)]" />
 
       <div className="relative z-10 mx-auto w-full max-w-6xl space-y-8 px-4 py-14 sm:space-y-10 sm:px-6 lg:px-8">
-        <section className="rounded-[2rem] border border-white/10 bg-black/35 p-6 backdrop-blur-xl sm:p-10">
+        <section className="rounded-[2rem] bg-black/35 p-6 backdrop-blur-xl sm:p-10">
           <p className="text-xs uppercase tracking-[0.35em] text-[color:var(--color-accent)]">
             Experimental Feed
           </p>
           <h1 className="mt-4 max-w-4xl text-3xl leading-tight text-white sm:text-5xl">
             Muzeu digital cu vibe instagram, dar curatorial.
           </h1>
-          <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/75 sm:text-base">
-            Lucrarile sunt grupate pe perioade artistice, iar timeframe-ul ramane
-            sticky in scroll. Focusul ramane pe imagine, nu pe numarul de lucrari pe ani.
+          <p className="mt-4 text-sm uppercase tracking-[0.24em] text-white/65">
+            Less text. More art.
           </p>
         </section>
 
         <nav className="sticky top-20 z-30 -mx-1 overflow-x-auto px-1 lg:hidden" data-gallery-scroll>
-          <div className="inline-flex gap-2 rounded-2xl border border-white/10 bg-black/55 p-2 backdrop-blur">
+          <div className="inline-flex gap-2 rounded-2xl bg-black/65 p-2 backdrop-blur">
             {periodSections.map((section) => (
               <a
                 key={`mobile-${section.id}`}
                 href={`#period-${section.id}`}
-                className={`rounded-full border px-3 py-2 text-[0.65rem] uppercase tracking-[0.2em] transition ${
+                className={`rounded-full px-3 py-2 text-[0.65rem] uppercase tracking-[0.2em] transition ${
                   activeSection === section.id
-                    ? "border-white/60 bg-white text-black"
-                    : "border-white/20 text-white/70"
+                    ? "bg-white text-black"
+                    : "bg-white/10 text-white/70"
                 }`}
               >
                 {section.timeframe}
@@ -145,7 +149,7 @@ export default function ExperimentalPage() {
 
         <section className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
           <aside className="hidden lg:block">
-            <div className="sticky top-28 rounded-3xl border border-white/10 bg-black/30 p-5">
+            <div className="sticky top-28 rounded-3xl bg-black/35 p-5 backdrop-blur">
               <p className="mb-5 text-xs uppercase tracking-[0.28em] text-white/45">
                 Timeframe
               </p>
@@ -154,10 +158,10 @@ export default function ExperimentalPage() {
                   <li key={`desktop-${section.id}`}>
                     <a
                       href={`#period-${section.id}`}
-                      className={`block rounded-2xl border px-3 py-3 transition ${
+                      className={`block rounded-2xl px-3 py-3 transition ${
                         activeSection === section.id
-                          ? "border-white/50 bg-white text-black"
-                          : "border-white/15 text-white/75 hover:border-white/30"
+                          ? "bg-white text-black"
+                          : "bg-white/5 text-white/75 hover:bg-white/10"
                       }`}
                     >
                       <p className="text-[0.62rem] uppercase tracking-[0.24em]">
@@ -178,25 +182,22 @@ export default function ExperimentalPage() {
                 id={`period-${section.id}`}
                 data-period-section
                 data-period-id={section.id}
-                className="scroll-mt-28 rounded-[2rem] border border-white/10 bg-black/28 p-4 sm:p-6"
+                className="scroll-mt-28 rounded-[2rem] bg-black/22 p-4 sm:p-6"
               >
-                <header className="mb-5 space-y-2 border-b border-white/10 pb-4">
+                <header className="mb-4 space-y-1 pb-1">
                   <p className="text-xs uppercase tracking-[0.3em] text-white/50">
                     {section.timeframe}
                   </p>
                   <h2 className="text-2xl text-white sm:text-3xl">{section.title}</h2>
-                  <p className="max-w-3xl text-sm leading-relaxed text-white/70">
-                    {section.note}
-                  </p>
                 </header>
 
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {section.items.map((artwork) => (
                     <figure
                       key={artwork.id}
-                      className="overflow-hidden rounded-3xl border border-white/10 bg-[color:var(--color-surface)]/90"
+                      className="overflow-hidden rounded-2xl bg-[color:var(--color-surface)]/85"
                     >
-                      <figcaption className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+                      <figcaption className="flex items-center justify-between gap-3 px-3 py-2">
                         <div className="min-w-0">
                           <p className="truncate text-xs uppercase tracking-[0.18em] text-white/70">
                             nutuart atelier
@@ -205,7 +206,7 @@ export default function ExperimentalPage() {
                             {collectionLabels[artwork.collection]}
                           </p>
                         </div>
-                        <span className="rounded-full border border-white/20 px-2 py-1 text-[0.62rem] uppercase tracking-[0.16em] text-white/60">
+                        <span className="rounded-full bg-white/10 px-2 py-1 text-[0.62rem] uppercase tracking-[0.16em] text-white/60">
                           {artwork.year}
                         </span>
                       </figcaption>
@@ -218,12 +219,11 @@ export default function ExperimentalPage() {
                           sizes="(min-width: 1280px) 30vw, (min-width: 640px) 44vw, 92vw"
                         />
                       </div>
-                      <figcaption className="space-y-2 px-4 py-3">
+                      <figcaption className="space-y-1 px-3 py-2">
                         <p className="text-sm leading-tight text-white">{artwork.title}</p>
                         <p className="text-xs uppercase tracking-[0.16em] text-white/55">
                           {artwork.medium}
                         </p>
-                        <p className="text-sm text-white/68">{artwork.description}</p>
                       </figcaption>
                     </figure>
                   ))}
@@ -233,18 +233,11 @@ export default function ExperimentalPage() {
           </div>
         </section>
 
-        <section className="rounded-3xl border border-white/10 bg-black/30 p-6 text-center sm:p-8">
-          <p className="text-xs uppercase tracking-[0.35em] text-white/55">
-            Next step
-          </p>
-          <p className="mx-auto mt-3 max-w-3xl text-sm leading-relaxed text-white/75 sm:text-base">
-            Daca varianta asta este aproape de ce vrei, urmatorul pas este sa
-            introducem toata arhiva de poze si sa ajustam manual ce lucrare intra in fiecare perioada.
-          </p>
+        <section className="rounded-3xl bg-black/30 p-6 text-center sm:p-8">
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/"
-              className="rounded-full border border-white/25 px-5 py-3 text-xs uppercase tracking-[0.28em] text-white transition hover:bg-white/10"
+              className="rounded-full bg-white/10 px-5 py-3 text-xs uppercase tracking-[0.28em] text-white transition hover:bg-white/20"
             >
               Inapoi la galerie
             </Link>
