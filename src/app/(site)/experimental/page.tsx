@@ -6,6 +6,15 @@ import {
   type CollectionSlug,
 } from "@/data/artworks";
 
+const heroArtworks = artworks.slice(0, 5);
+const heroLayout = [
+  "md:col-span-6 md:row-span-3",
+  "md:col-span-3 md:row-span-2",
+  "md:col-span-3 md:row-span-2",
+  "md:col-span-4 md:row-span-2",
+  "md:col-span-8 md:row-span-2",
+];
+
 const collectionOrder: CollectionSlug[] = [
   "vitralii",
   "geamuri-sablate",
@@ -14,32 +23,32 @@ const collectionOrder: CollectionSlug[] = [
   "trofee",
 ];
 
-const roomNotes: Record<CollectionSlug, string> = {
-  vitralii:
-    "Compoziții în care lumina devine material principal, cu ritm cromatic și detalii de atelier.",
-  "geamuri-sablate":
-    "Intervenții pe sticlă pentru intimitate și personalitate arhitecturală, cu desen fin și contrast controlat.",
-  autocolante:
-    "Lucrări grafice aplicate în spațiu real: branding, zonare și identitate vizuală cu impact imediat.",
-  printuri:
-    "Piese de comunicare vizuală la scară mare, gândite pentru claritate, distanță și rezistență.",
-  trofee:
-    "Obiecte-premiu lucrate ca sculpturi mici, unde forma și reflexia transmit valoare simbolică.",
+const timelineByYear = Object.entries(
+  artworks.reduce<Record<string, typeof artworks>>((acc, artwork) => {
+    if (!acc[artwork.year]) {
+      acc[artwork.year] = [];
+    }
+    acc[artwork.year].push(artwork);
+    return acc;
+  }, {})
+)
+  .sort((a, b) => Number(b[0]) - Number(a[0]))
+  .map(([year, items]) => ({
+    year,
+    items: [...items].sort(
+      (first, second) =>
+        collectionOrder.indexOf(first.collection) -
+        collectionOrder.indexOf(second.collection)
+    ),
+  }));
+
+const collectionPalette: Record<CollectionSlug, string> = {
+  vitralii: "bg-emerald-300/20 text-emerald-100 border-emerald-300/30",
+  "geamuri-sablate": "bg-cyan-300/20 text-cyan-100 border-cyan-300/30",
+  autocolante: "bg-fuchsia-300/20 text-fuchsia-100 border-fuchsia-300/30",
+  printuri: "bg-amber-300/20 text-amber-100 border-amber-300/30",
+  trofee: "bg-orange-300/20 text-orange-100 border-orange-300/30",
 };
-
-const heroArtworks = artworks.slice(0, 5);
-const collectionRooms = collectionOrder.map((collection) => ({
-  collection,
-  items: artworks.filter((artwork) => artwork.collection === collection),
-}));
-
-const heroLayout = [
-  "md:col-span-6 md:row-span-3",
-  "md:col-span-3 md:row-span-2",
-  "md:col-span-3 md:row-span-2",
-  "md:col-span-4 md:row-span-2",
-  "md:col-span-8 md:row-span-2",
-];
 
 export default function ExperimentalPage() {
   return (
@@ -55,19 +64,18 @@ export default function ExperimentalPage() {
             Muzeu digital pentru lucrările artistului Nuțu Marcel Marius.
           </h1>
           <p className="max-w-3xl text-sm leading-relaxed text-white/75 sm:text-base">
-            Intrare curatorială, săli tematice și ritm vizual de expoziție.
-            Scopul este să facem din fiecare lucrare o piesă cu prezență, nu un
-            simplu thumbnail într-un grid generic.
+            Simulare de tur real: introducere, sală principală și apoi parcurs
+            cronologic pe ani, ca într-o expoziție retrospectivă.
           </p>
           <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.25em] text-white/70">
             <span className="rounded-full border border-white/20 px-3 py-2">
               Tur Curatorial
             </span>
             <span className="rounded-full border border-white/20 px-3 py-2">
-              Săli tematice
+              Timeline pe ani
             </span>
             <span className="rounded-full border border-white/20 px-3 py-2">
-              100+ lucrări ready
+              Fără scroll lateral
             </span>
           </div>
         </section>
@@ -110,30 +118,42 @@ export default function ExperimentalPage() {
         </section>
 
         <section className="space-y-8">
-          {collectionRooms.map((room) => (
+          <div className="space-y-3 rounded-3xl border border-white/10 bg-black/25 p-5 sm:p-6">
+            <p className="text-xs uppercase tracking-[0.32em] text-white/55">
+              Parcurs cronologic
+            </p>
+            <p className="max-w-3xl text-sm leading-relaxed text-white/72 sm:text-base">
+              Vizitatorul vede evoluția artistului an cu an. În fiecare an,
+              lucrările sunt afișate într-un grid clar, cu etichetă de
+              categorie, astfel încât experiența rămâne premium și practică
+              chiar și pentru 100+ imagini.
+            </p>
+          </div>
+
+          {timelineByYear.map((yearGroup) => (
             <article
-              key={room.collection}
+              key={yearGroup.year}
               className="rounded-[2rem] border border-white/10 bg-black/28 p-5 sm:p-7"
             >
-              <div className="mb-5 grid gap-4 md:grid-cols-[1.1fr_0.9fr] md:items-end">
-                <div className="space-y-2">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+                <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-white/55">
-                    Sala
+                    An de referință
                   </p>
-                  <h2 className="text-2xl text-white sm:text-3xl">
-                    {collectionLabels[room.collection]}
+                  <h2 className="text-3xl text-white sm:text-4xl">
+                    {yearGroup.year}
                   </h2>
                 </div>
-                <p className="max-w-xl text-sm leading-relaxed text-white/70">
-                  {roomNotes[room.collection]}
+                <p className="text-xs uppercase tracking-[0.25em] text-white/45">
+                  {yearGroup.items.length} lucrări
                 </p>
               </div>
 
-              <div className="flex gap-4 overflow-x-auto pb-2" data-gallery-scroll>
-                {room.items.map((artwork) => (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {yearGroup.items.map((artwork) => (
                   <figure
                     key={artwork.id}
-                    className="group w-[74vw] shrink-0 space-y-3 rounded-3xl border border-white/10 bg-black/30 p-3 sm:w-[360px]"
+                    className="group space-y-3 rounded-3xl border border-white/10 bg-black/30 p-3"
                   >
                     <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
                       <Image
@@ -141,17 +161,22 @@ export default function ExperimentalPage() {
                         alt={artwork.title}
                         fill
                         className="object-cover transition duration-500 group-hover:scale-105"
-                        sizes="(min-width: 640px) 360px, 74vw"
+                        sizes="(min-width: 1280px) 30vw, (min-width: 640px) 45vw, 92vw"
                       />
                     </div>
                     <figcaption className="space-y-1 px-1 pb-1">
+                      <p
+                        className={`inline-flex rounded-full border px-2 py-1 text-[0.62rem] uppercase tracking-[0.2em] ${collectionPalette[artwork.collection]}`}
+                      >
+                        {collectionLabels[artwork.collection]}
+                      </p>
                       <h3 className="text-base leading-tight text-white">
                         {artwork.title}
                       </h3>
                       <p className="text-xs uppercase tracking-[0.2em] text-white/55">
-                        {artwork.year} • {artwork.medium}
+                        {artwork.medium}
                       </p>
-                      <p className="line-clamp-2 text-sm text-white/65">
+                      <p className="text-sm text-white/65">
                         {artwork.description}
                       </p>
                     </figcaption>
@@ -167,9 +192,8 @@ export default function ExperimentalPage() {
             Pentru varianta finală
           </p>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/75 sm:text-base">
-            Putem integra acum toată arhiva (50-100+ imagini), cu filtrare pe
-            ani și colecții, plus un lightbox cinematic pentru vizionare
-            fullscreen.
+            Dacă îți place direcția, păstrăm timeline-ul și adăugăm direct toată
+            arhiva cu index automat pe ani + filtru de categorie.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
