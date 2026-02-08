@@ -8,6 +8,7 @@ import { ThemeSwitcher } from "./theme-switcher";
 
 const navLinks = [
   { href: "/", label: "Galerie" },
+  { href: "/experimental", label: "Experimental" },
   { href: "/artist", label: "Artist" },
   { href: "/contact", label: "Contact" },
 ];
