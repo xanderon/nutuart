@@ -77,6 +77,18 @@ export default function ExperimentalPage() {
           ))}
         </section>
 
+        <section className="mt-12 overflow-hidden rounded-[2rem] border border-black/6 bg-white shadow-[0_36px_90px_-70px_rgba(15,23,42,0.45)]">
+          <div className="relative aspect-[16/7] sm:aspect-[16/6]">
+            <Image
+              src="/images/collections/decorations/vaza-alba-baza.png"
+              alt="Compozitie decorativa din sticla pe fundal alb"
+              fill
+              className="object-cover object-center"
+              sizes="(min-width: 1024px) 75vw, 100vw"
+            />
+          </div>
+        </section>
+
         <section className="mt-10 border-t border-black/6 pt-6">
           <div className="flex flex-wrap items-center gap-3">
             <Link
