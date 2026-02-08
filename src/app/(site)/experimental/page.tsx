@@ -1,269 +1,258 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import {
-  artworks,
-  collectionLabels,
-  type CollectionSlug,
-} from "@/data/artworks";
+import { useEffect, useMemo, useState } from "react";
+import { artworks, collectionLabels, type Artwork } from "@/data/artworks";
 
-const heroArtworks = artworks.slice(0, 5);
-const heroLayout = [
-  "md:col-span-6 md:row-span-3",
-  "md:col-span-3 md:row-span-2",
-  "md:col-span-3 md:row-span-2",
-  "md:col-span-4 md:row-span-2",
-  "md:col-span-8 md:row-span-2",
-];
-
-const stageBlueprint: Array<{
+type PeriodDefinition = {
   id: string;
   title: string;
-  subtitle: string;
-  description: string;
-  collections: CollectionSlug[];
-}> = [
+  timeframe: string;
+  note: string;
+  match: (artwork: Artwork) => boolean;
+};
+
+const getYear = (value: string) => Number.parseInt(value, 10);
+
+const periodDefinitions: PeriodDefinition[] = [
   {
-    id: "origini",
-    title: "Origini & Semn",
-    subtitle: "Primele gesturi vizuale",
-    description:
-      "Un început orientat spre simbol și compoziții care definesc semnătura artistului.",
-    collections: ["vitralii"],
+    id: "atelier-foundation",
+    title: "Atelier Foundations",
+    timeframe: "Early period",
+    note: "Primele lucrari de impact pentru spatii comerciale si proiecte vizuale de identitate.",
+    match: (artwork) =>
+      getYear(artwork.year) <= 2014 &&
+      (artwork.collection === "autocolante" || artwork.collection === "printuri"),
   },
   {
-    id: "transparente",
-    title: "Transparențe Structurate",
-    subtitle: "Lumină și intimitate",
-    description:
-      "Lucrări pe sticlă în care modelul devine arhitectură vizuală pentru spații reale.",
-    collections: ["geamuri-sablate"],
+    id: "glass-architecture",
+    title: "Glass Architecture",
+    timeframe: "Middle period",
+    note: "Seria orientata pe sticla si lumina, cu compozitii pentru interior si spatii functionale.",
+    match: (artwork) => artwork.collection === "geamuri-sablate",
   },
   {
-    id: "identitate",
-    title: "Identitate în Spațiu",
-    subtitle: "Grafică aplicată",
-    description:
-      "Intervenții vizuale care transformă suprafețe utilitare în spații cu personalitate.",
-    collections: ["autocolante"],
+    id: "light-compositions",
+    title: "Light Compositions",
+    timeframe: "Later period",
+    note: "Lucrari mature in vitralii, unde culoarea si reflexia devin element central.",
+    match: (artwork) => artwork.collection === "vitralii",
   },
   {
-    id: "scala-publica",
-    title: "Scală Publică",
-    subtitle: "Mesaj la distanță",
-    description:
-      "Piese gândite pentru impact urban, lizibilitate și prezență în context exterior.",
-    collections: ["printuri"],
-  },
-  {
-    id: "obiecte-simbol",
-    title: "Obiecte Simbol",
-    subtitle: "Finaluri memorabile",
-    description:
-      "Trofee și obiecte-premiu în care forma, textura și reflexia exprimă valoare.",
-    collections: ["trofee"],
+    id: "symbolic-objects",
+    title: "Symbolic Objects",
+    timeframe: "Signature pieces",
+    note: "Obiecte-premiu si piese de final de parcurs, cu accent pe detaliu si prezenta.",
+    match: (artwork) => artwork.collection === "trofee",
   },
 ];
 
-const timelineStages = stageBlueprint.map((stage) => ({
-  ...stage,
-  items: artworks.filter((artwork) => stage.collections.includes(artwork.collection)),
-}));
-
-const collectionPalette: Record<CollectionSlug, string> = {
-  vitralii: "bg-emerald-300/20 text-emerald-100 border-emerald-300/30",
-  "geamuri-sablate": "bg-cyan-300/20 text-cyan-100 border-cyan-300/30",
-  autocolante: "bg-fuchsia-300/20 text-fuchsia-100 border-fuchsia-300/30",
-  printuri: "bg-amber-300/20 text-amber-100 border-amber-300/30",
-  trofee: "bg-orange-300/20 text-orange-100 border-orange-300/30",
-};
-
 export default function ExperimentalPage() {
+  const periodSections = useMemo(() => {
+    const used = new Set<string>();
+
+    const sections = periodDefinitions
+      .map((definition) => {
+        const items = artworks.filter(
+          (artwork) => !used.has(artwork.id) && definition.match(artwork)
+        );
+        items.forEach((artwork) => used.add(artwork.id));
+        return { ...definition, items };
+      })
+      .filter((section) => section.items.length > 0);
+
+    const remaining = artworks.filter((artwork) => !used.has(artwork.id));
+    if (remaining.length > 0) {
+      sections.push({
+        id: "archive-select",
+        title: "Archive Select",
+        timeframe: "Cross period",
+        note: "Lucrari care completeaza traseul si se pot muta ulterior in perioade dedicate.",
+        items: remaining,
+      });
+    }
+
+    return sections;
+  }, []);
+
+  const [activeSection, setActiveSection] = useState(periodSections[0]?.id ?? "");
+
+  useEffect(() => {
+    const elements = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-period-section]")
+    );
+    if (elements.length === 0) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const firstVisible = entries.find((entry) => entry.isIntersecting);
+        if (!firstVisible) {
+          return;
+        }
+        const periodId = (firstVisible.target as HTMLElement).dataset.periodId;
+        if (periodId) {
+          setActiveSection(periodId);
+        }
+      },
+      {
+        rootMargin: "-40% 0px -45% 0px",
+        threshold: 0,
+      }
+    );
+
+    elements.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, [periodSections]);
+
   return (
     <div className="relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(234,191,117,0.2),transparent_36%),radial-gradient(circle_at_84%_14%,rgba(101,148,255,0.16),transparent_32%),radial-gradient(circle_at_48%_88%,rgba(255,126,96,0.16),transparent_34%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_8%,rgba(252,135,105,0.15),transparent_34%),radial-gradient(circle_at_82%_14%,rgba(251,191,73,0.16),transparent_34%),radial-gradient(circle_at_55%_90%,rgba(118,132,255,0.14),transparent_34%)]" />
 
-      <div className="relative z-10 mx-auto w-full max-w-6xl space-y-10 px-4 py-14 sm:space-y-16 sm:px-6 lg:px-8">
-        <section className="space-y-7 rounded-[2rem] border border-white/10 bg-black/35 p-6 backdrop-blur-xl sm:p-10">
+      <div className="relative z-10 mx-auto w-full max-w-6xl space-y-8 px-4 py-14 sm:space-y-10 sm:px-6 lg:px-8">
+        <section className="rounded-[2rem] border border-white/10 bg-black/35 p-6 backdrop-blur-xl sm:p-10">
           <p className="text-xs uppercase tracking-[0.35em] text-[color:var(--color-accent)]">
-            Experimental Wing
+            Experimental Feed
           </p>
-          <h1 className="max-w-4xl text-3xl leading-tight text-white sm:text-5xl">
-            Muzeu digital pentru lucrările artistului Nuțu Marcel Marius.
+          <h1 className="mt-4 max-w-4xl text-3xl leading-tight text-white sm:text-5xl">
+            Muzeu digital cu vibe instagram, dar curatorial.
           </h1>
-          <p className="max-w-3xl text-sm leading-relaxed text-white/75 sm:text-base">
-            Simulare de tur real: introducere, sală principală și apoi un
-            timeline curatorial construit pe etape artistice.
+          <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/75 sm:text-base">
+            Lucrarile sunt grupate pe perioade artistice, iar timeframe-ul ramane
+            sticky in scroll. Focusul ramane pe imagine, nu pe numarul de lucrari pe ani.
           </p>
-          <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.25em] text-white/70">
-            <span className="rounded-full border border-white/20 px-3 py-2">
-              Tur Curatorial
-            </span>
-            <span className="rounded-full border border-white/20 px-3 py-2">
-              Timeline pe etape
-            </span>
-            <span className="rounded-full border border-white/20 px-3 py-2">
-              Fără scroll lateral
-            </span>
-          </div>
         </section>
 
-        <section className="space-y-5">
-          <div className="flex items-center justify-between">
-            <p className="text-xs uppercase tracking-[0.32em] text-white/60">
-              Sala Principală
-            </p>
-            <p className="text-xs uppercase tracking-[0.28em] text-white/40">
-              selecție curatoriată
-            </p>
-          </div>
-          <div className="grid auto-rows-[110px] grid-cols-1 gap-4 md:grid-cols-12 md:auto-rows-[130px]">
-            {heroArtworks.map((artwork, index) => (
-              <article
-                key={`hero-${artwork.id}`}
-                className={`group relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 ${heroLayout[index % heroLayout.length]}`}
+        <nav className="sticky top-20 z-30 -mx-1 overflow-x-auto px-1 lg:hidden" data-gallery-scroll>
+          <div className="inline-flex gap-2 rounded-2xl border border-white/10 bg-black/55 p-2 backdrop-blur">
+            {periodSections.map((section) => (
+              <a
+                key={`mobile-${section.id}`}
+                href={`#period-${section.id}`}
+                className={`rounded-full border px-3 py-2 text-[0.65rem] uppercase tracking-[0.2em] transition ${
+                  activeSection === section.id
+                    ? "border-white/60 bg-white text-black"
+                    : "border-white/20 text-white/70"
+                }`}
               >
-                <Image
-                  src={artwork.image}
-                  alt={artwork.title}
-                  fill
-                  className="object-cover transition duration-500 group-hover:scale-105"
-                  sizes="(min-width: 768px) 50vw, 100vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-5">
-                  <p className="text-[0.62rem] uppercase tracking-[0.26em] text-white/60">
-                    {collectionLabels[artwork.collection]}
+                {section.timeframe}
+              </a>
+            ))}
+          </div>
+        </nav>
+
+        <section className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+          <aside className="hidden lg:block">
+            <div className="sticky top-28 rounded-3xl border border-white/10 bg-black/30 p-5">
+              <p className="mb-5 text-xs uppercase tracking-[0.28em] text-white/45">
+                Timeframe
+              </p>
+              <ol className="space-y-3">
+                {periodSections.map((section) => (
+                  <li key={`desktop-${section.id}`}>
+                    <a
+                      href={`#period-${section.id}`}
+                      className={`block rounded-2xl border px-3 py-3 transition ${
+                        activeSection === section.id
+                          ? "border-white/50 bg-white text-black"
+                          : "border-white/15 text-white/75 hover:border-white/30"
+                      }`}
+                    >
+                      <p className="text-[0.62rem] uppercase tracking-[0.24em]">
+                        {section.timeframe}
+                      </p>
+                      <p className="mt-1 text-sm">{section.title}</p>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </aside>
+
+          <div className="space-y-8">
+            {periodSections.map((section) => (
+              <article
+                key={section.id}
+                id={`period-${section.id}`}
+                data-period-section
+                data-period-id={section.id}
+                className="scroll-mt-28 rounded-[2rem] border border-white/10 bg-black/28 p-4 sm:p-6"
+              >
+                <header className="mb-5 space-y-2 border-b border-white/10 pb-4">
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/50">
+                    {section.timeframe}
                   </p>
-                  <h2 className="mt-1 text-xl leading-tight text-white">
-                    {artwork.title}
-                  </h2>
-                  <p className="text-sm text-white/70">{artwork.medium}</p>
+                  <h2 className="text-2xl text-white sm:text-3xl">{section.title}</h2>
+                  <p className="max-w-3xl text-sm leading-relaxed text-white/70">
+                    {section.note}
+                  </p>
+                </header>
+
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {section.items.map((artwork) => (
+                    <figure
+                      key={artwork.id}
+                      className="overflow-hidden rounded-3xl border border-white/10 bg-[color:var(--color-surface)]/90"
+                    >
+                      <figcaption className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-xs uppercase tracking-[0.18em] text-white/70">
+                            nutuart atelier
+                          </p>
+                          <p className="truncate text-[0.7rem] uppercase tracking-[0.14em] text-white/45">
+                            {collectionLabels[artwork.collection]}
+                          </p>
+                        </div>
+                        <span className="rounded-full border border-white/20 px-2 py-1 text-[0.62rem] uppercase tracking-[0.16em] text-white/60">
+                          {artwork.year}
+                        </span>
+                      </figcaption>
+                      <div className="relative aspect-square">
+                        <Image
+                          src={artwork.image}
+                          alt={artwork.title}
+                          fill
+                          className="object-cover"
+                          sizes="(min-width: 1280px) 30vw, (min-width: 640px) 44vw, 92vw"
+                        />
+                      </div>
+                      <figcaption className="space-y-2 px-4 py-3">
+                        <p className="text-sm leading-tight text-white">{artwork.title}</p>
+                        <p className="text-xs uppercase tracking-[0.16em] text-white/55">
+                          {artwork.medium}
+                        </p>
+                        <p className="text-sm text-white/68">{artwork.description}</p>
+                      </figcaption>
+                    </figure>
+                  ))}
                 </div>
               </article>
             ))}
           </div>
         </section>
 
-        <section className="space-y-8">
-          <div className="space-y-3 rounded-3xl border border-white/10 bg-black/25 p-5 sm:p-6">
-            <p className="text-xs uppercase tracking-[0.32em] text-white/55">
-              Parcurs curatorial
-            </p>
-            <p className="max-w-3xl text-sm leading-relaxed text-white/72 sm:text-base">
-              Timeline-ul din stânga ghidează vizitatorul prin capitolele
-              expoziției, iar în dreapta sunt lucrările. Focusul rămâne pe
-              imagine și atmosferă, nu pe frecvența din anii de producție.
-            </p>
-          </div>
-          <div className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
-            <aside className="hidden lg:block">
-              <div className="sticky top-28 rounded-3xl border border-white/10 bg-black/28 p-5">
-                <p className="mb-4 text-xs uppercase tracking-[0.28em] text-white/45">
-                  Timeline
-                </p>
-                <ol className="relative space-y-4 border-l border-white/20 pl-4">
-                  {timelineStages.map((stage, index) => (
-                    <li key={stage.id} className="space-y-1">
-                      <span className="absolute -ml-[1.12rem] mt-1.5 h-2.5 w-2.5 rounded-full border border-white/40 bg-black" />
-                      <p className="text-[0.62rem] uppercase tracking-[0.26em] text-white/40">
-                        Capitol {String(index + 1).padStart(2, "0")}
-                      </p>
-                      <a
-                        href={`#stage-${stage.id}`}
-                        className="block text-sm text-white/80 transition hover:text-white"
-                      >
-                        {stage.title}
-                      </a>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </aside>
-
-            <div className="space-y-8">
-              {timelineStages.map((stage, index) => (
-                <article
-                  id={`stage-${stage.id}`}
-                  key={stage.id}
-                  className="scroll-mt-28 rounded-[2rem] border border-white/10 bg-black/28 p-5 sm:p-7"
-                >
-                  <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-4">
-                    <div className="space-y-2">
-                      <p className="text-xs uppercase tracking-[0.3em] text-white/55">
-                        Capitol {String(index + 1).padStart(2, "0")}
-                      </p>
-                      <h2 className="text-3xl text-white sm:text-4xl">
-                        {stage.title}
-                      </h2>
-                      <p className="text-sm uppercase tracking-[0.24em] text-white/45">
-                        {stage.subtitle}
-                      </p>
-                    </div>
-                    <p className="max-w-xl text-sm leading-relaxed text-white/68">
-                      {stage.description}
-                    </p>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                    {stage.items.map((artwork) => (
-                      <figure
-                        key={artwork.id}
-                        className="group space-y-3 rounded-3xl border border-white/10 bg-black/30 p-3"
-                      >
-                        <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
-                          <Image
-                            src={artwork.image}
-                            alt={artwork.title}
-                            fill
-                            className="object-cover transition duration-500 group-hover:scale-105"
-                            sizes="(min-width: 1280px) 30vw, (min-width: 640px) 45vw, 92vw"
-                          />
-                        </div>
-                        <figcaption className="space-y-1 px-1 pb-1">
-                          <p
-                            className={`inline-flex rounded-full border px-2 py-1 text-[0.62rem] uppercase tracking-[0.2em] ${collectionPalette[artwork.collection]}`}
-                          >
-                            {collectionLabels[artwork.collection]}
-                          </p>
-                          <h3 className="text-base leading-tight text-white">
-                            {artwork.title}
-                          </h3>
-                          <p className="text-xs uppercase tracking-[0.2em] text-white/55">
-                            {artwork.medium}
-                          </p>
-                          <p className="text-sm text-white/65">
-                            {artwork.description}
-                          </p>
-                        </figcaption>
-                      </figure>
-                    ))}
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <section className="rounded-3xl border border-white/10 bg-black/30 p-6 text-center sm:p-8">
           <p className="text-xs uppercase tracking-[0.35em] text-white/55">
-            Pentru varianta finală
+            Next step
           </p>
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/75 sm:text-base">
-            Dacă îți place direcția, păstrăm timeline-ul curatorial și adăugăm
-            direct toată arhiva, apoi marcăm discret perioadele reale.
+          <p className="mx-auto mt-3 max-w-3xl text-sm leading-relaxed text-white/75 sm:text-base">
+            Daca varianta asta este aproape de ce vrei, urmatorul pas este sa
+            introducem toata arhiva de poze si sa ajustam manual ce lucrare intra in fiecare perioada.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/"
               className="rounded-full border border-white/25 px-5 py-3 text-xs uppercase tracking-[0.28em] text-white transition hover:bg-white/10"
             >
-              Înapoi la galerie
+              Inapoi la galerie
             </Link>
             <Link
               href="/contact"
               className="rounded-full border border-transparent bg-white px-5 py-3 text-xs uppercase tracking-[0.28em] text-black transition hover:bg-white/85"
             >
-              Programăm selecția
+              Stabilim perioadele
             </Link>
           </div>
         </section>
