@@ -6,6 +6,7 @@ const mockSources = [
   "/images/collections/decorations/vaza-alba-baza-2.png",
   "/images/collections/decorations/vaza-alba-baza-3.png",
   "/images/collections/decorations/vaza-alba-baza-4.png",
+  "/images/collections/decorations/vaza-alba-baza-5.png",
 ];
 
 const feedCardClasses = [
@@ -40,17 +41,22 @@ export default function ExperimentalPage() {
           {mockFeed.map((item, index) => (
             <figure key={item.id} className="group">
               <div
-                className={`relative overflow-hidden rounded-2xl border border-black/6 bg-[linear-gradient(180deg,#ffffff,#f8fafc)] shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)] transition duration-300 ${feedCardClasses[index % feedCardClasses.length]}`}
+                className={`relative overflow-hidden rounded-2xl transition duration-300 ${feedCardClasses[index % feedCardClasses.length]}`}
+                style={{
+                  WebkitMaskImage:
+                    "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 7%, black 93%, transparent 100%)",
+                  maskImage:
+                    "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 7%, black 93%, transparent 100%)",
+                }}
               >
                 <Image
                   src={item.src}
                   alt={item.alt}
                   fill
-                  className="object-contain object-center p-2.5 transition duration-500 group-hover:scale-[1.02]"
+                  className="object-contain object-center p-1 transition duration-500 group-hover:scale-[1.02]"
                   sizes="(min-width: 1024px) 31vw, (min-width: 640px) 48vw, 50vw"
                   priority={index < 3}
                 />
-                <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-black/4" />
               </div>
             </figure>
           ))}
