@@ -4,14 +4,15 @@ import Link from "next/link";
 const mockSources = [
   "/images/collections/decorations/vaza-alba-baza.png",
   "/images/collections/decorations/vaza-alba-baza-2.png",
+  "/images/collections/decorations/vaza-alba-baza-3.png",
 ];
 
 const feedShapeClasses = [
   "aspect-[4/5]",
-  "aspect-[5/4]",
   "aspect-[4/5]",
-  "aspect-square",
-  "aspect-[5/4]",
+  "aspect-[4/5]",
+  "aspect-[4/5]",
+  "aspect-[4/5]",
   "aspect-[4/5]",
 ];
 
@@ -34,31 +35,19 @@ export default function ExperimentalPage() {
           </h1>
         </section>
 
-        <section className="mb-8 overflow-hidden rounded-[2rem] border border-black/5 bg-white">
-          <div className="relative aspect-[16/11] sm:aspect-[16/9]">
-            <Image
-              src="/images/collections/decorations/vaza-alba-baza.png"
-              alt="Compozitie decorativa din sticla pe fundal alb"
-              fill
-              className="object-cover object-center"
-              sizes="(min-width: 1024px) 75vw, 100vw"
-              priority
-            />
-          </div>
-        </section>
-
         <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
           {mockFeed.map((item, index) => (
             <figure key={item.id} className="group">
               <div
-                className={`relative overflow-hidden rounded-2xl ${feedShapeClasses[index % feedShapeClasses.length]}`}
+                className={`relative overflow-hidden rounded-2xl border border-black/5 bg-white ${feedShapeClasses[index % feedShapeClasses.length]}`}
               >
                 <Image
                   src={item.src}
                   alt={item.alt}
                   fill
-                  className="object-cover object-center transition duration-500 group-hover:scale-[1.02]"
+                  className="object-contain object-center p-2 transition duration-500 group-hover:scale-[1.02]"
                   sizes="(min-width: 1024px) 31vw, (min-width: 640px) 48vw, 50vw"
+                  priority={index < 3}
                 />
               </div>
             </figure>
@@ -71,7 +60,7 @@ export default function ExperimentalPage() {
               src="/images/collections/decorations/vaza-alba-baza.png"
               alt="Compozitie decorativa din sticla pe fundal alb"
               fill
-              className="object-cover object-center"
+              className="object-contain object-center"
               sizes="(min-width: 1024px) 75vw, 100vw"
             />
           </div>
