@@ -1,7 +1,27 @@
 import Image from "next/image";
 import Link from "next/link";
 
+const mockSources = [
+  "/images/collections/decorations/vaza-alba-baza.png",
+  "/images/collections/decorations/vaza-alba-baza-2.png",
+];
+
+const feedShapeClasses = [
+  "aspect-[4/5]",
+  "aspect-[5/4]",
+  "aspect-[4/5]",
+  "aspect-square",
+  "aspect-[5/4]",
+  "aspect-[4/5]",
+];
+
 export default function ExperimentalPage() {
+  const mockFeed = Array.from({ length: 20 }, (_, index) => ({
+    id: `mock-${index + 1}`,
+    src: mockSources[index % mockSources.length],
+    alt: `Decor glass concept ${index + 1}`,
+  }));
+
   return (
     <div className="bg-[#fcfcfd] text-[#111827]">
       <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 lg:px-8">
@@ -27,8 +47,26 @@ export default function ExperimentalPage() {
           </div>
         </section>
 
+        <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+          {mockFeed.map((item, index) => (
+            <figure key={item.id} className="group">
+              <div
+                className={`relative overflow-hidden rounded-2xl ${feedShapeClasses[index % feedShapeClasses.length]}`}
+              >
+                <Image
+                  src={item.src}
+                  alt={item.alt}
+                  fill
+                  className="object-cover object-center transition duration-500 group-hover:scale-[1.02]"
+                  sizes="(min-width: 1024px) 31vw, (min-width: 640px) 48vw, 50vw"
+                />
+              </div>
+            </figure>
+          ))}
+        </section>
+
         <section className="relative mt-12 overflow-hidden rounded-[2rem] bg-transparent">
-          <div className="relative aspect-[16/7] sm:aspect-[16/6] [mask-image:radial-gradient(125%_100%_at_50%_50%,black_66%,transparent_100%)]">
+          <div className="relative aspect-[16/7] sm:aspect-[16/6]">
             <Image
               src="/images/collections/decorations/vaza-alba-baza.png"
               alt="Compozitie decorativa din sticla pe fundal alb"
@@ -37,7 +75,7 @@ export default function ExperimentalPage() {
               sizes="(min-width: 1024px) 75vw, 100vw"
             />
           </div>
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#fcfcfd_0%,transparent_9%,transparent_91%,#fcfcfd_100%),linear-gradient(to_bottom,#fcfcfd_0%,transparent_14%,transparent_90%,#fcfcfd_100%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#fcfcfd_0%,transparent_7%,transparent_93%,#fcfcfd_100%),linear-gradient(to_bottom,#fcfcfd_0%,transparent_4%,transparent_96%,#fcfcfd_100%)]" />
         </section>
 
         <section className="mt-10 border-t border-black/6 pt-6">
