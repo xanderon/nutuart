@@ -8,15 +8,16 @@ const mockSources = [
   "/images/collections/decorations/vaza-alba-baza-4.png",
   "/images/collections/decorations/vaza-alba-baza-5.png",
   "/images/collections/decorations/vaza-alba-baza-6.png",
+  "/images/collections/decorations/vaza-alba-baza-7.png",
 ];
 
 const feedCardClasses = [
-  "aspect-[4/5] sm:translate-y-0",
-  "aspect-[5/6] sm:translate-y-2",
-  "aspect-[4/5] sm:-translate-y-1",
   "aspect-[4/5]",
-  "aspect-[5/6] sm:translate-y-1",
-  "aspect-[4/5] sm:-translate-y-2",
+  "aspect-[4/5]",
+  "aspect-[4/5]",
+  "aspect-[4/5]",
+  "aspect-[4/5]",
+  "aspect-[4/5]",
 ];
 
 export default function ExperimentalPage() {
@@ -39,7 +40,7 @@ export default function ExperimentalPage() {
         </section>
 
         <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-          <figure className="group col-span-2 row-span-2 sm:col-span-2">
+          <figure className="group col-span-2 sm:col-span-2 sm:row-span-2">
             <div
               className="relative aspect-[16/12] overflow-hidden rounded-3xl sm:aspect-[16/10]"
               style={{
