@@ -29,12 +29,25 @@ export default function ExperimentalPage() {
     <div className="bg-[#fcfcfd] text-[#111827]">
       <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 lg:px-8">
         <section className="mb-8 rounded-[2rem] border border-black/5 bg-white px-5 py-7 shadow-[0_30px_80px_-60px_rgba(14,24,39,0.35)] sm:px-8">
-          <p className="text-[0.62rem] uppercase tracking-[0.34em] text-[#64748b]">
-            Experimental Feed
-          </p>
-          <h1 className="mt-3 max-w-xl text-3xl leading-tight text-[#0f172a] sm:text-5xl">
-            Sticla. Lumina. Cadru curat.
-          </h1>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[0.62rem] uppercase tracking-[0.34em] text-[#64748b]">
+                Experimental Feed
+              </p>
+              <h1 className="mt-3 max-w-xl text-2xl leading-tight text-[#0f172a] sm:text-4xl">
+                Glass Art by Artist Nutu Marcel Marius
+              </h1>
+            </div>
+            <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-xl sm:h-24 sm:w-20">
+              <Image
+                src="/images/artist_nutu_marcel_marius_two.jpg"
+                alt="Artist Nutu Marcel Marius"
+                fill
+                className="object-cover object-[50%_28%]"
+                sizes="80px"
+              />
+            </div>
+          </div>
         </section>
 
         <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
