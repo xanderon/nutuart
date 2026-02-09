@@ -7,6 +7,7 @@ const mockSources = [
   "/images/collections/decorations/vaza-alba-baza-3.png",
   "/images/collections/decorations/vaza-alba-baza-4.png",
   "/images/collections/decorations/vaza-alba-baza-5.png",
+  "/images/collections/decorations/vaza-alba-baza-6.png",
 ];
 
 const feedCardClasses = [
@@ -29,28 +30,36 @@ export default function ExperimentalPage() {
     <div className="bg-[#fcfcfd] text-[#111827]">
       <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 lg:px-8">
         <section className="mb-8 rounded-[2rem] border border-black/5 bg-white px-5 py-7 shadow-[0_30px_80px_-60px_rgba(14,24,39,0.35)] sm:px-8">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-[0.62rem] uppercase tracking-[0.34em] text-[#64748b]">
-                Experimental Feed
-              </p>
-              <h1 className="mt-3 max-w-xl text-2xl leading-tight text-[#0f172a] sm:text-4xl">
-                Glass Art by Artist Nutu Marcel Marius
-              </h1>
-            </div>
-            <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-xl sm:h-24 sm:w-20">
+          <p className="text-[0.62rem] uppercase tracking-[0.34em] text-[#64748b]">
+            Experimental Feed
+          </p>
+          <h1 className="mt-3 max-w-2xl text-2xl leading-tight text-[#0f172a] sm:text-4xl">
+            Glass Art by Artist Nutu Marcel Marius
+          </h1>
+        </section>
+
+        <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+          <figure className="group col-span-2 row-span-2 sm:col-span-2">
+            <div
+              className="relative aspect-[16/12] overflow-hidden rounded-3xl sm:aspect-[16/10]"
+              style={{
+                WebkitMaskImage:
+                  "linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%)",
+                maskImage:
+                  "linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%)",
+              }}
+            >
               <Image
                 src="/images/artist_nutu_marcel_marius_two.jpg"
                 alt="Artist Nutu Marcel Marius"
                 fill
-                className="object-cover object-[50%_28%]"
-                sizes="80px"
+                className="object-cover object-[50%_30%] transition duration-500 group-hover:scale-[1.02]"
+                sizes="(min-width: 640px) 66vw, 100vw"
+                priority
               />
             </div>
-          </div>
-        </section>
+          </figure>
 
-        <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
           {mockFeed.map((item, index) => (
             <figure key={item.id} className="group">
               <div
