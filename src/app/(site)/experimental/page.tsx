@@ -51,10 +51,10 @@ export default function ExperimentalPage() {
               }}
             >
               <Image
-                src="/images/artist_nutu_marcel_marius_two.jpg"
+                src="/images/portret-mai-patratos.png"
                 alt="Artist Nutu Marcel Marius"
                 fill
-                className="object-cover object-[50%_30%] transition duration-500 group-hover:scale-[1.02]"
+                className="object-cover object-center transition duration-500 group-hover:scale-[1.02]"
                 sizes="(min-width: 640px) 66vw, 100vw"
                 priority
               />
