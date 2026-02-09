@@ -5,15 +5,16 @@ const mockSources = [
   "/images/collections/decorations/vaza-alba-baza.png",
   "/images/collections/decorations/vaza-alba-baza-2.png",
   "/images/collections/decorations/vaza-alba-baza-3.png",
+  "/images/collections/decorations/vaza-alba-baza-4.png",
 ];
 
-const feedShapeClasses = [
+const feedCardClasses = [
+  "aspect-[4/5] sm:translate-y-0",
+  "aspect-[5/6] sm:translate-y-2",
+  "aspect-[4/5] sm:-translate-y-1",
   "aspect-[4/5]",
-  "aspect-[4/5]",
-  "aspect-[4/5]",
-  "aspect-[4/5]",
-  "aspect-[4/5]",
-  "aspect-[4/5]",
+  "aspect-[5/6] sm:translate-y-1",
+  "aspect-[4/5] sm:-translate-y-2",
 ];
 
 export default function ExperimentalPage() {
@@ -39,16 +40,17 @@ export default function ExperimentalPage() {
           {mockFeed.map((item, index) => (
             <figure key={item.id} className="group">
               <div
-                className={`relative overflow-hidden rounded-2xl border border-black/5 bg-white ${feedShapeClasses[index % feedShapeClasses.length]}`}
+                className={`relative overflow-hidden rounded-2xl border border-black/6 bg-[linear-gradient(180deg,#ffffff,#f8fafc)] shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)] transition duration-300 ${feedCardClasses[index % feedCardClasses.length]}`}
               >
                 <Image
                   src={item.src}
                   alt={item.alt}
                   fill
-                  className="object-contain object-center p-2 transition duration-500 group-hover:scale-[1.02]"
+                  className="object-contain object-center p-2.5 transition duration-500 group-hover:scale-[1.02]"
                   sizes="(min-width: 1024px) 31vw, (min-width: 640px) 48vw, 50vw"
                   priority={index < 3}
                 />
+                <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-black/4" />
               </div>
             </figure>
           ))}
