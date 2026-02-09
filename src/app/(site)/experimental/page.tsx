@@ -40,14 +40,14 @@ export default function ExperimentalPage() {
         </section>
 
         <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-          <figure className="group col-span-2 sm:col-span-2 sm:row-span-2">
+          <figure className="group">
             <div
-              className="relative aspect-[16/12] overflow-hidden rounded-3xl sm:aspect-[16/10]"
+              className="relative aspect-[4/5] overflow-hidden rounded-2xl transition duration-300"
               style={{
                 WebkitMaskImage:
-                  "linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%)",
+                  "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 7%, black 93%, transparent 100%)",
                 maskImage:
-                  "linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%)",
+                  "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 7%, black 93%, transparent 100%)",
               }}
             >
               <Image
@@ -55,7 +55,7 @@ export default function ExperimentalPage() {
                 alt="Artist Nutu Marcel Marius"
                 fill
                 className="object-cover object-center transition duration-500 group-hover:scale-[1.02]"
-                sizes="(min-width: 640px) 66vw, 100vw"
+                sizes="(min-width: 1024px) 31vw, (min-width: 640px) 48vw, 50vw"
                 priority
               />
             </div>
