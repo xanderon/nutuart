@@ -26,6 +26,7 @@ const feedCardClasses = [
 export default function ExperimentalPage() {
   const [shieldVisible, setShieldVisible] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [musicDockCollapsed, setMusicDockCollapsed] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const shieldTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -69,24 +70,10 @@ export default function ExperimentalPage() {
       }
     };
 
-    const onVisibilityChange = () => {
-      if (document.hidden) {
-        showShield(1100);
-      }
-    };
-
-    const onBlur = () => {
-      showShield(900);
-    };
-
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("blur", onBlur);
-    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
       window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("blur", onBlur);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
       if (shieldTimeoutRef.current) {
         clearTimeout(shieldTimeoutRef.current);
       }
@@ -105,17 +92,31 @@ export default function ExperimentalPage() {
     const tryAutoplay = async () => {
       try {
         await audio.play();
+        setIsAudioPlaying(true);
       } catch {
         // Some browsers require user interaction before autoplay.
+        setIsAudioPlaying(false);
       }
     };
 
     void tryAutoplay();
   }, []);
 
-  const toggleMute = useCallback(() => {
+  const handleAudioButton = useCallback(async () => {
     const audio = audioRef.current;
     if (!audio) {
+      return;
+    }
+
+    setMusicDockCollapsed(false);
+
+    if (audio.paused) {
+      try {
+        await audio.play();
+        setIsAudioPlaying(true);
+      } catch {
+        setIsAudioPlaying(false);
+      }
       return;
     }
 
@@ -155,6 +156,9 @@ export default function ExperimentalPage() {
         loop
         preload="auto"
         playsInline
+        onPlay={() => setIsAudioPlaying(true)}
+        onPause={() => setIsAudioPlaying(false)}
+        onVolumeChange={() => setIsMuted(Boolean(audioRef.current?.muted))}
       />
 
       {shieldVisible ? (
@@ -260,20 +264,14 @@ export default function ExperimentalPage() {
       <div
         className={`group fixed bottom-4 right-0 z-[130] transition-transform duration-500 ${
           musicDockCollapsed
-            ? "translate-x-[4.15rem] hover:translate-x-0 focus-within:translate-x-0"
+            ? "translate-x-[2.7rem] hover:translate-x-0 focus-within:translate-x-0"
             : "translate-x-0"
         }`}
       >
         <div className="rounded-l-full border border-black/10 border-r-0 bg-white/88 p-1.5 shadow-[0_14px_30px_-18px_rgba(15,23,42,0.45)] backdrop-blur-md">
           <button
             type="button"
-            onClick={() => {
-              if (musicDockCollapsed) {
-                setMusicDockCollapsed(false);
-                return;
-              }
-              toggleMute();
-            }}
+            onClick={() => void handleAudioButton()}
             className="inline-flex h-8 items-center gap-2 rounded-full border border-black/10 bg-white px-2.5 text-[#0f172a] transition hover:border-black"
             aria-label={isMuted ? "Unmute music" : "Mute music"}
             title={isMuted ? "Unmute music" : "Mute music"}
@@ -281,17 +279,17 @@ export default function ExperimentalPage() {
             <span className="flex h-4 items-end gap-[2px]" aria-hidden="true">
               <span
                 className={`w-[2px] rounded-full bg-[#0f172a] ${
-                  isMuted ? "h-1.5 opacity-40" : "h-2.5 wave-1"
+                  isMuted || !isAudioPlaying ? "h-1.5 opacity-40" : "h-2.5 wave-1"
                 }`}
               />
               <span
                 className={`w-[2px] rounded-full bg-[#0f172a] ${
-                  isMuted ? "h-2 opacity-40" : "h-3.5 wave-2"
+                  isMuted || !isAudioPlaying ? "h-2 opacity-40" : "h-3.5 wave-2"
                 }`}
               />
               <span
                 className={`w-[2px] rounded-full bg-[#0f172a] ${
-                  isMuted ? "h-2.5 opacity-40" : "h-4 wave-3"
+                  isMuted || !isAudioPlaying ? "h-2.5 opacity-40" : "h-4 wave-3"
                 }`}
               />
             </span>
