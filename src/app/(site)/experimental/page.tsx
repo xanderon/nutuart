@@ -262,9 +262,9 @@ export default function ExperimentalPage() {
       </div>
 
       <div
-        className={`group fixed bottom-4 right-0 z-[130] transition-transform duration-500 ${
+        className={`group fixed bottom-4 right-0 z-[130] -ml-10 pl-10 transition-transform duration-500 ${
           musicDockCollapsed
-            ? "translate-x-[2.7rem] hover:translate-x-0 focus-within:translate-x-0"
+            ? "translate-x-[1.9rem] hover:translate-x-0 focus-within:translate-x-0"
             : "translate-x-0"
         }`}
       >
