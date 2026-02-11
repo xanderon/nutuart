@@ -26,7 +26,7 @@ const feedCardClasses = [
 export default function ExperimentalPage() {
   const [shieldVisible, setShieldVisible] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [musicDockCollapsed, setMusicDockCollapsed] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const shieldTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -105,33 +105,12 @@ export default function ExperimentalPage() {
     const tryAutoplay = async () => {
       try {
         await audio.play();
-        setIsPlaying(true);
       } catch {
-        setIsPlaying(false);
+        // Some browsers require user interaction before autoplay.
       }
     };
 
     void tryAutoplay();
-  }, []);
-
-  const togglePlay = useCallback(async () => {
-    const audio = audioRef.current;
-    if (!audio) {
-      return;
-    }
-
-    if (audio.paused) {
-      try {
-        await audio.play();
-        setIsPlaying(true);
-      } catch {
-        setIsPlaying(false);
-      }
-      return;
-    }
-
-    audio.pause();
-    setIsPlaying(false);
   }, []);
 
   const toggleMute = useCallback(() => {
@@ -143,6 +122,23 @@ export default function ExperimentalPage() {
     const nextMuted = !audio.muted;
     audio.muted = nextMuted;
     setIsMuted(nextMuted);
+  }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setMusicDockCollapsed(true);
+    }, 4200);
+
+    const onScroll = () => {
+      setMusicDockCollapsed(true);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   return (
@@ -159,8 +155,6 @@ export default function ExperimentalPage() {
         loop
         preload="auto"
         playsInline
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
       />
 
       {shieldVisible ? (
@@ -263,48 +257,77 @@ export default function ExperimentalPage() {
         </section>
       </div>
 
-      <div className="fixed bottom-4 right-4 z-[130]">
-        <div className="flex items-center gap-1.5 rounded-full border border-black/10 bg-white/85 p-1.5 shadow-[0_14px_30px_-18px_rgba(15,23,42,0.45)] backdrop-blur-md">
+      <div
+        className={`group fixed bottom-4 right-0 z-[130] transition-transform duration-500 ${
+          musicDockCollapsed
+            ? "translate-x-[4.15rem] hover:translate-x-0 focus-within:translate-x-0"
+            : "translate-x-0"
+        }`}
+      >
+        <div className="rounded-l-full border border-black/10 border-r-0 bg-white/88 p-1.5 shadow-[0_14px_30px_-18px_rgba(15,23,42,0.45)] backdrop-blur-md">
           <button
             type="button"
-            onClick={() => void togglePlay()}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#0f172a] text-white transition hover:bg-black"
-            aria-label={isPlaying ? "Pause music" : "Play music"}
-            title={isPlaying ? "Pause music" : "Play music"}
-          >
-            {isPlaying ? (
-              <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <rect x="6" y="5" width="4" height="14" rx="1" />
-                <rect x="14" y="5" width="4" height="14" rx="1" />
-              </svg>
-            ) : (
-              <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4 translate-x-[1px]"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.7L9.5 4.64A1 1 0 0 0 8 5.5Z" />
-              </svg>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={toggleMute}
-            className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-black/10 bg-white px-2 text-[0.58rem] uppercase tracking-[0.16em] text-[#0f172a] transition hover:border-black"
+            onClick={() => {
+              if (musicDockCollapsed) {
+                setMusicDockCollapsed(false);
+                return;
+              }
+              toggleMute();
+            }}
+            className="inline-flex h-8 items-center gap-2 rounded-full border border-black/10 bg-white px-2.5 text-[#0f172a] transition hover:border-black"
             aria-label={isMuted ? "Unmute music" : "Mute music"}
             title={isMuted ? "Unmute music" : "Mute music"}
           >
-            {isMuted ? "Muted" : "Sound"}
+            <span className="flex h-4 items-end gap-[2px]" aria-hidden="true">
+              <span
+                className={`w-[2px] rounded-full bg-[#0f172a] ${
+                  isMuted ? "h-1.5 opacity-40" : "h-2.5 wave-1"
+                }`}
+              />
+              <span
+                className={`w-[2px] rounded-full bg-[#0f172a] ${
+                  isMuted ? "h-2 opacity-40" : "h-3.5 wave-2"
+                }`}
+              />
+              <span
+                className={`w-[2px] rounded-full bg-[#0f172a] ${
+                  isMuted ? "h-2.5 opacity-40" : "h-4 wave-3"
+                }`}
+              />
+            </span>
+            <span
+              className={`overflow-hidden text-[0.58rem] uppercase tracking-[0.16em] transition-all duration-300 ${
+                musicDockCollapsed
+                  ? "max-w-0 opacity-0 sm:group-hover:max-w-16 sm:group-hover:opacity-100"
+                  : "max-w-16 opacity-100"
+              }`}
+            >
+              {isMuted ? "Mute" : "Sound"}
+            </span>
           </button>
         </div>
       </div>
+
+      <style jsx>{`
+        .wave-1 {
+          animation: wave 0.95s ease-in-out infinite;
+        }
+        .wave-2 {
+          animation: wave 1.15s ease-in-out infinite;
+        }
+        .wave-3 {
+          animation: wave 0.85s ease-in-out infinite;
+        }
+        @keyframes wave {
+          0%,
+          100% {
+            transform: scaleY(0.45);
+          }
+          50% {
+            transform: scaleY(1);
+          }
+        }
+      `}</style>
     </div>
   );
 }
