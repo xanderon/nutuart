@@ -9,8 +9,10 @@ export const metadata: Metadata = {
     "Galerie completă cu lucrările artistului Nuțu Marcel Marius, între două portrete de prezentare.",
 };
 
-const topPortrait = "/images/artist_nutu_marcel_marius.jpg";
-const bottomPortrait = "/images/artist_nutu_marcel_marius_two.jpg";
+const topPortrait =
+  "/images/collections/artist-nutu-marcel/ChatGPT Image Feb 14, 2026, 11_30_33 AM.png";
+const bottomPortrait =
+  "/images/collections/artist-nutu-marcel/ChatGPT Image Feb 14, 2026, 11_34_59 AM.png";
 
 export default function ExperimentalPage() {
   const artworks = getArtworks();
@@ -27,7 +29,7 @@ export default function ExperimentalPage() {
         <p className="mt-3 text-base text-muted sm:text-lg">Pui Artist de sticla</p>
       </section>
 
-      <section className="mt-8 overflow-hidden rounded-[2rem] border border-[color:var(--color-outline)] bg-[color:var(--color-surface)]/65">
+      <section className="mt-8 overflow-hidden rounded-[2rem] border border-[color:var(--color-outline)] bg-[radial-gradient(circle_at_20%_20%,rgba(244,197,108,0.13),transparent_55%),var(--color-surface)]/65">
         <div className="relative aspect-[16/9] sm:aspect-[16/7]">
           <Image
             src={topPortrait}
@@ -75,7 +77,7 @@ export default function ExperimentalPage() {
         </div>
       </section>
 
-      <section className="mt-10 overflow-hidden rounded-[2rem] border border-[color:var(--color-outline)] bg-[color:var(--color-surface)]/65">
+      <section className="mt-10 overflow-hidden rounded-[2rem] border border-[color:var(--color-outline)] bg-[radial-gradient(circle_at_80%_30%,rgba(244,197,108,0.13),transparent_55%),var(--color-surface)]/65">
         <div className="relative aspect-[16/9] sm:aspect-[16/7]">
           <Image
             src={bottomPortrait}
