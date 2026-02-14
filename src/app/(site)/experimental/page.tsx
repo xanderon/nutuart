@@ -30,8 +30,8 @@ export default function ExperimentalPage() {
   const decorationImages = getDecorationImages();
 
   return (
-    <div className="mx-auto -mt-5 w-full max-w-7xl px-4 pb-14 pt-2 sm:-mt-8 sm:px-6 lg:px-8">
-      <section className="rounded-[1.5rem] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/80 p-3.5 shadow-[var(--shadow-soft)] sm:p-4">
+    <div className="mx-auto -mt-7 w-full max-w-7xl px-4 pb-14 pt-0 sm:-mt-10 sm:px-6 lg:px-8">
+      <section className="py-2">
         <div className="grid items-center gap-3 lg:grid-cols-[1.25fr_0.75fr]">
           <div className="space-y-2.5 lg:pr-2">
             <p className="text-[0.58rem] uppercase tracking-[0.3em] text-muted">
@@ -45,7 +45,7 @@ export default function ExperimentalPage() {
               Creații din sticlă realizate manual. Artă, lumină și detaliu în fiecare piesă.
             </p>
           </div>
-          <div className="relative ml-0 aspect-[1/1] max-w-[230px] justify-self-start overflow-hidden rounded-[0.95rem] border border-[color:var(--color-outline)] bg-[radial-gradient(circle_at_30%_22%,rgba(244,197,108,0.18),transparent_55%),var(--color-surface)]/55 p-1.5 lg:justify-self-end">
+          <div className="relative ml-0 aspect-[1/1] max-w-[220px] justify-self-start overflow-hidden rounded-[0.95rem] bg-[radial-gradient(circle_at_30%_22%,rgba(244,197,108,0.14),transparent_55%)] p-1 lg:justify-self-end">
             <Image
               src={topPortrait}
               alt="Nutu Marcel Marius"
