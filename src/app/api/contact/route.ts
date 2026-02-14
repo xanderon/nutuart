@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
 const resendApiKey = process.env.RESEND_API_KEY;
-const defaultRecipients = [
-  "marcelnutu@gmail.com",
-  "alexnutu+artgal@gmail.com",
-];
+const defaultRecipients = ["marcelnutu@yahoo.com"];
 
 const resend =
   resendApiKey && resendApiKey !== ""
@@ -39,11 +36,28 @@ const buildEmail = ({
 
 export async function POST(request: Request) {
   const body = (await request.json()) as ContactPayload;
-  const { name, email, phone, message } = body;
+  const name = body.name?.trim() ?? "";
+  const email = body.email?.trim() ?? "";
+  const phone = body.phone?.trim() ?? "";
+  const message = body.message?.trim() ?? "";
+
+  if (!name) {
+    return NextResponse.json(
+      { error: "Completează numele." },
+      { status: 400 }
+    );
+  }
 
   if (!email && !phone) {
     return NextResponse.json(
       { error: "Completează emailul sau telefonul." },
+      { status: 400 }
+    );
+  }
+
+  if (!message) {
+    return NextResponse.json(
+      { error: "Completează mesajul." },
       { status: 400 }
     );
   }

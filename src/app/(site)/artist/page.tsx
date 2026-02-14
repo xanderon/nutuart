@@ -9,25 +9,25 @@ export const metadata: Metadata = {
 
 export default function ArtistPage() {
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-16 px-4 py-16 sm:px-6 lg:px-8">
-      <header className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+    <div className="mx-auto w-full max-w-6xl space-y-10 px-4 py-16 sm:px-6 lg:px-8">
+      <header className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
         <div className="space-y-6">
           <span className="text-xs uppercase tracking-[0.35em] text-muted">
             Artistul
           </span>
           <h1 className="font-display text-4xl leading-tight sm:text-5xl">
-            Nuțu Marcel Marius, artist plastic specializat în sticlă.
+            Nuțu Marcel Marius
           </h1>
           <p className="text-base leading-relaxed text-muted">
-            Născut în București, a urmat Facultatea de Arte Plastice. Lucrează
-            cu sticla ca material central, păstrând interesul pentru desen și
-            culoare. Îmbină practica de atelier cu proiecte aplicate și lucrări
-            personale.
+            Nuțu Marcel Marius este artist plastic specializat în lucrul cu
+            sticla. Născut în București, a absolvit Facultatea de Arte
+            Plastice, iar experiența practică din atelier, inclusiv lucrul la
+            cuptorul de sticlărie, i-a format o relație directă cu materialul.
           </p>
-          <p className="text-sm leading-relaxed text-muted">
-            Este posibil membru al uniunii artiștilor plastici (de confirmat),
-            soț, tată și bunic. Vrea ca lucrările să fie clare și sincere, fără
-            zgomot inutil.
+          <p className="text-base leading-relaxed text-muted">
+            Realizează geamuri sablate, design-uri pentru autocolant aplicat pe
+            suprafețe vitrate și proiecte de vitralii, fiecare lucrare fiind
+            adaptată spațiului și luminii existente.
           </p>
         </div>
         <div className="relative overflow-hidden rounded-[calc(var(--radius-lg)*1.1)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/60 shadow-[var(--shadow-soft)]">
@@ -42,51 +42,22 @@ export default function ArtistPage() {
         </div>
       </header>
 
-      <section className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-        <div className="rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/60 p-6">
-          <h2 className="font-display text-2xl">Manifest</h2>
-          <p className="mt-4 text-sm leading-relaxed text-muted">
-            „Sticla e sinceră. Te obligă să negociezi cu lumină, reflexii și
-            transparențe. Fiecare tăietură și gravură trebuie să aibă sens și
-            răbdare.”
-          </p>
-        </div>
-        <div className="space-y-4 text-sm leading-relaxed text-muted">
-          <p>
-            Începuturile: desen și pictură clasică, apoi experimente cu sticlă.
-            Detalii de adăugat: an absolvire, profesori marcanti, tehnici preferate.
-          </p>
-          <p>
-            Expoziții și lucrări: principalele apariții (oraș, an, titlu) de
-            completat; lucrări instalate în spații publice și private.
-          </p>
-          <p>
-            Întrebări deschise pentru completare: membre/afiliere la uniunea
-            artiștilor plastici? Premii sau selecții notabile? Ce proiecte
-            personale pregătește acum?
-          </p>
-        </div>
-      </section>
-
-      <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-        <div className="space-y-4 text-sm leading-relaxed text-muted">
-          <h2 className="text-xs uppercase tracking-[0.35em] text-muted">
-            Direcții și inspirație
-          </h2>
-          <p>
-            Interes pentru materiale care prind sau filtrează lumina și pentru
-            compoziții simple. Întrebări de completat: influențe artistice
-            preferate? Ce colecții personale vrea să expună public?
-          </p>
-        </div>
-        <div className="relative overflow-hidden rounded-[calc(var(--radius-lg)*1.05)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/60 shadow-[var(--shadow-soft)]">
+      <section className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+        <div className="relative overflow-hidden rounded-[calc(var(--radius-lg)*1.1)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/60 shadow-[var(--shadow-soft)]">
           <Image
             src="/images/artist_nutu_marcel_marius_two.jpg"
-            alt="Artistul și o lucrare de artă semnată Nuțu"
+            alt="Nuțu Marcel Marius, portret"
             width={960}
             height={720}
             className="h-full w-full object-cover"
           />
+        </div>
+        <div className="space-y-4">
+          <p className="text-base leading-relaxed text-muted">
+            Lucrează atât pentru locuințe, cât și pentru birouri sau spații
+            comerciale, realizând piese personalizate, cu atenție la detalii și
+            execuție.
+          </p>
         </div>
       </section>
     </div>

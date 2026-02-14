@@ -5,6 +5,7 @@ import { artworks as baseArtworks, collectionLabels, type Artwork } from "@/data
 const collectionSlugs = Object.keys(collectionLabels) as Array<Artwork["collection"]>;
 
 const mediumByCollection: Record<Artwork["collection"], string> = {
+  decorations: "Artă în sticlă",
   autocolante: "Autocolant / grafică aplicată",
   "geamuri-sablate": "Sticlă sablată",
   vitralii: "Sticlă colorată",

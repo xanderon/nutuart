@@ -19,7 +19,7 @@ export function SiteHeader() {
 
   return (
     <header className="fixed top-6 z-50 w-full px-4">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-white/10 bg-black/40 px-4 py-3 text-xs uppercase tracking-[0.35em] text-white/70 backdrop-blur">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/10 bg-black/40 px-4 py-3 text-xs uppercase tracking-[0.35em] text-white/70 backdrop-blur">
         <Link href="/" className="font-display text-sm tracking-tight text-white">
           NutuArt
         </Link>

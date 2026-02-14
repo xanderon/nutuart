@@ -1,4 +1,5 @@
 export type CollectionSlug =
+  | "decorations"
   | "autocolante"
   | "geamuri-sablate"
   | "vitralii"
@@ -6,6 +7,7 @@ export type CollectionSlug =
   | "trofee";
 
 export const collectionLabels: Record<CollectionSlug, string> = {
+  decorations: "Artă în sticlă",
   autocolante: "Autocolante",
   "geamuri-sablate": "Geamuri sablate",
   vitralii: "Vitralii",

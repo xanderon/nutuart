@@ -63,4 +63,4 @@ export const themes: Record<
   },
 };
 
-export const defaultTheme: ThemeName = "dark";
+export const defaultTheme: ThemeName = "light";
