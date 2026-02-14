@@ -30,8 +30,8 @@ export default function ExperimentalPage() {
   const decorationImages = getDecorationImages();
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-1 sm:px-6 lg:px-8">
-      <section className="py-1">
+    <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-14 sm:px-6 sm:pt-16 lg:px-8">
+      <section className="py-0.5">
         <div className="grid items-center gap-3 md:grid-cols-[1.25fr_0.75fr]">
           <div className="space-y-2.5 lg:pr-2">
             <p className="text-[0.58rem] uppercase tracking-[0.3em] text-muted">
@@ -45,21 +45,21 @@ export default function ExperimentalPage() {
               Creații din sticlă realizate manual. Artă, lumină și detaliu în fiecare piesă.
             </p>
           </div>
-          <div className="relative ml-0 aspect-[1/1] max-w-[240px] justify-self-start overflow-hidden rounded-[0.95rem] border border-[color:var(--color-outline)] bg-[radial-gradient(circle_at_30%_22%,rgba(244,197,108,0.14),transparent_55%)] p-1 md:justify-self-end">
+          <div className="relative ml-0 h-[180px] w-[180px] justify-self-start overflow-hidden rounded-[0.95rem] border border-[color:var(--color-outline)] bg-[radial-gradient(circle_at_30%_22%,rgba(244,197,108,0.14),transparent_55%)] p-1 sm:h-[220px] sm:w-[220px] md:justify-self-end">
             <Image
               src={topPortrait}
               alt="Nutu Marcel Marius"
               fill
               className="object-contain p-2 drop-shadow-[0_16px_28px_rgba(0,0,0,0.28)]"
               style={{ WebkitMaskImage: portraitEdgeMask, maskImage: portraitEdgeMask }}
-              sizes="230px"
+              sizes="(min-width: 640px) 220px, 180px"
               priority
             />
           </div>
         </div>
       </section>
 
-      <section className="mt-4">
+      <section className="mt-3">
         <p className="mb-4 text-[0.62rem] uppercase tracking-[0.34em] text-muted">Decorations Gallery</p>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {decorationImages.map((src, index) => (
