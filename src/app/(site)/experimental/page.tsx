@@ -10,9 +10,7 @@ export const metadata: Metadata = {
 };
 
 const topPortrait =
-  "/images/artist_nutu_marcel_marius_at_work.jpg";
-const bottomPortrait =
-  "/images/collections/artist-nutu-marcel/ChatGPT Image Feb 14, 2026, 11_30_33 AM.png";
+  "/images/collections/artist-nutu-marcel/ChatGPT Image Feb 14, 2026, 11_34_59 AM.png";
 
 const portraitEdgeMask =
   "linear-gradient(to right, transparent 0%, black 16%, black 84%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)";
@@ -33,40 +31,25 @@ export default function ExperimentalPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-10 sm:px-6 lg:px-8">
-      <section className="rounded-[2rem] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/75 p-6 shadow-[var(--shadow-soft)] sm:p-8">
-        <div className="grid items-center gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-          <div className="space-y-6 lg:pr-6">
+      <section className="rounded-[2rem] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/75 p-5 shadow-[var(--shadow-soft)] sm:p-6">
+        <div className="grid items-center gap-5 lg:grid-cols-[0.75fr_1.25fr]">
+          <div className="space-y-4 lg:pr-4">
             <h1 className="text-4xl leading-tight sm:text-6xl">Nutu Marcel Marius</h1>
             <p className="text-xl leading-tight text-muted">Artist în sticlă / Glass Artist</p>
-            <p className="max-w-xl text-lg leading-relaxed text-muted">
+            <p className="max-w-xl text-base leading-relaxed text-muted sm:text-lg">
               Creații din sticlă realizate manual. Artă, lumină și detaliu în fiecare piesă.
             </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <a
-                href="/gallery"
-                className="rounded-full border border-[color:var(--color-accent)] bg-[color:var(--color-accent)] px-6 py-3 text-sm font-semibold text-black transition hover:opacity-90"
-              >
-                Vezi lucrările
-              </a>
-              <a
-                href="/artist"
-                className="rounded-full border border-[color:var(--color-outline)] px-6 py-3 text-sm font-semibold transition hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
-              >
-                Despre artist
-              </a>
-            </div>
           </div>
-          <div className="relative aspect-[5/4] overflow-hidden rounded-[1.4rem] border border-[color:var(--color-outline)] bg-[color:var(--color-surface)]/55">
+          <div className="relative ml-0 aspect-[4/3] overflow-hidden rounded-[1.2rem] border border-[color:var(--color-outline)] bg-[radial-gradient(circle_at_30%_22%,rgba(244,197,108,0.18),transparent_55%),var(--color-surface)]/55 p-2">
             <Image
               src={topPortrait}
-              alt="Nutu Marcel Marius in atelier"
+              alt="Nutu Marcel Marius"
               fill
-              className="object-cover"
-              sizes="(min-width: 1024px) 44vw, 100vw"
+              className="object-contain p-3 drop-shadow-[0_20px_45px_rgba(0,0,0,0.32)]"
+              style={{ WebkitMaskImage: portraitEdgeMask, maskImage: portraitEdgeMask }}
+              sizes="(min-width: 1024px) 32vw, 100vw"
               priority
             />
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.38),rgba(0,0,0,0.06))]" />
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_18%,rgba(255,255,255,0.2),transparent_42%)]" />
           </div>
         </div>
       </section>
@@ -93,27 +76,6 @@ export default function ExperimentalPage() {
         </div>
       </section>
 
-      <section className="mt-10 rounded-[2rem] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/75 p-6 shadow-[var(--shadow-soft)] sm:p-8">
-        <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-4 lg:pl-2">
-            <p className="text-[0.62rem] uppercase tracking-[0.34em] text-muted">Footer</p>
-            <h2 className="text-2xl leading-tight sm:text-4xl">Final de pagină</h2>
-            <p className="text-base leading-relaxed text-muted sm:text-lg">
-              În partea de jos, textul rămâne în stânga iar portretul PNG în dreapta, pentru un final echilibrat al compoziției.
-            </p>
-          </div>
-          <div className="relative aspect-[5/4] rounded-[1.4rem] bg-[radial-gradient(circle_at_75%_24%,rgba(244,197,108,0.16),transparent_55%),var(--color-surface)]/55 p-4">
-            <Image
-              src={bottomPortrait}
-              alt="Portret artist in zona footer"
-              fill
-              className="object-contain p-4 drop-shadow-[0_20px_45px_rgba(0,0,0,0.32)]"
-              style={{ WebkitMaskImage: portraitEdgeMask, maskImage: portraitEdgeMask }}
-              sizes="(min-width: 1024px) 34vw, 100vw"
-            />
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
