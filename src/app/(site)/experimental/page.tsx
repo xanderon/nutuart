@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import fs from "node:fs";
+import path from "node:path";
 import Image from "next/image";
 
 export const metadata: Metadata = {
@@ -12,24 +14,23 @@ const topPortrait =
 const bottomPortrait =
   "/images/collections/artist-nutu-marcel/ChatGPT Image Feb 14, 2026, 11_30_33 AM.png";
 
-const decorationImages = [
-  "ChatGPT Image Feb 9, 2026, 07_20_54 PM.png",
-  "ChatGPT Image Feb 9, 2026, 08_04_20 PM.png",
-  "ChatGPT Image Feb 9, 2026, 08_09_25 PM.png",
-  "ChatGPT Image Feb 9, 2026, 08_14_22 PM.png",
-  "ChatGPT Image Feb 9, 2026, 08_16_25 PM.png",
-  "ChatGPT Image Feb 9, 2026, 08_25_44 PM.png",
-  "ChatGPT Image Feb 9, 2026, 08_27_14 PM.png",
-  "vaza-alba-baza.png",
-  "vaza-alba-baza-2.png",
-  "vaza-alba-baza-3.png",
-  "vaza-alba-baza-4.png",
-  "vaza-alba-baza-5.png",
-  "vaza-alba-baza-6.png",
-  "vaza-alba-baza-7.png",
-].map((file) => `/images/collections/decorations/${file}`);
+const portraitEdgeMask =
+  "linear-gradient(to right, transparent 0%, black 16%, black 84%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)";
+
+function getDecorationImages() {
+  const dir = path.join(process.cwd(), "public", "images", "collections", "decorations");
+  if (!fs.existsSync(dir)) return [];
+
+  return fs
+    .readdirSync(dir)
+    .filter((file) => /\.(png|jpe?g|webp|avif)$/i.test(file))
+    .sort((a, b) => a.localeCompare(b))
+    .map((file) => `/images/collections/decorations/${file}`);
+}
 
 export default function ExperimentalPage() {
+  const decorationImages = getDecorationImages();
+
   return (
     <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-10 sm:px-6 lg:px-8">
       <section className="rounded-[2rem] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/75 p-6 shadow-[var(--shadow-soft)] sm:p-8">
@@ -40,6 +41,7 @@ export default function ExperimentalPage() {
               alt="Artist Nutu Marcel Marius"
               fill
               className="object-contain p-4 drop-shadow-[0_20px_45px_rgba(0,0,0,0.32)]"
+              style={{ WebkitMaskImage: portraitEdgeMask, maskImage: portraitEdgeMask }}
               sizes="(min-width: 1024px) 34vw, 100vw"
               priority
             />
@@ -91,6 +93,7 @@ export default function ExperimentalPage() {
               alt="Portret artist in zona footer"
               fill
               className="object-contain p-4 drop-shadow-[0_20px_45px_rgba(0,0,0,0.32)]"
+              style={{ WebkitMaskImage: portraitEdgeMask, maskImage: portraitEdgeMask }}
               sizes="(min-width: 1024px) 34vw, 100vw"
             />
           </div>
