@@ -30,24 +30,29 @@ export default function ExperimentalPage() {
   const decorationImages = getDecorationImages();
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-3 sm:px-6 lg:px-8">
-      <section className="rounded-[1.8rem] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/75 p-4 shadow-[var(--shadow-soft)] sm:p-5">
-        <div className="grid items-center gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-          <div className="space-y-3 lg:pr-3">
-            <h1 className="text-3xl leading-tight sm:text-5xl">Nutu Marcel Marius</h1>
-            <p className="text-lg leading-tight text-muted">Artist în sticlă / Glass Artist</p>
-            <p className="max-w-xl text-sm leading-relaxed text-muted sm:text-base">
+    <div className="mx-auto -mt-5 w-full max-w-7xl px-4 pb-14 pt-2 sm:-mt-8 sm:px-6 lg:px-8">
+      <section className="rounded-[1.5rem] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/80 p-3.5 shadow-[var(--shadow-soft)] sm:p-4">
+        <div className="grid items-center gap-3 lg:grid-cols-[1.25fr_0.75fr]">
+          <div className="space-y-2.5 lg:pr-2">
+            <p className="text-[0.58rem] uppercase tracking-[0.3em] text-muted">
+              NutuArt / Experimental
+            </p>
+            <h1 className="text-2xl leading-tight sm:text-4xl">Nutu Marcel Marius</h1>
+            <p className="text-base leading-tight text-muted sm:text-lg">
+              Artist în sticlă / Glass Artist
+            </p>
+            <p className="max-w-xl text-sm leading-relaxed text-muted">
               Creații din sticlă realizate manual. Artă, lumină și detaliu în fiecare piesă.
             </p>
           </div>
-          <div className="relative ml-0 aspect-[10/9] overflow-hidden rounded-[1rem] border border-[color:var(--color-outline)] bg-[radial-gradient(circle_at_30%_22%,rgba(244,197,108,0.18),transparent_55%),var(--color-surface)]/55 p-1.5">
+          <div className="relative ml-0 aspect-[1/1] max-w-[230px] justify-self-start overflow-hidden rounded-[0.95rem] border border-[color:var(--color-outline)] bg-[radial-gradient(circle_at_30%_22%,rgba(244,197,108,0.18),transparent_55%),var(--color-surface)]/55 p-1.5 lg:justify-self-end">
             <Image
               src={topPortrait}
               alt="Nutu Marcel Marius"
               fill
-              className="object-contain p-2.5 drop-shadow-[0_18px_36px_rgba(0,0,0,0.3)]"
+              className="object-contain p-2 drop-shadow-[0_16px_28px_rgba(0,0,0,0.28)]"
               style={{ WebkitMaskImage: portraitEdgeMask, maskImage: portraitEdgeMask }}
-              sizes="(min-width: 1024px) 30vw, 100vw"
+              sizes="230px"
               priority
             />
           </div>
