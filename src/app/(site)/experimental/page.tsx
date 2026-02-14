@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 const topPortrait =
-  "/images/collections/artist-nutu-marcel/ChatGPT Image Feb 14, 2026, 11_34_59 AM.png";
+  "/images/artist_nutu_marcel_marius_at_work.jpg";
 const bottomPortrait =
   "/images/collections/artist-nutu-marcel/ChatGPT Image Feb 14, 2026, 11_30_33 AM.png";
 
@@ -34,24 +34,39 @@ export default function ExperimentalPage() {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-10 sm:px-6 lg:px-8">
       <section className="rounded-[2rem] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/75 p-6 shadow-[var(--shadow-soft)] sm:p-8">
-        <div className="grid items-center gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="relative aspect-[5/4] rounded-[1.4rem] bg-[radial-gradient(circle_at_25%_20%,rgba(244,197,108,0.16),transparent_55%),var(--color-surface)]/55 p-4">
+        <div className="grid items-center gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+          <div className="space-y-6 lg:pr-6">
+            <h1 className="text-4xl leading-tight sm:text-6xl">Nutu Marcel Marius</h1>
+            <p className="text-xl leading-tight text-muted">Artist în sticlă / Glass Artist</p>
+            <p className="max-w-xl text-lg leading-relaxed text-muted">
+              Creații din sticlă realizate manual. Artă, lumină și detaliu în fiecare piesă.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <a
+                href="/gallery"
+                className="rounded-full border border-[color:var(--color-accent)] bg-[color:var(--color-accent)] px-6 py-3 text-sm font-semibold text-black transition hover:opacity-90"
+              >
+                Vezi lucrările
+              </a>
+              <a
+                href="/artist"
+                className="rounded-full border border-[color:var(--color-outline)] px-6 py-3 text-sm font-semibold transition hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+              >
+                Despre artist
+              </a>
+            </div>
+          </div>
+          <div className="relative aspect-[5/4] overflow-hidden rounded-[1.4rem] border border-[color:var(--color-outline)] bg-[color:var(--color-surface)]/55">
             <Image
               src={topPortrait}
-              alt="Artist Nutu Marcel Marius"
+              alt="Nutu Marcel Marius in atelier"
               fill
-              className="object-contain p-4 drop-shadow-[0_20px_45px_rgba(0,0,0,0.32)]"
-              style={{ WebkitMaskImage: portraitEdgeMask, maskImage: portraitEdgeMask }}
-              sizes="(min-width: 1024px) 34vw, 100vw"
+              className="object-cover"
+              sizes="(min-width: 1024px) 44vw, 100vw"
               priority
             />
-          </div>
-          <div className="space-y-4 lg:pr-6">
-            <p className="text-[0.62rem] uppercase tracking-[0.34em] text-muted">Header</p>
-            <h1 className="text-3xl leading-tight sm:text-5xl">Artist Nutu Marcel Marius</h1>
-            <p className="text-base leading-relaxed text-muted sm:text-lg">
-              Pui Artist de sticla. Portretul de sus este integrat ca zonă de introducere, cu focus pe prezența artistului.
-            </p>
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.38),rgba(0,0,0,0.06))]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_18%,rgba(255,255,255,0.2),transparent_42%)]" />
           </div>
         </div>
       </section>
