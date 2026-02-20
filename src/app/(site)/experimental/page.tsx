@@ -52,7 +52,6 @@ export default function ExperimentalPage() {
       </section>
 
       <section className="mt-[-12px]">
-        <p className="mb-1 text-[0.62rem] uppercase tracking-[0.34em] text-muted">Artă de autor</p>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {decorationImages.map((src, index) => (
             <figure
