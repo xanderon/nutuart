@@ -11,14 +11,9 @@ export default async function HomePage() {
     <div className="mx-auto w-full max-w-6xl space-y-12 px-4 py-12 sm:space-y-14 sm:px-6 lg:px-0">
       <section>
         <div className="mb-6 rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/50 p-6">
-          <p className="text-xs uppercase tracking-[0.35em] text-muted">Galerie comercială</p>
           <h1 className="mt-3 font-display text-3xl leading-tight sm:text-4xl">
-            Lucrări comerciale în sticlă și branding vizual
+            Lucrări comerciale: Lucrări decorative pentru spații comerciale și rezidențiale.
           </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">
-            Selecție de proiecte realizate pentru spații comerciale și corporate:
-            autocolante, geamuri sablate, vitralii, printuri outdoor și trofee personalizate.
-          </p>
         </div>
         <GalleryExplorer artworks={artworks} />
       </section>
