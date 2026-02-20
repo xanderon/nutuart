@@ -42,9 +42,10 @@ export default function ExperimentalPage() {
             />
           </div>
           <div className="space-y-1 lg:pr-2">
+            <p className="text-xs uppercase tracking-[0.35em] text-muted">Artist</p>
             <h1 className="text-[2rem] leading-tight sm:text-[4rem]">Nutu Marcel Marius</h1>
-            <p className="text-lg leading-tight text-muted sm:text-xl">
-              Artist în sticlă / Glass Artist
+            <p className="max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
+              O selecție din colecția personală de artă.
             </p>
           </div>
         </div>
