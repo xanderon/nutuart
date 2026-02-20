@@ -10,9 +10,9 @@ export default async function HomePage() {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-12 px-4 py-12 sm:space-y-14 sm:px-6 lg:px-0">
       <section>
-        <div className="mb-6 rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/50 p-6">
-          <h1 className="mt-3 font-display text-3xl leading-tight sm:text-4xl">
-            Lucrări comerciale: Lucrări decorative pentru spații comerciale și rezidențiale.
+        <div className="mb-5 rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/50 p-6">
+          <h1 className="font-display text-3xl leading-tight sm:text-4xl">
+            Lucrări decorative pentru spații comerciale și rezidențiale.
           </h1>
         </div>
         <GalleryExplorer artworks={artworks} />
