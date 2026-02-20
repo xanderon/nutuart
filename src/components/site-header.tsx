@@ -18,8 +18,8 @@ export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="fixed top-6 z-50 w-full px-4">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/10 bg-black/40 px-4 py-3 text-xs uppercase tracking-[0.35em] text-white/70 backdrop-blur">
+    <header className="fixed top-3 z-50 w-full px-4 sm:top-6">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/10 bg-black/35 px-3 py-2.5 text-xs uppercase tracking-[0.35em] text-white/70 backdrop-blur sm:px-4 sm:py-3">
         <Link href="/" className="font-display text-sm tracking-tight text-white">
           NutuArt
         </Link>
@@ -44,7 +44,7 @@ export function SiteHeader() {
         </nav>
         <button
           type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 md:hidden"
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 md:hidden"
           onClick={() => setMobileOpen((prev) => !prev)}
         >
           <span className="sr-only">Meniu</span>
