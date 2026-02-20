@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { Artwork } from "@/data/artworks";
+import { useEffect, useMemo, useState } from "react";
+import type { Artwork, CollectionSlug } from "@/data/artworks";
 import { GalleryGrid } from "./gallery-grid";
 import { GalleryFilters } from "./gallery-filters";
 
@@ -23,28 +23,65 @@ export function GalleryExplorer({
   const [activeCollection, setActiveCollection] = useState<
     Artwork["collection"] | "toate"
   >(initialCollection);
+  const [compactFilters, setCompactFilters] = useState(false);
+
+  const availableCollections = useMemo(() => {
+    const unique = new Set<CollectionSlug>();
+    artworks.forEach((artwork) => {
+      if (artwork.collection !== "decorations") {
+        unique.add(artwork.collection);
+      }
+    });
+    return Array.from(unique);
+  }, [artworks]);
+
+  const effectiveActiveCollection =
+    activeCollection === "toate" || availableCollections.includes(activeCollection)
+      ? activeCollection
+      : "toate";
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const onScroll = () => {
+      setCompactFilters(window.scrollY > 140);
+    };
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const filteredArtworks = useMemo(() => {
     const collectionFiltered =
-      activeCollection === "toate"
+      effectiveActiveCollection === "toate"
         ? artworks
-        : artworks.filter((artwork) => artwork.collection === activeCollection);
+        : artworks.filter(
+            (artwork) => artwork.collection === effectiveActiveCollection
+          );
 
     if (maxItems) {
       return collectionFiltered.slice(0, maxItems);
     }
 
     return collectionFiltered;
-  }, [artworks, activeCollection, maxItems]);
+  }, [artworks, effectiveActiveCollection, maxItems]);
 
   return (
     <div className="space-y-5">
       {showFilters ? (
-        <div className="sticky top-[68px] z-20 -mx-4 border-b border-[color:var(--color-outline)]/70 bg-[color:var(--page-bg)]/88 px-4 py-2 backdrop-blur sm:top-[78px] sm:px-0 sm:py-3 lg:top-[92px]">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className={
+            "sticky top-[60px] z-20 -mx-4 border-b border-[color:var(--color-outline)]/70 bg-[color:var(--page-bg)]/88 px-4 backdrop-blur transition-[padding] duration-200 sm:top-[78px] sm:px-0 lg:top-[92px] " +
+            (compactFilters ? "py-1 sm:py-2" : "py-2 sm:py-3")
+          }
+        >
+          <div className="flex">
             <GalleryFilters
-              activeCollection={activeCollection}
+              activeCollection={effectiveActiveCollection}
               onChange={setActiveCollection}
+              collections={availableCollections}
+              compact={compactFilters}
             />
           </div>
         </div>
