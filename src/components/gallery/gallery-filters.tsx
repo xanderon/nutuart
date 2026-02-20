@@ -24,7 +24,7 @@ export function GalleryFilters({
     <div
       data-gallery-scroll=""
       className={cn(
-        "flex w-full items-center gap-1.5 overflow-x-auto overflow-y-visible pb-1 pr-1 text-left sm:justify-center sm:text-center",
+        "flex w-full items-center gap-1.5 overflow-x-auto overflow-y-visible pr-1 text-left sm:justify-center sm:text-center",
         compact ? "sm:gap-1.5" : "sm:gap-2"
       )}
     >
