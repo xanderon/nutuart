@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Galerie",
+  title: "Galerie comercială",
   description:
-    "Proiectele NutuArt prezentate digital: autocolante corporate, geamuri sablate, vitralii, printuri outdoor, trofee și preview pentru colecția de artă Marcel Nuțu.",
+    "Lucrările comerciale NutuArt: autocolante corporate, geamuri sablate, vitralii, printuri outdoor și trofee personalizate.",
 };
 
 export default function GalleryPage({
