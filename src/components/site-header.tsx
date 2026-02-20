@@ -16,13 +16,19 @@ const navLinks = [
 export function SiteHeader() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const mobileTitle = pathname === "/contact" ? "Contact" : null;
 
   return (
     <header className="fixed top-3 z-50 w-full px-4 sm:top-6">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/10 bg-black/35 px-3 py-2.5 text-xs uppercase tracking-[0.35em] text-white/70 backdrop-blur sm:px-4 sm:py-3">
+      <div className="relative mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/10 bg-black/35 px-3 py-2.5 text-xs uppercase tracking-[0.35em] text-white/70 backdrop-blur sm:px-4 sm:py-3">
         <Link href="/" className="font-display text-sm tracking-tight text-white">
           NutuArt
         </Link>
+        {mobileTitle ? (
+          <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 font-display text-base normal-case tracking-tight text-white md:hidden">
+            {mobileTitle}
+          </span>
+        ) : null}
         <nav className="hidden items-center gap-4 md:flex">
           {navLinks.map((link) => {
             const isActive =

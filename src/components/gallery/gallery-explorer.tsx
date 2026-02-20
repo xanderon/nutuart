@@ -72,7 +72,7 @@ export function GalleryExplorer({
       {showFilters ? (
         <div
           className={
-            "sticky top-[60px] z-20 -mx-4 border-b border-[color:var(--color-outline)]/70 bg-[color:var(--page-bg)]/88 px-4 backdrop-blur transition-[padding] duration-200 sm:top-[78px] sm:px-0 lg:top-[92px] " +
+            "sticky top-[64px] z-20 -mx-4 border-b border-[color:var(--color-outline)]/70 bg-[color:var(--page-bg)]/88 px-4 backdrop-blur transition-[padding] duration-200 sm:top-[84px] sm:px-0 lg:top-[96px] " +
             (compactFilters ? "py-1 sm:py-2" : "py-2 sm:py-3")
           }
         >

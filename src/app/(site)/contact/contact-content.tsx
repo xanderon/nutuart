@@ -27,9 +27,11 @@ export function ContactContent() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4 px-4 pb-6 pt-11 sm:space-y-6 sm:px-6 sm:pb-9 sm:pt-5 lg:px-8 lg:pt-6">
+    <div className="mx-auto w-full max-w-5xl space-y-4 px-4 pb-6 pt-7 sm:space-y-6 sm:px-6 sm:pb-9 sm:pt-5 lg:px-8 lg:pt-6">
       <header className="space-y-1.5 text-center sm:space-y-2">
-        <h1 className="font-display text-3xl leading-tight sm:text-5xl">Contact</h1>
+        <h1 className="hidden font-display text-3xl leading-tight sm:block sm:text-5xl">
+          Contact
+        </h1>
         <p className="mx-auto max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
           Lucrări decorative pentru spații comerciale și rezidențiale.
         </p>
