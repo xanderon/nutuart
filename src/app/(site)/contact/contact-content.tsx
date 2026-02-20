@@ -35,23 +35,23 @@ export function ContactContent() {
         </p>
       </header>
 
-      <section className="grid grid-cols-2 gap-3 rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/55 p-3 sm:gap-5 sm:p-8">
-        <div className="space-y-1">
-          <p className="text-xs uppercase tracking-[0.35em] text-muted">Email</p>
-          <p className="font-display text-base font-semibold leading-snug text-foreground sm:text-3xl">
+      <section className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+        <article className="rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/55 p-4 sm:p-6">
+          <p className="text-[0.65rem] uppercase tracking-[0.3em] text-muted">Email</p>
+          <p className="mt-1 font-display text-xl font-semibold leading-tight text-foreground sm:text-3xl">
             <SafeContactText value={publicEmailValue} />
           </p>
-          <p className="hidden text-xs text-muted sm:block">Răspundem în cel mai scurt timp.</p>
-        </div>
-        <div className="space-y-1">
-          <p className="text-xs uppercase tracking-[0.35em] text-muted">
+          <p className="mt-1 text-xs text-muted">Răspundem în cel mai scurt timp.</p>
+        </article>
+        <article className="rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/55 p-4 sm:p-6">
+          <p className="text-[0.65rem] uppercase tracking-[0.3em] text-muted">
             Telefon & WhatsApp
           </p>
-          <p className="font-display text-base font-semibold leading-snug text-foreground sm:text-3xl">
+          <p className="mt-1 font-display text-xl font-semibold leading-tight text-foreground sm:text-3xl">
             <SafeContactText value={publicPhoneValue} />
           </p>
-          <p className="hidden text-xs text-muted sm:block">Poți suna sau trimite mesaj direct.</p>
-        </div>
+          <p className="mt-1 text-xs text-muted">Poți suna sau trimite mesaj direct.</p>
+        </article>
       </section>
 
       <section className="overflow-hidden rounded-[calc(var(--radius-lg)*1.1)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/60 shadow-[var(--shadow-soft)]">
