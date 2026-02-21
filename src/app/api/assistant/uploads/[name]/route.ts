@@ -16,11 +16,11 @@ const mimeByExtension: Record<string, string> = {
 };
 
 type Params = {
-  params: { name: string };
+  params: Promise<{ name: string }>;
 };
 
 export async function GET(_: Request, { params }: Params) {
-  const { name } = params;
+  const { name } = await params;
   if (!/^[a-zA-Z0-9._-]+$/.test(name)) {
     return NextResponse.json({ error: "Nume fisier invalid." }, { status: 400 });
   }
