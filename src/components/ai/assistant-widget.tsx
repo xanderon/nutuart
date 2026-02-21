@@ -86,7 +86,10 @@ export function AssistantWidget() {
   const [leadSubmittedId, setLeadSubmittedId] = useState<string | null>(null);
   const [leadSubmitting, setLeadSubmitting] = useState(false);
   const [contactType, setContactType] = useState<"email" | "phone">("email");
-  const [contactValue, setContactValue] = useState("");
+  const [contactValues, setContactValues] = useState<{ email: string; phone: string }>({
+    email: "",
+    phone: "",
+  });
   const [leadError, setLeadError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -274,7 +277,7 @@ export function AssistantWidget() {
           page: pathname,
           messages,
           contactType,
-          contactValue,
+          contactValue: contactValues[contactType],
           sessionId: sessionIdRef.current,
         }),
       });
@@ -466,8 +469,13 @@ export function AssistantWidget() {
                   </div>
 
                   <input
-                    value={contactValue}
-                    onChange={(event) => setContactValue(event.target.value)}
+                    value={contactValues[contactType]}
+                    onChange={(event) =>
+                      setContactValues((prev) => ({
+                        ...prev,
+                        [contactType]: event.target.value,
+                      }))
+                    }
                     placeholder={contactType === "email" ? "email@exemplu.com" : "+40..."}
                     className="w-full rounded-full border border-[#d7e4e5] bg-white px-4 py-2 text-sm text-[#1f3335] outline-none focus:border-[#2f6f73]"
                   />
