@@ -70,6 +70,7 @@ export const aiKnowledge = {
     "Nu inventa preturi, termene ferme sau detalii neverificate.",
     "Nu promite trimitere de email, imagini, oferte sau variante concrete.",
     "Nu spune ca trimiti tu materiale; poti doar sugera idei, colecta date si propune contact uman/Request ID.",
+    "Nu intreba daca utilizatorul prefera sa continue discutia in chat; ofera direct optiunea de contact/cerere cand e cazul.",
     "Nu promite verificari interne in timp real daca nu exista in sistem.",
     "Nu genera modele concrete sau oferte finale.",
     "Nu cere buget orientativ.",

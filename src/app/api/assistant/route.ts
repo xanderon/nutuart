@@ -4,6 +4,7 @@ import {
   buildLeadDraft,
   countAssistantQuestions,
   countUncertainReplies,
+  hasProjectIntent,
   isHumanHandoffIntent,
   isLeadReady,
   leadInfoCount,
@@ -83,14 +84,18 @@ export async function POST(request: Request) {
   const leadReadyFromSignals = isLeadReady(messages);
   const latestUserContent = latestUserMessage.content || "";
   const handoffIntent = isHumanHandoffIntent(messages);
+  const projectIntent = hasProjectIntent(messages);
   const userMessageCount = messages.filter((message) => message.role === "user").length;
   const uncertainReplies = countUncertainReplies(messages);
   const assistantQuestionCount = countAssistantQuestions(messages);
+  const proactiveLeadCapture =
+    userMessageCount >= 2 && (projectIntent || uncertainReplies >= 1 || Boolean(draft.projectType));
   const earlyContactOffer = uncertainReplies >= 2 && userMessageCount >= 3;
   const tooManyClarifications = assistantQuestionCount >= 3 && userMessageCount >= 3;
   const lowProgressReminder = userMessageCount >= 6 && infoCount <= 1;
   const leadReadyNow =
     leadReadyFromSignals ||
+    proactiveLeadCapture ||
     (handoffIntent && infoCount >= 2) ||
     earlyContactOffer ||
     tooManyClarifications ||
@@ -130,7 +135,7 @@ export async function POST(request: Request) {
     if (infoCount >= 2) {
       return NextResponse.json({
         reply:
-          "Sigur. Pot trimite mai departe detaliile discutate pana acum, ca sa nu mai fie nevoie sa le explici din nou. Ai prefera sa fii contactat pe email sau telefon?",
+          "Sigur. Pot inregistra acum cererea folosind detaliile discutate, ca sa nu mai fie nevoie sa le explici din nou. Ai prefera sa fii contactat pe email sau telefon?",
         leadReady: true,
         leadDraft: draft,
       });
@@ -138,7 +143,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       reply:
-        "Sigur. Pot sa te conectez direct cu artistul. Ca sa trimit mai departe util, spune-mi te rog 1-2 detalii (tipul piesei si dimensiunea aproximativa), apoi iti cer email sau telefon.",
+        "Sigur. Pot sa te conectez direct cu artistul. Ca sa inregistrez util cererea, spune-mi te rog 1-2 detalii (tipul piesei si dimensiunea aproximativa), apoi iti cer email sau telefon.",
       leadReady: false,
       leadDraft: draft,
     });
@@ -147,7 +152,7 @@ export async function POST(request: Request) {
   if (earlyContactOffer) {
     return NextResponse.json({
       reply:
-        "Perfect, e suficient pentru inceput. Pentru a stabili mai exact detaliile, poti contacta direct: Email: marcelnutu@yahoo.com | Telefon / WhatsApp: +40 721 383 668. Sau, daca preferi, imi poti lasa aici emailul sau numarul tau de telefon, iar eu trimit mai departe detaliile discutate si vei fi contactat. Ai prefera email sau telefon?",
+        "Perfect, e suficient pentru inceput. Pentru a stabili mai exact detaliile, poti contacta direct: Email: marcelnutu@yahoo.com | Telefon / WhatsApp: +40 721 383 668. Sau, daca preferi, imi poti lasa aici emailul sau numarul tau de telefon, iar eu inregistrez cererea cu detaliile discutate si vei fi contactat. Ai prefera email sau telefon?",
       leadReady: true,
       leadDraft: draft,
     });
@@ -156,7 +161,7 @@ export async function POST(request: Request) {
   if (tooManyClarifications || lowProgressReminder) {
     return NextResponse.json({
       reply:
-        "Ca sa nu pierdem timp cu prea multe detalii acum, iti propun varianta rapida: poti contacta direct la marcelnutu@yahoo.com / +40 721 383 668 sau imi lasi aici emailul ori telefonul si trimit mai departe ce am discutat. Ai prefera email sau telefon?",
+        "Ca sa nu pierdem timp cu prea multe detalii acum, iti propun varianta rapida: poti contacta direct la marcelnutu@yahoo.com / +40 721 383 668 sau imi lasi aici emailul ori telefonul si inregistrez cererea cu ce am discutat. Ai prefera email sau telefon?",
       leadReady: true,
       leadDraft: draft,
     });
@@ -236,15 +241,23 @@ export async function POST(request: Request) {
 function enforceAssistantPolicy(reply: string) {
   let text = reply;
 
+  const forbiddenPromiseRegex =
+    /\b(iti\s+trimit|îți\s+trimit|pot\s+sa\s+trimit|o\s+sa\s+trimit|voi\s+trimite)\b[\s\S]{0,80}\b(email|e-mail|model|modele|exempl|poza|imagine|fisier|fișier)\b/i;
+  if (forbiddenPromiseRegex.test(text)) {
+    return "Pot sa-ti ofer idei generale aici. Pentru exemple concrete, poti contacta direct la marcelnutu@yahoo.com / +40 721 383 668 sau imi lasi emailul ori telefonul si inregistrez cererea pentru contact.";
+  }
+
   const replacements: Array<[RegExp, string]> = [
     [
       /\b(pot|iti pot|îți pot|o sa|voi)\s+(sa\s+)?(trimite|trimitem|trimit)\b/gi,
-      "pot sa sugerez",
+      "pot sa inregistrez",
     ],
     [/\bvrei sa le primesti pe email\??/gi, "vrei sa inregistram o cerere catre artist?"],
     [/\bai un buget orientativ\??/gi, "daca vrei, spune-mi tipul piesei si dimensiunea"],
-    [/\biti trimit\b/gi, "iti pot sugera"],
+    [/\biti trimit\b/gi, "iti pot propune"],
     [/\biti raspund cu oferta\b/gi, "iti pot oferi o directie generala"],
+    [/\bpreferi sa discutam mai mult aici(?: in chat)?\??/gi, "vrei sa inregistram cererea acum?"],
+    [/\bvrei sa continuam aici(?: in chat)?\??/gi, "vrei sa inregistram cererea acum?"],
   ];
 
   for (const [pattern, value] of replacements) {
