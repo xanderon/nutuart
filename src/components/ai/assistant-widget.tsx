@@ -9,6 +9,14 @@ type Message = {
   content: string;
 };
 
+type LeadDraft = {
+  projectType: string;
+  dimensions: string;
+  style: string;
+  location: string;
+  summary: string;
+};
+
 const rotatingHints = [
   "Pot sa te ajut?",
   "Vrei idei rapide?",
@@ -33,6 +41,14 @@ const universalStarters = [
   "Cum decurge o comanda?",
   "Cat dureaza realizarea?",
   "Pot trimite o poza?",
+] as const;
+
+const headerNudges = [
+  "Cu ce te pot ajuta azi?",
+  "Vrei ceva personalizat?",
+  "Cauti un cadou?",
+  "Pot sa-ti recomand o varianta potrivita?",
+  "Vrei sa-ti explic rapid cum decurge comanda?",
 ] as const;
 
 function pickRandom<T>(items: readonly T[]) {
@@ -64,6 +80,14 @@ export function AssistantWidget() {
   const [bootTyping, setBootTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [headerNudgeIndex, setHeaderNudgeIndex] = useState(0);
+  const [leadReady, setLeadReady] = useState(false);
+  const [leadDraft, setLeadDraft] = useState<LeadDraft | null>(null);
+  const [leadSubmittedId, setLeadSubmittedId] = useState<string | null>(null);
+  const [leadSubmitting, setLeadSubmitting] = useState(false);
+  const [contactType, setContactType] = useState<"email" | "phone">("email");
+  const [contactValue, setContactValue] = useState("");
+  const [leadError, setLeadError] = useState<string | null>(null);
 
   const hideHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastScrollHintAtRef = useRef(0);
@@ -72,6 +96,10 @@ export function AssistantWidget() {
   const hasOpenedRef = useRef(false);
 
   const starters = useMemo(() => universalStarters, []);
+  const hasUserMessage = useMemo(
+    () => messages.some((message) => message.role === "user"),
+    [messages]
+  );
 
   const showHint = (duration = 3000) => {
     if (hasOpenedRef.current) return;
@@ -131,6 +159,16 @@ export function AssistantWidget() {
   }, [hintVisible]);
 
   useEffect(() => {
+    if (!open || hasUserMessage) return;
+
+    const interval = setInterval(() => {
+      setHeaderNudgeIndex((prev) => (prev + 1) % headerNudges.length);
+    }, 5200);
+
+    return () => clearInterval(interval);
+  }, [open, hasUserMessage]);
+
+  useEffect(() => {
     if (open) return;
 
     const onScroll = () => {
@@ -168,6 +206,8 @@ export function AssistantWidget() {
       const data = (await response.json().catch(() => ({}))) as {
         reply?: string;
         error?: string;
+        leadReady?: boolean;
+        leadDraft?: LeadDraft;
       };
 
       if (!response.ok || !data.reply) {
@@ -175,10 +215,58 @@ export function AssistantWidget() {
       }
 
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply || "" }]);
+      if (data.leadReady) {
+        setLeadReady(true);
+      }
+      if (data.leadDraft) {
+        setLeadDraft(data.leadDraft);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Eroare la asistent.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const submitLeadForward = async () => {
+    if (leadSubmitting) return;
+    setLeadError(null);
+    setLeadSubmitting(true);
+
+    try {
+      const response = await fetch("/api/assistant/forward", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          page: pathname,
+          messages,
+          contactType,
+          contactValue,
+        }),
+      });
+
+      const data = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        requestId?: string;
+        confirmation?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !data.ok || !data.requestId) {
+        throw new Error(data.error || "Nu am putut trimite cererea.");
+      }
+
+      const confirmation =
+        data.confirmation ||
+        `Multumesc! Am trimis cererea. Numarul solicitarii tale este: ${data.requestId}.`;
+
+      setLeadSubmittedId(data.requestId);
+      setLeadReady(false);
+      setMessages((prev) => [...prev, { role: "assistant", content: confirmation }]);
+    } catch (err) {
+      setLeadError(err instanceof Error ? err.message : "Eroare la trimitere.");
+    } finally {
+      setLeadSubmitting(false);
     }
   };
 
@@ -209,12 +297,14 @@ export function AssistantWidget() {
                       </div>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-[14px] font-semibold text-[#1f2f31]">
+                  <div className="space-y-1">
+                    <p className="inline-flex rounded-full bg-white px-3 py-1 text-[13px] font-semibold text-[#1f2f31] shadow-[0_8px_18px_-14px_rgba(10,30,31,0.35)]">
                       Salut! Sunt Marcelino.
                     </p>
                     <p className="text-[12px] text-[#4f6365]">
-                      Iti raspund rapid despre modele, comenzi si personalizare.
+                      {hasUserMessage
+                        ? "Iti raspund rapid despre modele, comenzi si personalizare."
+                        : headerNudges[headerNudgeIndex]}
                     </p>
                   </div>
                 </div>
@@ -251,6 +341,65 @@ export function AssistantWidget() {
                   </span>
                 </div>
               ) : null}
+
+              {!leadSubmittedId && leadReady ? (
+                <div className="space-y-3 rounded-2xl border border-[#d7e4e5] bg-[#f6fbfb] p-3">
+                  <p className="text-xs text-[#36585b]">
+                    Daca vrei, pot trimite mai departe detaliile discutate pana acum, iar artistul
+                    poate reveni cu o propunere.
+                  </p>
+
+                  {leadDraft ? (
+                    <p className="text-[11px] text-[#557073]">
+                      Rezumat: {leadDraft.summary}
+                    </p>
+                  ) : null}
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setContactType("email")}
+                      className={`rounded-full px-3 py-1 text-xs ${
+                        contactType === "email"
+                          ? "bg-[#2f6f73] text-white"
+                          : "border border-[#cfe0e2] bg-white text-[#456466]"
+                      }`}
+                    >
+                      Email
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setContactType("phone")}
+                      className={`rounded-full px-3 py-1 text-xs ${
+                        contactType === "phone"
+                          ? "bg-[#2f6f73] text-white"
+                          : "border border-[#cfe0e2] bg-white text-[#456466]"
+                      }`}
+                    >
+                      Telefon
+                    </button>
+                  </div>
+
+                  <input
+                    value={contactValue}
+                    onChange={(event) => setContactValue(event.target.value)}
+                    placeholder={contactType === "email" ? "email@exemplu.com" : "+40..."}
+                    className="w-full rounded-full border border-[#d7e4e5] bg-white px-4 py-2 text-sm text-[#1f3335] outline-none focus:border-[#2f6f73]"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => void submitLeadForward()}
+                    disabled={leadSubmitting}
+                    className="rounded-full bg-[#2f6f73] px-4 py-2 text-sm font-semibold text-white hover:bg-[#3c8a90] disabled:opacity-70"
+                  >
+                    {leadSubmitting ? "Se trimite..." : "Trimite cererea catre artist"}
+                  </button>
+
+                  {leadError ? <p className="text-xs text-[#a64a4a]">{leadError}</p> : null}
+                </div>
+              ) : null}
+
               {error ? <p className="text-xs text-[#a64a4a]">{error}</p> : null}
             </div>
 

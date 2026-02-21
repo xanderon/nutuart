@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { buildKnowledgeContext } from "@/data/ai-knowledge";
+import { buildLeadDraft, isLeadReady } from "@/lib/assistant-lead-signals";
 
 type ChatRole = "user" | "assistant";
 type ChatMessage = {
@@ -110,7 +111,10 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ reply });
+    const leadReady = isLeadReady(messages);
+    const leadDraft = buildLeadDraft(messages);
+
+    return NextResponse.json({ reply, leadReady, leadDraft });
   } catch (error) {
     console.error("Assistant route error", error);
     return NextResponse.json(
