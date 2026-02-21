@@ -437,6 +437,9 @@ export function AssistantWidget() {
 
               {!leadSubmittedId && leadReady ? (
                 <div className="space-y-3 rounded-2xl border border-[#d7e4e5] bg-[#f6fbfb] p-3">
+                  <p className="text-[11px] text-[#7a6a42]">
+                    Nota: partea de referinte (Request ID) este inca in constructie.
+                  </p>
                   <p className="text-xs text-[#36585b]">
                     Daca vrei, pot trimite mai departe detaliile discutate pana acum, ca sa nu mai
                     fie nevoie sa le explici din nou.
@@ -548,6 +551,9 @@ export function AssistantWidget() {
                   </a>
                 ) : null}
               </div>
+              <p className="mb-2 text-[11px] text-[#7a6a42]">
+                Nota: upload-ul de poze este momentan in constructie.
+              </p>
               {uploadError ? <p className="mb-2 text-xs text-[#a64a4a]">{uploadError}</p> : null}
               <form onSubmit={handleSubmit} className="flex gap-2">
                 <input
