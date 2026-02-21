@@ -82,6 +82,7 @@ export async function POST(request: Request) {
     requestId,
     createdAt: new Date().toISOString(),
     page,
+    status: "NEW",
     contactType,
     contactValue,
     transcript: messages,
@@ -92,6 +93,6 @@ export async function POST(request: Request) {
     ok: true,
     requestId,
     confirmation:
-      `Multumesc! Am trimis cererea. Numarul solicitarii tale este: ${requestId}. Vei fi contactat cat mai curand.`,
+      `Multumesc! Am trimis cererea. Numar solicitare: ${requestId}. Revenim de obicei in 24–48 de ore. Daca vrei sa verifici mai tarziu, imi poti scrie: Status ${requestId}`,
   });
 }

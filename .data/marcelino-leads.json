@@ -1,0 +1,54 @@
+{
+  "leads": [
+    {
+      "requestId": "M-2721",
+      "createdAt": "2026-02-21T10:09:23.447Z",
+      "page": "/",
+      "contactType": "email",
+      "contactValue": "metalicuus@yahoo.com",
+      "transcript": [
+        {
+          "role": "assistant",
+          "content": "Iti place ceva de aici? Spune-mi ce model si ce dimensiune ai in minte."
+        },
+        {
+          "role": "user",
+          "content": "Vreau ceva personalizat"
+        },
+        {
+          "role": "assistant",
+          "content": "Perfect! Unde vrei sa fie montata piesa si ce dimensiune aproximativa ai in gand?"
+        },
+        {
+          "role": "user",
+          "content": "o sticla de bucatarie nu stiu cat de mare e"
+        },
+        {
+          "role": "assistant",
+          "content": "Pentru bucatarie, dimensiunea sticlei depinde de locul exact—de exemplu, intre blatul de lucru si dulapuri sau pe perete. Ai cumva o idee despre spațiul disponibil sau poti masura aproximativ? Sau poti trimite o poza?"
+        },
+        {
+          "role": "user",
+          "content": "nu"
+        },
+        {
+          "role": "assistant",
+          "content": "Înțeleg, fără problemă! Dacă poți măsura sau face o poză când ai ocazia, ne va ajuta mult să propunem ceva potrivit. Între timp, ce stil preferi: modern, clasic sau minimalist?"
+        },
+        {
+          "role": "user",
+          "content": "ceva floral"
+        },
+        {
+          "role": "assistant",
+          "content": "Un decor floral e o alegere frumoasă pentru bucătărie, aduce prospețime și culoare. Preferi un model mai stilizat, simplificat sau unul detaliat, aproape pictural?"
+        }
+      ],
+      "projectType": "",
+      "location": "bucatarie",
+      "dimensions": "",
+      "style": "floral",
+      "summary": "Locatie: bucatarie | Stil: floral"
+    }
+  ]
+}

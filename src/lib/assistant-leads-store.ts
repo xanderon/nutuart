@@ -6,10 +6,13 @@ export type AssistantLead = LeadDraft & {
   requestId: string;
   createdAt: string;
   page: string;
+  status: LeadStatus;
   contactType: "email" | "phone";
   contactValue: string;
   transcript: Array<{ role: "user" | "assistant"; content: string }>;
 };
+
+export type LeadStatus = "NEW" | "SEEN" | "IN_PROGRESS" | "REPLIED" | "CLOSED";
 
 type StoreShape = {
   leads: AssistantLead[];
@@ -38,7 +41,12 @@ function readStore(): StoreShape {
   try {
     const parsed = JSON.parse(raw) as StoreShape;
     return {
-      leads: Array.isArray(parsed.leads) ? parsed.leads : [],
+      leads: Array.isArray(parsed.leads)
+        ? parsed.leads.map((lead) => ({
+            ...lead,
+            status: (lead as AssistantLead).status || "NEW",
+          }))
+        : [],
     };
   } catch {
     return { leads: [] };
@@ -71,6 +79,23 @@ export function createLead(lead: AssistantLead) {
 export function listLeads() {
   const store = readStore();
   return store.leads;
+}
+
+export function getLeadByRequestId(requestId: string) {
+  const store = readStore();
+  return store.leads.find((lead) => lead.requestId.toUpperCase() === requestId.toUpperCase());
+}
+
+export function updateLeadStatus(requestId: string, status: LeadStatus) {
+  const store = readStore();
+  const index = store.leads.findIndex(
+    (lead) => lead.requestId.toUpperCase() === requestId.toUpperCase()
+  );
+  if (index < 0) return null;
+  const next = { ...store.leads[index], status };
+  store.leads[index] = next;
+  writeStore(store);
+  return next;
 }
 
 export function computeDailyOverview(leads: AssistantLead[]) {

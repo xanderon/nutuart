@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { computeDailyOverview, listLeads } from "@/lib/assistant-leads-store";
+import { AssistantDashboardTable } from "@/components/ai/assistant-dashboard-table";
 
 export const metadata: Metadata = {
   title: "Assistant Dashboard",
@@ -45,44 +46,7 @@ export default function AssistantDashboardPage() {
         <p className="mt-3 text-sm leading-relaxed text-foreground">{tldr}</p>
       </section>
 
-      <section className="overflow-hidden rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/45">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-[color:var(--color-elevated)]/70 text-left text-xs uppercase tracking-[0.18em] text-muted">
-              <tr>
-                <th className="px-4 py-3">ID</th>
-                <th className="px-4 py-3">Tip</th>
-                <th className="px-4 py-3">Dimensiuni</th>
-                <th className="px-4 py-3">Stil</th>
-                <th className="px-4 py-3">Contact</th>
-                <th className="px-4 py-3">Creat</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leads.length ? (
-                leads.map((lead) => (
-                  <tr key={lead.requestId} className="border-t border-[color:var(--color-outline)]">
-                    <td className="px-4 py-3 font-semibold">{lead.requestId}</td>
-                    <td className="px-4 py-3">{lead.projectType || "-"}</td>
-                    <td className="px-4 py-3">{lead.dimensions || "-"}</td>
-                    <td className="px-4 py-3">{lead.style || "-"}</td>
-                    <td className="px-4 py-3">
-                      {lead.contactType}: {lead.contactValue}
-                    </td>
-                    <td className="px-4 py-3">{new Date(lead.createdAt).toLocaleString("ro-RO")}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td className="px-4 py-6 text-muted" colSpan={6}>
-                    Nu exista cereri inca.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <AssistantDashboardTable initialLeads={leads} />
     </div>
   );
 }

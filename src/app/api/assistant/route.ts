@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { buildKnowledgeContext } from "@/data/ai-knowledge";
 import { buildLeadDraft, isLeadReady } from "@/lib/assistant-lead-signals";
+import { getLeadByRequestId, type LeadStatus } from "@/lib/assistant-leads-store";
 
 type ChatRole = "user" | "assistant";
 type ChatMessage = {
@@ -58,6 +59,28 @@ export async function POST(request: Request) {
       },
       { status: 503 }
     );
+  }
+
+  const requestIdMatch = latestUserMessage.content.match(/\b([MGA]-\d{4})\b/i);
+  if (requestIdMatch) {
+    const requestId = requestIdMatch[1].toUpperCase();
+    const lead = getLeadByRequestId(requestId);
+
+    if (!lead) {
+      return NextResponse.json({
+        reply:
+          `Nu gasesc o solicitare cu ID ${requestId}. Verifica, te rog, formatul (ex: M-4821).`,
+        leadReady: false,
+        leadDraft: buildLeadDraft(messages),
+      });
+    }
+
+    const statusText = statusMessage(lead.status);
+    return NextResponse.json({
+      reply: `Status ${requestId}: ${statusText}`,
+      leadReady: false,
+      leadDraft: buildLeadDraft(messages),
+    });
   }
 
   const systemPrompt = [
@@ -121,5 +144,22 @@ export async function POST(request: Request) {
       { error: "A apărut o eroare la asistent." },
       { status: 500 }
     );
+  }
+}
+
+function statusMessage(status: LeadStatus) {
+  switch (status) {
+    case "NEW":
+      return "cererea ta a fost primita si urmeaza sa fie analizata. De obicei revenim in 24–48 de ore.";
+    case "SEEN":
+      return "cererea ta este in curs de analiza. Vei primi un raspuns in curand.";
+    case "IN_PROGRESS":
+      return "se lucreaza la o propunere pentru tine. Revenim cat mai curand.";
+    case "REPLIED":
+      return "ti-am trimis deja un raspuns. Te rog verifica emailul sau mesajele.";
+    case "CLOSED":
+      return "cererea este inchisa. Daca vrei, putem deschide una noua pe baza altor detalii.";
+    default:
+      return "status indisponibil momentan.";
   }
 }
