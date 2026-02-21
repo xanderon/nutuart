@@ -88,6 +88,7 @@ export function AssistantWidget() {
   const [contactType, setContactType] = useState<"email" | "phone">("email");
   const [contactValue, setContactValue] = useState("");
   const [leadError, setLeadError] = useState<string | null>(null);
+  const messagesListRef = useRef<HTMLDivElement | null>(null);
 
   const hideHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastScrollHintAtRef = useRef(0);
@@ -167,6 +168,16 @@ export function AssistantWidget() {
 
     return () => clearInterval(interval);
   }, [open, hasUserMessage]);
+
+  useEffect(() => {
+    if (!open) return;
+    const container = messagesListRef.current;
+    if (!container) return;
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages, loading, bootTyping, leadReady, leadSubmittedId, open]);
 
   useEffect(() => {
     if (open) return;
@@ -318,7 +329,7 @@ export function AssistantWidget() {
               </div>
             </div>
 
-            <div className="max-h-[50vh] space-y-4 overflow-y-auto px-4 py-4">
+            <div ref={messagesListRef} className="max-h-[50vh] space-y-4 overflow-y-auto px-4 py-4">
               {messages.map((message, index) => (
                 <div
                   key={`${message.role}-${index}`}
@@ -345,8 +356,8 @@ export function AssistantWidget() {
               {!leadSubmittedId && leadReady ? (
                 <div className="space-y-3 rounded-2xl border border-[#d7e4e5] bg-[#f6fbfb] p-3">
                   <p className="text-xs text-[#36585b]">
-                    Daca vrei, pot trimite mai departe detaliile discutate pana acum, iar artistul
-                    poate reveni cu o propunere.
+                    Daca vrei, pot trimite mai departe detaliile discutate pana acum, ca sa nu mai
+                    fie nevoie sa le explici din nou.
                   </p>
 
                   {leadDraft ? (
@@ -397,6 +408,9 @@ export function AssistantWidget() {
                   </button>
 
                   {leadError ? <p className="text-xs text-[#a64a4a]">{leadError}</p> : null}
+                  <p className="text-[11px] text-[#5a6f71]">
+                    Sau, daca preferi direct: marcelnutu@yahoo.com / +40 721 383 668
+                  </p>
                 </div>
               ) : null}
 

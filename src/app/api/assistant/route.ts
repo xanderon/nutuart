@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { buildKnowledgeContext } from "@/data/ai-knowledge";
-import { buildLeadDraft, isLeadReady } from "@/lib/assistant-lead-signals";
+import {
+  buildLeadDraft,
+  isHumanHandoffIntent,
+  isLeadReady,
+  leadInfoCount,
+} from "@/lib/assistant-lead-signals";
 import { getLeadByRequestId, type LeadStatus } from "@/lib/assistant-leads-store";
 
 type ChatRole = "user" | "assistant";
@@ -83,6 +88,26 @@ export async function POST(request: Request) {
     });
   }
 
+  const draft = buildLeadDraft(messages);
+  const infoCount = leadInfoCount(messages);
+  if (isHumanHandoffIntent(messages)) {
+    if (infoCount >= 2) {
+      return NextResponse.json({
+        reply:
+          "Sigur. Pot trimite mai departe detaliile discutate pana acum, ca sa nu mai fie nevoie sa le explici din nou. Ai prefera sa fii contactat pe email sau telefon?",
+        leadReady: true,
+        leadDraft: draft,
+      });
+    }
+
+    return NextResponse.json({
+      reply:
+        "Sigur. Pot sa te conectez direct cu artistul. Ca sa trimit mai departe util, spune-mi te rog 1-2 detalii (tipul piesei si dimensiunea aproximativa), apoi iti cer email sau telefon.",
+      leadReady: false,
+      leadDraft: draft,
+    });
+  }
+
   const systemPrompt = [
     "Numele tau este Marcelino, asistentul AI al site-ului NutuArt.",
     "Raspunzi in romana, scurt, clar, prietenos si natural.",
@@ -135,7 +160,7 @@ export async function POST(request: Request) {
     }
 
     const leadReady = isLeadReady(messages);
-    const leadDraft = buildLeadDraft(messages);
+    const leadDraft = draft;
 
     return NextResponse.json({ reply, leadReady, leadDraft });
   } catch (error) {

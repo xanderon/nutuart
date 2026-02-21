@@ -39,6 +39,8 @@ const locationKeywords: Array<[string, RegExp]> = [
 
 const intentRegex =
   /\b(vreau|as vrea|proiect|comanda|cat costa|pret|durata|termen|personalizat|pot sa fac)\b/i;
+const humanHandoffRegex =
+  /\b(vorbesc|vorbim|discut|discutam|om|persoana|operator|direct|sunat|contactat)\b/i;
 
 function firstMatch(text: string, rules: Array<[string, RegExp]>) {
   const match = rules.find(([, regex]) => regex.test(text));
@@ -90,4 +92,16 @@ export function isLeadReady(messages: ChatMessage[]) {
   const hasIntent = intentRegex.test(userText);
 
   return hasIntent && infoCount >= 2;
+}
+
+export function leadInfoCount(messages: ChatMessage[]) {
+  const draft = buildLeadDraft(messages);
+  return [draft.projectType, draft.location, draft.dimensions, draft.style].filter(Boolean)
+    .length;
+}
+
+export function isHumanHandoffIntent(messages: ChatMessage[]) {
+  const latestUser = [...messages].reverse().find((message) => message.role === "user");
+  if (!latestUser) return false;
+  return humanHandoffRegex.test(latestUser.content);
 }
