@@ -32,7 +32,7 @@ const contextualOpeners = {
   gallery:
     "Iti place ceva de aici? Spune-mi ce model si ce dimensiune ai in minte.",
   artist: "Vrei o piesa personalizata? Pot sa-ti recomand 2-3 variante.",
-  contact: "Spune-mi pe scurt: dimensiune, buget si unde vrei sa o pui.",
+  contact: "Spune-mi pe scurt ce proiect ai in minte si unde vrei sa folosesti piesa.",
 } as const;
 
 const universalStarters = [
@@ -512,6 +512,10 @@ export function AssistantWidget() {
                   </button>
                 ))}
               </div>
+              <p className="mb-2 text-[11px] text-[#5a6f71]">
+                Preferi direct? Pot trimite detaliile discutate ca cerere cu Request ID sau poti
+                contacta direct la marcelnutu@yahoo.com / +40 721 383 668.
+              </p>
               <div className="mb-2 flex items-center justify-between gap-2">
                 <input
                   ref={fileInputRef}

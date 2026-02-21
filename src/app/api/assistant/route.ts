@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { buildKnowledgeContext } from "@/data/ai-knowledge";
 import {
   buildLeadDraft,
+  countUncertainReplies,
   isHumanHandoffIntent,
   isLeadReady,
   leadInfoCount,
@@ -81,7 +82,11 @@ export async function POST(request: Request) {
   const leadReadyFromSignals = isLeadReady(messages);
   const latestUserContent = latestUserMessage.content || "";
   const handoffIntent = isHumanHandoffIntent(messages);
-  const leadReadyNow = leadReadyFromSignals || (handoffIntent && infoCount >= 2);
+  const userMessageCount = messages.filter((message) => message.role === "user").length;
+  const uncertainReplies = countUncertainReplies(messages);
+  const earlyContactOffer = uncertainReplies >= 2 && userMessageCount >= 3;
+  const leadReadyNow =
+    leadReadyFromSignals || (handoffIntent && infoCount >= 2) || earlyContactOffer;
 
   upsertSession({
     sessionId,
@@ -127,6 +132,15 @@ export async function POST(request: Request) {
       reply:
         "Sigur. Pot sa te conectez direct cu artistul. Ca sa trimit mai departe util, spune-mi te rog 1-2 detalii (tipul piesei si dimensiunea aproximativa), apoi iti cer email sau telefon.",
       leadReady: false,
+      leadDraft: draft,
+    });
+  }
+
+  if (earlyContactOffer) {
+    return NextResponse.json({
+      reply:
+        "Perfect, e suficient pentru inceput. Daca vrei, pot trimite mai departe detaliile discutate pana acum, ca sa fii contactat. Sau poti contacta direct la marcelnutu@yahoo.com / +40 721 383 668. Ai prefera email sau telefon pentru cerere?",
+      leadReady: true,
       leadDraft: draft,
     });
   }

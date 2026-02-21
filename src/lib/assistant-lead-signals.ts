@@ -41,6 +41,8 @@ const intentRegex =
   /\b(vreau|as vrea|proiect|comanda|cat costa|pret|durata|termen|personalizat|pot sa fac)\b/i;
 const humanHandoffRegex =
   /\b(vorbesc|vorbim|discut|discutam|om|persoana|operator|direct|sunat|contactat)\b/i;
+const uncertainRegex =
+  /\b(nu stiu|nu știu|nush|nu sunt sigur|nu sunt sigura|habar n-am|nu conteaza|nu contează)\b/i;
 
 function firstMatch(text: string, rules: Array<[string, RegExp]>) {
   const match = rules.find(([, regex]) => regex.test(text));
@@ -104,4 +106,10 @@ export function isHumanHandoffIntent(messages: ChatMessage[]) {
   const latestUser = [...messages].reverse().find((message) => message.role === "user");
   if (!latestUser) return false;
   return humanHandoffRegex.test(latestUser.content);
+}
+
+export function countUncertainReplies(messages: ChatMessage[]) {
+  return messages.filter(
+    (message) => message.role === "user" && uncertainRegex.test(message.content)
+  ).length;
 }
