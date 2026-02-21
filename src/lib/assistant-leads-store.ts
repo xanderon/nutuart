@@ -34,6 +34,24 @@ type StoreShape = {
   sessions: AssistantSession[];
 };
 
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_ASSISTANT_BUCKET = process.env.SUPABASE_ASSISTANT_BUCKET || "assistant-data";
+const SUPABASE_STORE_OBJECT_PATH = "assistant/store.json";
+
+function canUseSupabaseStore() {
+  return Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && SUPABASE_ASSISTANT_BUCKET);
+}
+
+function buildSupabaseObjectUrl(objectPath: string) {
+  if (!SUPABASE_URL) return "";
+  const normalizedPath = objectPath
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+  return `${SUPABASE_URL}/storage/v1/object/${encodeURIComponent(SUPABASE_ASSISTANT_BUCKET)}/${normalizedPath}`;
+}
+
 function getStorePath() {
   if (process.env.VERCEL) {
     return "/tmp/marcelino-leads.json";
@@ -54,36 +72,90 @@ function ensureStore() {
   return filePath;
 }
 
-function readStore(): StoreShape {
+function normalizeStore(parsed: StoreShape): StoreShape {
+  return {
+    leads: Array.isArray(parsed.leads)
+      ? parsed.leads.map((lead) => ({
+          ...lead,
+          status: (lead as AssistantLead).status || "NEW",
+          imageUrls: Array.isArray((lead as AssistantLead).imageUrls)
+            ? (lead as AssistantLead).imageUrls
+            : [],
+        }))
+      : [],
+    sessions: Array.isArray(parsed.sessions)
+      ? parsed.sessions.map((session) => ({
+          ...session,
+          imageUrls: Array.isArray(session.imageUrls) ? session.imageUrls : [],
+          forwarded: Boolean(session.forwarded),
+          leadReady: Boolean(session.leadReady),
+        }))
+      : [],
+  };
+}
+
+async function readStore(): Promise<StoreShape> {
+  if (canUseSupabaseStore()) {
+    try {
+      const response = await fetch(buildSupabaseObjectUrl(SUPABASE_STORE_OBJECT_PATH), {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          apikey: SUPABASE_SERVICE_ROLE_KEY || "",
+        },
+        cache: "no-store",
+      });
+
+      if (response.status === 404) {
+        return { leads: [], sessions: [] };
+      }
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("Supabase read store failed", response.status, errText);
+        return { leads: [], sessions: [] };
+      }
+      const parsed = (await response.json()) as StoreShape;
+      return normalizeStore(parsed);
+    } catch (error) {
+      console.error("Supabase read store error", error);
+      return { leads: [], sessions: [] };
+    }
+  }
+
   const filePath = ensureStore();
   const raw = fs.readFileSync(filePath, "utf-8");
   try {
     const parsed = JSON.parse(raw) as StoreShape;
-    return {
-      leads: Array.isArray(parsed.leads)
-        ? parsed.leads.map((lead) => ({
-            ...lead,
-            status: (lead as AssistantLead).status || "NEW",
-            imageUrls: Array.isArray((lead as AssistantLead).imageUrls)
-              ? (lead as AssistantLead).imageUrls
-              : [],
-          }))
-        : [],
-      sessions: Array.isArray(parsed.sessions)
-        ? parsed.sessions.map((session) => ({
-            ...session,
-            imageUrls: Array.isArray(session.imageUrls) ? session.imageUrls : [],
-            forwarded: Boolean(session.forwarded),
-            leadReady: Boolean(session.leadReady),
-          }))
-        : [],
-    };
+    return normalizeStore(parsed);
   } catch {
     return { leads: [], sessions: [] };
   }
 }
 
-function writeStore(data: StoreShape) {
+async function writeStore(data: StoreShape) {
+  if (canUseSupabaseStore()) {
+    try {
+      const response = await fetch(buildSupabaseObjectUrl(SUPABASE_STORE_OBJECT_PATH), {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          apikey: SUPABASE_SERVICE_ROLE_KEY || "",
+          "Content-Type": "application/json",
+          "x-upsert": "true",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("Supabase write store failed", response.status, errText);
+      }
+      return;
+    } catch (error) {
+      console.error("Supabase write store error", error);
+      return;
+    }
+  }
+
   const filePath = ensureStore();
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 }
@@ -99,48 +171,48 @@ export function buildRequestId(projectType: string) {
   return `M-${randomFourDigits()}`;
 }
 
-export function createLead(lead: AssistantLead) {
-  const store = readStore();
+export async function createLead(lead: AssistantLead) {
+  const store = await readStore();
   store.leads.unshift(lead);
-  writeStore(store);
+  await writeStore(store);
   return lead;
 }
 
-export function listLeads() {
-  const store = readStore();
+export async function listLeads() {
+  const store = await readStore();
   return store.leads;
 }
 
-export function listSessions() {
-  const store = readStore();
+export async function listSessions() {
+  const store = await readStore();
   return store.sessions.sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
 }
 
-export function getSessionById(sessionId: string) {
-  const store = readStore();
+export async function getSessionById(sessionId: string) {
+  const store = await readStore();
   return store.sessions.find((session) => session.sessionId === sessionId) ?? null;
 }
 
-export function getLeadByRequestId(requestId: string) {
-  const store = readStore();
+export async function getLeadByRequestId(requestId: string) {
+  const store = await readStore();
   return store.leads.find((lead) => lead.requestId.toUpperCase() === requestId.toUpperCase());
 }
 
-export function updateLeadStatus(requestId: string, status: LeadStatus) {
-  const store = readStore();
+export async function updateLeadStatus(requestId: string, status: LeadStatus) {
+  const store = await readStore();
   const index = store.leads.findIndex(
     (lead) => lead.requestId.toUpperCase() === requestId.toUpperCase()
   );
   if (index < 0) return null;
   const next = { ...store.leads[index], status };
   store.leads[index] = next;
-  writeStore(store);
+  await writeStore(store);
   return next;
 }
 
-export function upsertSession(input: {
+export async function upsertSession(input: {
   sessionId: string;
   page: string;
   messageCount: number;
@@ -148,7 +220,7 @@ export function upsertSession(input: {
   leadReady: boolean;
   draft: LeadDraft;
 }) {
-  const store = readStore();
+  const store = await readStore();
   const now = new Date().toISOString();
   const index = store.sessions.findIndex((session) => session.sessionId === input.sessionId);
   if (index >= 0) {
@@ -176,11 +248,11 @@ export function upsertSession(input: {
       ...input.draft,
     });
   }
-  writeStore(store);
+  await writeStore(store);
 }
 
-export function markSessionForwarded(sessionId: string, requestId?: string) {
-  const store = readStore();
+export async function markSessionForwarded(sessionId: string, requestId?: string) {
+  const store = await readStore();
   const index = store.sessions.findIndex((session) => session.sessionId === sessionId);
   if (index < 0) return;
   store.sessions[index] = {
@@ -189,11 +261,11 @@ export function markSessionForwarded(sessionId: string, requestId?: string) {
     requestId: requestId || store.sessions[index].requestId,
     updatedAt: new Date().toISOString(),
   };
-  writeStore(store);
+  await writeStore(store);
 }
 
-export function addSessionImage(sessionId: string, imageUrl: string) {
-  const store = readStore();
+export async function addSessionImage(sessionId: string, imageUrl: string) {
+  const store = await readStore();
   const index = store.sessions.findIndex((session) => session.sessionId === sessionId);
   const now = new Date().toISOString();
   if (index >= 0) {
@@ -222,7 +294,7 @@ export function addSessionImage(sessionId: string, imageUrl: string) {
       summary: "Sesiune cu imagine incarcata.",
     });
   }
-  writeStore(store);
+  await writeStore(store);
 }
 
 export function computeDailyOverview(leads: AssistantLead[]) {

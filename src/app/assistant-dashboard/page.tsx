@@ -8,9 +8,9 @@ export const metadata: Metadata = {
   description: "Dashboard simplu pentru cererile preluate de Marcelino.",
 };
 
-export default function AssistantDashboardPage() {
-  const leads = listLeads();
-  const sessions = listSessions();
+export default async function AssistantDashboardPage() {
+  const leads = await listLeads();
+  const sessions = await listSessions();
   const overview = computeDailyOverview(leads);
 
   const tldr = [

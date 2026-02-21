@@ -1,10 +1,9 @@
-import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { addSessionImage } from "@/lib/assistant-leads-store";
 import {
-  ensureAssistantUploadDir,
   MAX_ASSISTANT_UPLOAD_SIZE,
+  saveAssistantUpload,
 } from "@/lib/assistant-upload-store";
 
 export const runtime = "nodejs";
@@ -44,13 +43,12 @@ export async function POST(request: Request) {
   }
 
   const fileName = safeFileName(fileValue.name);
-  const dir = ensureAssistantUploadDir();
-  const targetPath = path.join(dir, fileName);
   const buffer = Buffer.from(await fileValue.arrayBuffer());
+  const contentType = fileValue.type || mimeFromExtension(path.extname(fileName).toLowerCase());
 
-  fs.writeFileSync(targetPath, buffer);
+  await saveAssistantUpload(fileName, buffer, contentType);
   const imageUrl = `/api/assistant/uploads/${fileName}`;
-  addSessionImage(sessionId, imageUrl);
+  await addSessionImage(sessionId, imageUrl);
 
   return NextResponse.json({
     ok: true,
@@ -58,4 +56,24 @@ export async function POST(request: Request) {
     fileName,
     size: fileValue.size,
   });
+}
+
+function mimeFromExtension(extension: string) {
+  switch (extension) {
+    case ".png":
+      return "image/png";
+    case ".jpg":
+    case ".jpeg":
+      return "image/jpeg";
+    case ".webp":
+      return "image/webp";
+    case ".gif":
+      return "image/gif";
+    case ".heic":
+      return "image/heic";
+    case ".heif":
+      return "image/heif";
+    default:
+      return "application/octet-stream";
+  }
 }

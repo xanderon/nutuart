@@ -98,7 +98,7 @@ export async function POST(request: Request) {
     tooManyClarifications ||
     lowProgressReminder;
 
-  upsertSession({
+  await upsertSession({
     sessionId,
     page,
     messageCount: messages.length,
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
 
   if (requestIdMatch) {
     const requestId = requestIdMatch[1].toUpperCase();
-    const lead = getLeadByRequestId(requestId);
+    const lead = await getLeadByRequestId(requestId);
 
     if (!lead) {
       return NextResponse.json({

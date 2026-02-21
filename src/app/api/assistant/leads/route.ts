@@ -15,7 +15,7 @@ const allowedStatuses: LeadStatus[] = [
 ];
 
 export async function GET() {
-  return NextResponse.json({ leads: listLeads() });
+  return NextResponse.json({ leads: await listLeads() });
 }
 
 export async function PATCH(request: Request) {
@@ -30,7 +30,7 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const updated = updateLeadStatus(requestId, status);
+  const updated = await updateLeadStatus(requestId, status);
   if (!updated) {
     return NextResponse.json({ error: "Cererea nu a fost gasita." }, { status: 404 });
   }

@@ -87,9 +87,9 @@ export async function POST(request: Request) {
 
   const draft = buildLeadDraft(messages);
   const requestId = buildRequestId(draft.projectType);
-  const session = getSessionById(sessionId);
+  const session = await getSessionById(sessionId);
 
-  createLead({
+  await createLead({
     requestId,
     createdAt: new Date().toISOString(),
     page,
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
     transcript: messages,
     ...draft,
   });
-  markSessionForwarded(sessionId, requestId);
+  await markSessionForwarded(sessionId, requestId);
 
   return NextResponse.json({
     ok: true,
