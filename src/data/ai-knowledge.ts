@@ -43,7 +43,6 @@ export const aiKnowledge = {
   faq: [
     "Cat dureaza? Depinde de dimensiune, complexitate si tehnica.",
     "Se poate personaliza? Da, proiectele sunt personalizabile.",
-    "Pot trimite o poza? Da, pozele si dimensiunile ajuta mult.",
     "Se poate face dupa un model? Da, se poate adapta dupa referinte.",
     "Se livreaza in tara? Da, in functie de proiect.",
     "Cat costa? Costul depinde de dimensiune, complexitate si tehnica.",

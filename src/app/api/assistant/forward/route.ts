@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { buildLeadDraft } from "@/lib/assistant-lead-signals";
-import { buildRequestId, createLead, markSessionForwarded } from "@/lib/assistant-leads-store";
+import {
+  buildRequestId,
+  createLead,
+  getSessionById,
+  markSessionForwarded,
+} from "@/lib/assistant-leads-store";
 
 export const runtime = "nodejs";
 
@@ -82,18 +87,21 @@ export async function POST(request: Request) {
 
   const draft = buildLeadDraft(messages);
   const requestId = buildRequestId(draft.projectType);
+  const session = getSessionById(sessionId);
 
   createLead({
     requestId,
     createdAt: new Date().toISOString(),
     page,
     status: "NEW",
+    sessionId,
+    imageUrls: session?.imageUrls ?? [],
     contactType,
     contactValue,
     transcript: messages,
     ...draft,
   });
-  markSessionForwarded(sessionId);
+  markSessionForwarded(sessionId, requestId);
 
   return NextResponse.json({
     ok: true,

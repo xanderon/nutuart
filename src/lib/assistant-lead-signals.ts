@@ -96,14 +96,6 @@ export function isLeadReady(messages: ChatMessage[]) {
   return hasIntent && infoCount >= 2;
 }
 
-export function hasProjectIntent(messages: ChatMessage[]) {
-  const userText = messages
-    .filter((message) => message.role === "user")
-    .map((message) => message.content)
-    .join(" \n ");
-  return intentRegex.test(userText);
-}
-
 export function leadInfoCount(messages: ChatMessage[]) {
   const draft = buildLeadDraft(messages);
   return [draft.projectType, draft.location, draft.dimensions, draft.style].filter(Boolean)

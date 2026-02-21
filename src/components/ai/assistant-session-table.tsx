@@ -12,6 +12,7 @@ export function AssistantSessionTable({ sessions }: Props) {
           <thead className="bg-[color:var(--color-elevated)]/70 text-left text-xs uppercase tracking-[0.18em] text-muted">
             <tr>
               <th className="px-4 py-3">Sesiune</th>
+              <th className="px-4 py-3">Request</th>
               <th className="px-4 py-3">Pagina</th>
               <th className="px-4 py-3">Rezumat</th>
               <th className="px-4 py-3">Ultimul mesaj</th>
@@ -25,6 +26,7 @@ export function AssistantSessionTable({ sessions }: Props) {
               sessions.map((session) => (
                 <tr key={session.sessionId} className="border-t border-[color:var(--color-outline)]">
                   <td className="px-4 py-3 font-mono text-xs">{session.sessionId}</td>
+                  <td className="px-4 py-3 text-xs">{session.requestId || "-"}</td>
                   <td className="px-4 py-3">{session.page}</td>
                   <td className="max-w-[320px] px-4 py-3 text-xs text-muted">{session.summary}</td>
                   <td className="max-w-[260px] px-4 py-3 text-xs text-muted">
@@ -60,7 +62,7 @@ export function AssistantSessionTable({ sessions }: Props) {
               ))
             ) : (
               <tr>
-                <td className="px-4 py-6 text-muted" colSpan={7}>
+                <td className="px-4 py-6 text-muted" colSpan={8}>
                   Nu exista sesiuni inca.
                 </td>
               </tr>

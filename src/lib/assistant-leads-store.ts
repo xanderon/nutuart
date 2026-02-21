@@ -7,6 +7,8 @@ export type AssistantLead = LeadDraft & {
   createdAt: string;
   page: string;
   status: LeadStatus;
+  sessionId?: string;
+  imageUrls: string[];
   contactType: "email" | "phone";
   contactValue: string;
   transcript: Array<{ role: "user" | "assistant"; content: string }>;
@@ -19,6 +21,7 @@ export type AssistantSession = LeadDraft & {
   page: string;
   firstSeenAt: string;
   updatedAt: string;
+  requestId?: string;
   lastUserMessage: string;
   messageCount: number;
   leadReady: boolean;
@@ -61,6 +64,9 @@ function readStore(): StoreShape {
         ? parsed.leads.map((lead) => ({
             ...lead,
             status: (lead as AssistantLead).status || "NEW",
+            imageUrls: Array.isArray((lead as AssistantLead).imageUrls)
+              ? (lead as AssistantLead).imageUrls
+              : [],
           }))
         : [],
       sessions: Array.isArray(parsed.sessions)
@@ -110,6 +116,11 @@ export function listSessions() {
   return store.sessions.sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
+}
+
+export function getSessionById(sessionId: string) {
+  const store = readStore();
+  return store.sessions.find((session) => session.sessionId === sessionId) ?? null;
 }
 
 export function getLeadByRequestId(requestId: string) {
@@ -168,13 +179,14 @@ export function upsertSession(input: {
   writeStore(store);
 }
 
-export function markSessionForwarded(sessionId: string) {
+export function markSessionForwarded(sessionId: string, requestId?: string) {
   const store = readStore();
   const index = store.sessions.findIndex((session) => session.sessionId === sessionId);
   if (index < 0) return;
   store.sessions[index] = {
     ...store.sessions[index],
     forwarded: true,
+    requestId: requestId || store.sessions[index].requestId,
     updatedAt: new Date().toISOString(),
   };
   writeStore(store);

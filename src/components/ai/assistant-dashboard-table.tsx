@@ -65,6 +65,7 @@ export function AssistantDashboardTable({ initialLeads }: Props) {
               <th className="px-4 py-3">Tip</th>
               <th className="px-4 py-3">Dimensiuni</th>
               <th className="px-4 py-3">Stil</th>
+              <th className="px-4 py-3">Poze</th>
               <th className="px-4 py-3">Contact</th>
               <th className="px-4 py-3">Creat</th>
             </tr>
@@ -94,6 +95,26 @@ export function AssistantDashboardTable({ initialLeads }: Props) {
                   <td className="px-4 py-3">{lead.dimensions || "-"}</td>
                   <td className="px-4 py-3">{lead.style || "-"}</td>
                   <td className="px-4 py-3">
+                    {lead.imageUrls?.length ? (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted">{lead.imageUrls.length} imagine(i)</p>
+                        {lead.imageUrls.slice(0, 2).map((imageUrl) => (
+                          <a
+                            key={`${lead.requestId}-${imageUrl}`}
+                            href={imageUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block text-xs text-[color:var(--color-accent-strong)] underline underline-offset-2"
+                          >
+                            Deschide poza
+                          </a>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
                     {lead.contactType}: {lead.contactValue}
                   </td>
                   <td className="px-4 py-3">{new Date(lead.createdAt).toLocaleString("ro-RO")}</td>
@@ -101,7 +122,7 @@ export function AssistantDashboardTable({ initialLeads }: Props) {
               ))
             ) : (
               <tr>
-                <td className="px-4 py-6 text-muted" colSpan={7}>
+                <td className="px-4 py-6 text-muted" colSpan={8}>
                   Nu exista cereri inca.
                 </td>
               </tr>

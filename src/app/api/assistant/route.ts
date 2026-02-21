@@ -4,7 +4,6 @@ import {
   buildLeadDraft,
   countAssistantQuestions,
   countUncertainReplies,
-  hasProjectIntent,
   isHumanHandoffIntent,
   isLeadReady,
   leadInfoCount,
@@ -84,12 +83,10 @@ export async function POST(request: Request) {
   const leadReadyFromSignals = isLeadReady(messages);
   const latestUserContent = latestUserMessage.content || "";
   const handoffIntent = isHumanHandoffIntent(messages);
-  const projectIntent = hasProjectIntent(messages);
   const userMessageCount = messages.filter((message) => message.role === "user").length;
   const uncertainReplies = countUncertainReplies(messages);
   const assistantQuestionCount = countAssistantQuestions(messages);
-  const proactiveLeadCapture =
-    userMessageCount >= 2 && (projectIntent || uncertainReplies >= 1 || Boolean(draft.projectType));
+  const proactiveLeadCapture = userMessageCount >= 2;
   const earlyContactOffer = uncertainReplies >= 2 && userMessageCount >= 3;
   const tooManyClarifications = assistantQuestionCount >= 3 && userMessageCount >= 3;
   const lowProgressReminder = userMessageCount >= 6 && infoCount <= 1;
