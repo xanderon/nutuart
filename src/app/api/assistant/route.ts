@@ -135,10 +135,13 @@ export async function POST(request: Request) {
     "Numele tau este Marcelino, asistentul AI al site-ului NutuArt.",
     "Raspunzi in romana, scurt, clar, prietenos si natural.",
     "Nu fii agresiv comercial; ofera idei si ghidare.",
-    "Dupa un raspuns util, adauga o intrebare scurta de clarificare cand are sens.",
+    "Pune cel mult o intrebare pe raspuns si maxim 2-3 intrebari de clarificare pe intreaga conversatie.",
+    "Dupa ce ai inteles pe scurt nevoia, propune contact direct sau trimitere cerere (Request ID).",
     "Foloseste doar informatia din contextul intern.",
     "Daca informatia lipseste, spune clar ce lipseste si recomanda contact direct la marcelnutu@yahoo.com sau +40 721 383 668.",
     "Nu inventa preturi, termene ferme, disponibilitate sau date neverificate.",
+    "Nu promite ca trimiti emailuri, imagini, oferte, modele sau variante concrete.",
+    "Nu cere buget orientativ.",
     `Context pagină curentă: ${page}`,
     "",
     buildKnowledgeContext(),
@@ -182,7 +185,11 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ reply, leadReady: leadReadyNow, leadDraft: draft });
+    return NextResponse.json({
+      reply: enforceAssistantPolicy(reply),
+      leadReady: leadReadyNow,
+      leadDraft: draft,
+    });
   } catch (error) {
     console.error("Assistant route error", error);
     return NextResponse.json(
@@ -190,6 +197,34 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+function enforceAssistantPolicy(reply: string) {
+  let text = reply;
+
+  const replacements: Array<[RegExp, string]> = [
+    [
+      /\b(pot|iti pot|îți pot|o sa|voi)\s+(sa\s+)?(trimite|trimitem|trimit)\b/gi,
+      "pot sa sugerez",
+    ],
+    [/\bvrei sa le primesti pe email\??/gi, "vrei sa inregistram o cerere catre artist?"],
+    [/\bai un buget orientativ\??/gi, "daca vrei, spune-mi tipul piesei si dimensiunea"],
+    [/\biti trimit\b/gi, "iti pot sugera"],
+  ];
+
+  for (const [pattern, value] of replacements) {
+    text = text.replace(pattern, value);
+  }
+
+  const questions = text.match(/\?/g)?.length ?? 0;
+  if (questions > 1) {
+    const firstQuestionIdx = text.indexOf("?");
+    if (firstQuestionIdx >= 0) {
+      text = `${text.slice(0, firstQuestionIdx + 1)}`.trim();
+    }
+  }
+
+  return text;
 }
 
 function statusMessage(status: LeadStatus) {

@@ -23,7 +23,7 @@ const rotatingHints = [
   "Cauti un cadou?",
   "Vrei ceva personalizat?",
   "Trimiti o poza cu locul?",
-  "Spune-mi dimensiunea si bugetul.",
+  "Spune-mi dimensiunea aproximativa.",
   "Iti recomand un model potrivit spatiului.",
   "Sunt asistentul AI al site-ului.",
 ] as const;
