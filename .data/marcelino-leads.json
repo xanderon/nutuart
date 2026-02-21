@@ -1,6 +1,88 @@
 {
   "leads": [
     {
+      "requestId": "M-3183",
+      "createdAt": "2026-02-21T11:05:15.063Z",
+      "page": "/",
+      "status": "NEW",
+      "contactType": "phone",
+      "contactValue": "0723283818",
+      "transcript": [
+        {
+          "role": "assistant",
+          "content": "Iti place ceva de aici? Spune-mi ce model si ce dimensiune ai in minte."
+        },
+        {
+          "role": "assistant",
+          "content": "Am primit poza. Daca vrei, iti pot trimite mai departe rezumatul discutiei ca sa nu repeti detaliile."
+        },
+        {
+          "role": "user",
+          "content": "am pus o poza, acum ce fac? vreau un model pe ea"
+        },
+        {
+          "role": "assistant",
+          "content": "Mulțumesc! Pentru a crea un model pe poza ta, ar fi util să știu unde vrei să folosești piesa și ce stil preferi (modern, clasic, minimalist)?"
+        },
+        {
+          "role": "user",
+          "content": "nu stiu ceva modern"
+        },
+        {
+          "role": "assistant",
+          "content": "Perfect, un stil modern poate însemna linii simple, forme geometrice sau accente minimaliste. Unde vrei să montezi piesa: acasă, birou sau alt spațiu?"
+        }
+      ],
+      "projectType": "",
+      "location": "",
+      "dimensions": "",
+      "style": "modern",
+      "summary": "Stil: modern"
+    },
+    {
+      "requestId": "M-3687",
+      "createdAt": "2026-02-21T10:42:49.044Z",
+      "page": "/",
+      "status": "NEW",
+      "contactType": "phone",
+      "contactValue": "0723283818",
+      "transcript": [
+        {
+          "role": "assistant",
+          "content": "Iti place ceva de aici? Spune-mi ce model si ce dimensiune ai in minte."
+        },
+        {
+          "role": "user",
+          "content": "Vreau ceva personalizat"
+        },
+        {
+          "role": "assistant",
+          "content": "Super! Pentru ce spațiu sau ocazie dorești piesa personalizată?"
+        },
+        {
+          "role": "user",
+          "content": "usa de la baie"
+        },
+        {
+          "role": "assistant",
+          "content": "Perfect, o piesă pentru ușa de la baie. Ai o idee despre dimensiuni sau stilul preferat (modern, clasic, minimalist)?"
+        },
+        {
+          "role": "user",
+          "content": "Cat dureaza realizarea?"
+        },
+        {
+          "role": "assistant",
+          "content": "Durata depinde de dimensiune și complexitate, dar în general poate dura câteva săptămâni. Ai o dimensiune aproximativă sau un model în minte pentru ușa de la baie?"
+        }
+      ],
+      "projectType": "decor geam",
+      "location": "baie",
+      "dimensions": "",
+      "style": "",
+      "summary": "Tip: decor geam | Locatie: baie"
+    },
+    {
       "requestId": "M-2721",
       "createdAt": "2026-02-21T10:09:23.447Z",
       "page": "/",
@@ -48,7 +130,28 @@
       "location": "bucatarie",
       "dimensions": "",
       "style": "floral",
-      "summary": "Locatie: bucatarie | Stil: floral"
+      "summary": "Locatie: bucatarie | Stil: floral",
+      "status": "CLOSED"
+    }
+  ],
+  "sessions": [
+    {
+      "sessionId": "m-mlw6hwqv-we7qhl",
+      "page": "/",
+      "firstSeenAt": "2026-02-21T10:37:33.479Z",
+      "updatedAt": "2026-02-21T11:05:15.065Z",
+      "lastUserMessage": "nu stiu ceva modern",
+      "messageCount": 5,
+      "leadReady": true,
+      "forwarded": true,
+      "imageUrls": [
+        "/api/assistant/uploads/1771671887864-2s2huvk.png"
+      ],
+      "projectType": "",
+      "location": "",
+      "dimensions": "",
+      "style": "modern",
+      "summary": "Stil: modern"
     }
   ]
 }
