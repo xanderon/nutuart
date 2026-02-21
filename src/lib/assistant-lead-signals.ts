@@ -113,3 +113,9 @@ export function countUncertainReplies(messages: ChatMessage[]) {
     (message) => message.role === "user" && uncertainRegex.test(message.content)
   ).length;
 }
+
+export function countAssistantQuestions(messages: ChatMessage[]) {
+  return messages
+    .filter((message) => message.role === "assistant")
+    .reduce((total, message) => total + (message.content.match(/\?/g)?.length ?? 0), 0);
+}

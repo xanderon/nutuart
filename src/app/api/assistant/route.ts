@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { buildKnowledgeContext } from "@/data/ai-knowledge";
 import {
   buildLeadDraft,
+  countAssistantQuestions,
   countUncertainReplies,
   isHumanHandoffIntent,
   isLeadReady,
@@ -84,9 +85,16 @@ export async function POST(request: Request) {
   const handoffIntent = isHumanHandoffIntent(messages);
   const userMessageCount = messages.filter((message) => message.role === "user").length;
   const uncertainReplies = countUncertainReplies(messages);
+  const assistantQuestionCount = countAssistantQuestions(messages);
   const earlyContactOffer = uncertainReplies >= 2 && userMessageCount >= 3;
+  const tooManyClarifications = assistantQuestionCount >= 3 && userMessageCount >= 3;
+  const lowProgressReminder = userMessageCount >= 6 && infoCount <= 1;
   const leadReadyNow =
-    leadReadyFromSignals || (handoffIntent && infoCount >= 2) || earlyContactOffer;
+    leadReadyFromSignals ||
+    (handoffIntent && infoCount >= 2) ||
+    earlyContactOffer ||
+    tooManyClarifications ||
+    lowProgressReminder;
 
   upsertSession({
     sessionId,
@@ -139,7 +147,16 @@ export async function POST(request: Request) {
   if (earlyContactOffer) {
     return NextResponse.json({
       reply:
-        "Perfect, e suficient pentru inceput. Daca vrei, pot trimite mai departe detaliile discutate pana acum, ca sa fii contactat. Sau poti contacta direct la marcelnutu@yahoo.com / +40 721 383 668. Ai prefera email sau telefon pentru cerere?",
+        "Perfect, e suficient pentru inceput. Pentru a stabili mai exact detaliile, poti contacta direct: Email: marcelnutu@yahoo.com | Telefon / WhatsApp: +40 721 383 668. Sau, daca preferi, imi poti lasa aici emailul sau numarul tau de telefon, iar eu trimit mai departe detaliile discutate si vei fi contactat. Ai prefera email sau telefon?",
+      leadReady: true,
+      leadDraft: draft,
+    });
+  }
+
+  if (tooManyClarifications || lowProgressReminder) {
+    return NextResponse.json({
+      reply:
+        "Ca sa nu pierdem timp cu prea multe detalii acum, iti propun varianta rapida: poti contacta direct la marcelnutu@yahoo.com / +40 721 383 668 sau imi lasi aici emailul ori telefonul si trimit mai departe ce am discutat. Ai prefera email sau telefon?",
       leadReady: true,
       leadDraft: draft,
     });
@@ -151,6 +168,9 @@ export async function POST(request: Request) {
     "Nu fii agresiv comercial; ofera idei si ghidare.",
     "Pune cel mult o intrebare pe raspuns si maxim 2-3 intrebari de clarificare pe intreaga conversatie.",
     "Dupa ce ai inteles pe scurt nevoia, propune contact direct sau trimitere cerere (Request ID).",
+    "Cand utilizatorul cere exemple concrete, personalizare sau discutie cu o persoana, ofera contactul imediat.",
+    "Mesaj standard de contact: Email: marcelnutu@yahoo.com | Telefon / WhatsApp: +40 721 383 668, plus optiunea sa lase datele de contact in chat pentru Request ID.",
+    "Daca utilizatorul refuza contactul, continua normal cu idei scurte fara insistenta.",
     "Foloseste doar informatia din contextul intern.",
     "Daca informatia lipseste, spune clar ce lipseste si recomanda contact direct la marcelnutu@yahoo.com sau +40 721 383 668.",
     "Nu inventa preturi, termene ferme, disponibilitate sau date neverificate.",
@@ -224,6 +244,7 @@ function enforceAssistantPolicy(reply: string) {
     [/\bvrei sa le primesti pe email\??/gi, "vrei sa inregistram o cerere catre artist?"],
     [/\bai un buget orientativ\??/gi, "daca vrei, spune-mi tipul piesei si dimensiunea"],
     [/\biti trimit\b/gi, "iti pot sugera"],
+    [/\biti raspund cu oferta\b/gi, "iti pot oferi o directie generala"],
   ];
 
   for (const [pattern, value] of replacements) {
