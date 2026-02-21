@@ -29,8 +29,10 @@ const contextualOpeners = {
 
 const universalStarters = [
   "Vreau ceva personalizat",
-  "Cadou - ajuta-ma sa aleg",
+  "Caut un cadou",
   "Cum decurge o comanda?",
+  "Cat dureaza realizarea?",
+  "Pot trimite o poza?",
 ] as const;
 
 function pickRandom<T>(items: readonly T[]) {
@@ -71,9 +73,9 @@ export function AssistantWidget() {
 
   const starters = useMemo(() => universalStarters, []);
 
-  const showHint = (duration = 3400) => {
+  const showHint = (duration = 3000) => {
     if (hasOpenedRef.current) return;
-    if (hintCountRef.current >= 5) return;
+    if (hintCountRef.current >= 3) return;
 
     hintCountRef.current += 1;
     setHintText(pickRandom(rotatingHints));
@@ -87,12 +89,12 @@ export function AssistantWidget() {
     setMounted(true);
     mountedAtRef.current = Date.now();
 
-    const typingTimer = setTimeout(() => setBootTyping(true), 1900);
+    const typingTimer = setTimeout(() => setBootTyping(true), 900);
     const firstMessageTimer = setTimeout(() => {
       setBootTyping(false);
       setMessages([{ role: "assistant", content: contextualOpeners[context] }]);
-    }, 2800);
-    const firstHintTimer = setTimeout(() => showHint(3400), 4200);
+    }, 1700);
+    const firstHintTimer = setTimeout(() => showHint(3000), 2800);
 
     return () => {
       clearTimeout(typingTimer);
@@ -106,14 +108,14 @@ export function AssistantWidget() {
     if (open) return;
 
     const interval = setInterval(() => {
-      if (hasOpenedRef.current || hintCountRef.current >= 5) return;
+      if (hasOpenedRef.current || hintCountRef.current >= 3) return;
       setWaveNow(true);
       showHint(3000);
 
       setTimeout(() => {
         setWaveNow(false);
       }, 1000);
-    }, 20000);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [open]);
@@ -132,7 +134,7 @@ export function AssistantWidget() {
     if (open) return;
 
     const onScroll = () => {
-      if (hasOpenedRef.current || hintCountRef.current >= 5) return;
+      if (hasOpenedRef.current || hintCountRef.current >= 3) return;
       if (Date.now() - mountedAtRef.current < 10000) return;
       const now = Date.now();
       if (now - lastScrollHintAtRef.current < 20000) {
