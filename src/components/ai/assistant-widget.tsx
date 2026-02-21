@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
@@ -9,18 +10,16 @@ type Message = {
 };
 
 const rotatingHints = [
-  "Te pot ajuta?",
+  "Pot sa te ajut?",
   "Ai gasit ceva interesant?",
-  "Cautai un model anume?",
   "Vrei ceva personalizat?",
-  "Iti explic diferenta sablare vs vitraliu?",
+  "Iti explic diferenta dintre sablare si vitraliu?",
 ] as const;
 
 const contextualOpeners = {
   gallery:
     "Iti place ceva de aici? Putem adapta sau crea un model special pentru tine.",
-  artist:
-    "Vrei o piesa unica pentru spatiul tau? Iti pot explica optiunile.",
+  artist: "Vrei o piesa unica pentru spatiul tau? Iti pot explica optiunile.",
   contact: "Ai un proiect in minte? Spune-mi cateva detalii si te ghidez.",
 } as const;
 
@@ -33,14 +32,18 @@ const contextualStarters = {
   artist: [
     "Ce tip de lucrari realizeaza?",
     "Cum decurge o comanda personalizata?",
-    "Ce recomandati pentru spatii mici?",
+    "Ce se poate face pentru un spatiu mic?",
   ],
   contact: [
-    "Ce detalii sa trimit pentru proiect?",
-    "Care este urmatorul pas?",
-    "Pot trimite dimensiuni si poze?",
+    "Ce detalii sunt utile pentru proiect?",
+    "Cum iau legatura rapid cu artistul?",
+    "Pot trimite poze si dimensiuni?",
   ],
 } as const;
+
+function pickRandom<T>(items: readonly T[]) {
+  return items[Math.floor(Math.random() * items.length)];
+}
 
 function getContextFromPath(pathname: string) {
   if (pathname.includes("/contact")) return "contact" as const;
@@ -48,13 +51,8 @@ function getContextFromPath(pathname: string) {
   return "gallery" as const;
 }
 
-function pickRandom<T>(items: readonly T[]) {
-  return items[Math.floor(Math.random() * items.length)];
-}
-
 function withDots(text: string, step: number) {
-  const dots = ".".repeat((step % 3) + 1);
-  return `${text}${dots}`;
+  return `${text}${".".repeat((step % 3) + 1)}`;
 }
 
 export function AssistantWidget() {
@@ -63,22 +61,21 @@ export function AssistantWidget() {
 
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [pulse, setPulse] = useState(false);
   const [hintVisible, setHintVisible] = useState(false);
   const [hintText, setHintText] = useState("");
   const [dotsStep, setDotsStep] = useState(0);
+  const [waveNow, setWaveNow] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [bootTyping, setBootTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const starters = useMemo(() => contextualStarters[context], [context]);
 
-  const showHint = (duration = 6000) => {
+  const showHint = (duration = 3000) => {
     setHintText(pickRandom(rotatingHints));
     setHintVisible(true);
 
@@ -88,20 +85,18 @@ export function AssistantWidget() {
 
   useEffect(() => {
     setMounted(true);
-    const initialDelay = 1600;
 
-    const typingStart = setTimeout(() => setBootTyping(true), initialDelay);
-    const firstMessage = setTimeout(() => {
+    const typingTimer = setTimeout(() => setBootTyping(true), 1900);
+    const firstMessageTimer = setTimeout(() => {
       setBootTyping(false);
       setMessages([{ role: "assistant", content: contextualOpeners[context] }]);
-    }, initialDelay + 850);
-    const firstHint = setTimeout(() => showHint(6000), 2100);
+    }, 2800);
+    const firstHintTimer = setTimeout(() => showHint(3200), 2300);
 
     return () => {
-      clearTimeout(typingStart);
-      clearTimeout(firstMessage);
-      clearTimeout(firstHint);
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      clearTimeout(typingTimer);
+      clearTimeout(firstMessageTimer);
+      clearTimeout(firstHintTimer);
       if (hideHintTimerRef.current) clearTimeout(hideHintTimerRef.current);
     };
   }, [context]);
@@ -109,39 +104,37 @@ export function AssistantWidget() {
   useEffect(() => {
     if (open) return;
 
-    const pulseInterval = setInterval(() => {
-      setPulse(true);
-      setTimeout(() => setPulse(false), 900);
-    }, 10000);
+    const interval = setInterval(() => {
+      setWaveNow(true);
+      showHint(3000);
 
-    return () => clearInterval(pulseInterval);
+      setTimeout(() => {
+        setWaveNow(false);
+      }, 1000);
+    }, 9000);
+
+    return () => clearInterval(interval);
   }, [open]);
 
   useEffect(() => {
     if (!hintVisible) return;
-    const dotsInterval = setInterval(() => {
+
+    const interval = setInterval(() => {
       setDotsStep((prev) => (prev + 1) % 3);
-    }, 420);
-    return () => clearInterval(dotsInterval);
+    }, 400);
+
+    return () => clearInterval(interval);
   }, [hintVisible]);
 
   useEffect(() => {
     if (open) return;
 
     const onScroll = () => {
-      showHint(3800);
-
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      idleTimerRef.current = setTimeout(() => {
-        showHint(3800);
-      }, 12000);
+      showHint(2800);
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    };
+    return () => window.removeEventListener("scroll", onScroll);
   }, [open]);
 
   const sendMessage = async (text: string) => {
@@ -184,99 +177,154 @@ export function AssistantWidget() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-[140]">
-      {open ? (
-        <div className="w-[min(92vw,400px)] overflow-hidden rounded-[20px] border border-[#d8c8b0] bg-[linear-gradient(180deg,#fffdf8_0%,#f4ecde_100%)] shadow-[0_28px_75px_-38px_rgba(83,62,31,0.48)] backdrop-blur-md">
-          <div className="border-b border-[#e6dbc8] bg-[linear-gradient(90deg,rgba(212,186,144,0.2),rgba(255,255,255,0.45))] px-4 py-3">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-display text-base text-[#3f3120]">Asistent AI Atelier NUTU</p>
-                <p className="text-xs text-[#7d6950]">Raspund rapid despre lucrari si colaborare.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="rounded-full border border-[#d5c7ae] px-2.5 py-1 text-[11px] text-[#6f614d] hover:bg-white/75"
-              >
-                Inchide
-              </button>
-            </div>
-          </div>
-
-          <div className="max-h-[50vh] space-y-4 overflow-y-auto px-4 py-4">
-            {messages.map((message, index) => (
-              <div
-                key={`${message.role}-${index}`}
-                className={`rounded-[16px] px-3.5 py-2.5 text-sm leading-relaxed ${
-                  message.role === "assistant"
-                    ? "bg-[#efe5d6] text-[#413322]"
-                    : "ml-8 bg-[#b9925b] text-white"
-                }`}
-              >
-                {message.content}
-              </div>
-            ))}
-            {(loading || bootTyping) ? (
-              <p className="text-xs text-[#7f7058]">Asistentul scrie...</p>
-            ) : null}
-            {error ? <p className="text-xs text-[#8f4f3e]">{error}</p> : null}
-          </div>
-
-          <div className="border-t border-[#e6dbc8] px-4 py-3">
-            <div className="mb-3 flex flex-wrap gap-2">
-              {starters.map((starter) => (
+    <>
+      <div className="fixed bottom-6 right-6 z-[140]">
+        {open ? (
+          <div className="w-[min(92vw,400px)] overflow-hidden rounded-[20px] border border-[#d9e5e6] bg-white shadow-[0_28px_75px_-38px_rgba(12,34,35,0.35)]">
+            <div className="border-b border-[#e8eff0] bg-[#f4f7f7] px-4 py-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[15px] font-semibold text-[#111111]">Asistent</p>
+                  <p className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#2f6f73]">
+                    AI activ
+                  </p>
+                  <p className="mt-1 text-[12px] text-[#5f6a6b]">
+                    Te pot ajuta cu informatii despre lucrari din sticla.
+                  </p>
+                </div>
                 <button
-                  key={starter}
                   type="button"
-                  onClick={() => void sendMessage(starter)}
-                  className="rounded-full border border-[#d8cbb8] bg-[#fbf7f0] px-3 py-1.5 text-xs text-[#6f5f49] hover:border-[#b99a6e] hover:text-[#4e3f2b]"
+                  onClick={() => setOpen(false)}
+                  className="rounded-full border border-[#dce7e8] px-2 py-1 text-[10px] text-[#5f6a6b] hover:bg-[#f4f7f7]"
                 >
-                  {starter}
+                  Inchide
                 </button>
-              ))}
+              </div>
             </div>
-            <form onSubmit={handleSubmit} className="flex gap-2">
-              <input
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                placeholder="Scrie un mesaj..."
-                className="w-full rounded-full border border-[#d8cbb8] bg-[#fffdf9] px-4 py-2.5 text-sm text-[#3f3428] outline-none focus:border-[#b89a6f]"
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="rounded-full bg-[#b88f59] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_25px_-15px_rgba(93,66,30,0.55)] hover:brightness-95 disabled:opacity-70"
-              >
-                Trimite
-              </button>
-            </form>
+
+            <div className="max-h-[50vh] space-y-4 overflow-y-auto px-4 py-4">
+              {messages.map((message, index) => (
+                <div
+                  key={`${message.role}-${index}`}
+                  className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                    message.role === "assistant"
+                      ? "bg-[#f4f7f7] text-[#223638]"
+                      : "ml-8 bg-[#2f6f73] text-white"
+                  }`}
+                >
+                  {message.content}
+                </div>
+              ))}
+              {(loading || bootTyping) ? (
+                <p className="text-xs text-[#627274]">Asistentul scrie...</p>
+              ) : null}
+              {error ? <p className="text-xs text-[#a64a4a]">{error}</p> : null}
+            </div>
+
+            <div className="border-t border-[#e8eff0] px-4 py-3">
+              <div className="mb-3 flex flex-wrap gap-2">
+                {starters.map((starter) => (
+                  <button
+                    key={starter}
+                    type="button"
+                    onClick={() => void sendMessage(starter)}
+                    className="rounded-full border border-[#d7e4e5] bg-[#f9fbfb] px-3 py-1.5 text-xs text-[#406466] hover:border-[#2f6f73] hover:text-[#2f6f73]"
+                  >
+                    {starter}
+                  </button>
+                ))}
+              </div>
+              <form onSubmit={handleSubmit} className="flex gap-2">
+                <input
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  placeholder="Scrie un mesaj..."
+                  className="w-full rounded-full border border-[#d7e4e5] bg-white px-4 py-2.5 text-sm text-[#1f3335] outline-none focus:border-[#2f6f73]"
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="rounded-full bg-[#2f6f73] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#3c8a90] disabled:opacity-70"
+                >
+                  Trimite
+                </button>
+              </form>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="relative flex flex-col items-end gap-2">
-          <div
-            className={`max-w-[220px] rounded-full border border-[#decfb8] bg-[#fff8ea] px-3 py-1.5 text-xs text-[#6f5a3d] shadow-[0_16px_36px_-22px_rgba(105,76,40,0.5)] transition-all duration-400 ${
-              hintVisible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
-            }`}
-          >
-            {withDots(hintText || "Te pot ajuta", dotsStep)}
+        ) : (
+          <div className="relative flex flex-col items-end gap-2">
+            <div
+              className={`max-w-[220px] rounded-2xl bg-white px-3 py-2 text-xs text-[#314f52] shadow-[0_14px_30px_-20px_rgba(13,38,39,0.4)] transition-all duration-300 ${
+                hintVisible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+              }`}
+            >
+              {withDots(hintText || "Pot sa te ajut", dotsStep)}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className={`relative w-[85px] transition duration-200 hover:scale-110 ${
+                mounted ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
+              }`}
+              aria-label="Deschide asistentul AI"
+            >
+              <div className="ai-breathe">
+                <div className={waveNow ? "ai-wave" : ""}>
+                  <Image
+                    src="/images/AIGlass.png"
+                    alt="Asistent AI"
+                    width={85}
+                    height={120}
+                    className="h-auto w-full drop-shadow-[0_6px_14px_rgba(0,0,0,0.2)]"
+                    priority={false}
+                  />
+                </div>
+              </div>
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className={`relative h-16 w-16 rounded-full border border-[#cfb084] bg-[linear-gradient(180deg,#caa16b_0%,#b88f59_100%)] text-white shadow-[0_24px_48px_-28px_rgba(101,67,25,0.65)] transition duration-300 hover:scale-[1.05] ${
-              mounted ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
-            } ${pulse ? "scale-[1.02]" : "scale-100"}`}
-            aria-label="Deschide asistentul AI"
-          >
-            <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_25%,rgba(255,255,255,0.32),transparent_52%)]" />
-            <span className="relative flex h-full flex-col items-center justify-center leading-none">
-              <span className="text-lg">💬</span>
-              <span className="mt-0.5 text-[10px] font-semibold tracking-[0.08em]">AI</span>
-            </span>
-          </button>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+
+      <style jsx>{`
+        .ai-breathe {
+          animation: ai-breathe 3s ease-in-out infinite;
+          transform-origin: 50% 75%;
+        }
+
+        .ai-wave {
+          animation: ai-wave 1s ease-in-out;
+          transform-origin: 50% 75%;
+        }
+
+        @keyframes ai-breathe {
+          0%,
+          100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.04);
+          }
+        }
+
+        @keyframes ai-wave {
+          0% {
+            transform: rotate(0deg);
+          }
+          25% {
+            transform: rotate(6deg);
+          }
+          50% {
+            transform: rotate(-6deg);
+          }
+          75% {
+            transform: rotate(4deg);
+          }
+          100% {
+            transform: rotate(0deg);
+          }
+        }
+      `}</style>
+    </>
   );
 }
