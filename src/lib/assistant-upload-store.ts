@@ -41,6 +41,7 @@ export async function saveAssistantUpload(
   contentType: string
 ) {
   if (canUseSupabaseStorage()) {
+    const body = new Uint8Array(buffer);
     const response = await fetch(buildSupabaseObjectUrl(fileName), {
       method: "POST",
       headers: {
@@ -49,7 +50,7 @@ export async function saveAssistantUpload(
         "Content-Type": contentType,
         "x-upsert": "true",
       },
-      body: buffer,
+      body,
     });
 
     if (!response.ok) {
