@@ -14,8 +14,21 @@ export type AssistantLead = LeadDraft & {
 
 export type LeadStatus = "NEW" | "SEEN" | "IN_PROGRESS" | "REPLIED" | "CLOSED";
 
+export type AssistantSession = LeadDraft & {
+  sessionId: string;
+  page: string;
+  firstSeenAt: string;
+  updatedAt: string;
+  lastUserMessage: string;
+  messageCount: number;
+  leadReady: boolean;
+  forwarded: boolean;
+  imageUrls: string[];
+};
+
 type StoreShape = {
   leads: AssistantLead[];
+  sessions: AssistantSession[];
 };
 
 function getStorePath() {
@@ -30,7 +43,10 @@ function ensureStore() {
   const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify({ leads: [] } satisfies StoreShape, null, 2));
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify({ leads: [], sessions: [] } satisfies StoreShape, null, 2)
+    );
   }
   return filePath;
 }
@@ -47,9 +63,17 @@ function readStore(): StoreShape {
             status: (lead as AssistantLead).status || "NEW",
           }))
         : [],
+      sessions: Array.isArray(parsed.sessions)
+        ? parsed.sessions.map((session) => ({
+            ...session,
+            imageUrls: Array.isArray(session.imageUrls) ? session.imageUrls : [],
+            forwarded: Boolean(session.forwarded),
+            leadReady: Boolean(session.leadReady),
+          }))
+        : [],
     };
   } catch {
-    return { leads: [] };
+    return { leads: [], sessions: [] };
   }
 }
 
@@ -81,6 +105,13 @@ export function listLeads() {
   return store.leads;
 }
 
+export function listSessions() {
+  const store = readStore();
+  return store.sessions.sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  );
+}
+
 export function getLeadByRequestId(requestId: string) {
   const store = readStore();
   return store.leads.find((lead) => lead.requestId.toUpperCase() === requestId.toUpperCase());
@@ -96,6 +127,90 @@ export function updateLeadStatus(requestId: string, status: LeadStatus) {
   store.leads[index] = next;
   writeStore(store);
   return next;
+}
+
+export function upsertSession(input: {
+  sessionId: string;
+  page: string;
+  messageCount: number;
+  lastUserMessage: string;
+  leadReady: boolean;
+  draft: LeadDraft;
+}) {
+  const store = readStore();
+  const now = new Date().toISOString();
+  const index = store.sessions.findIndex((session) => session.sessionId === input.sessionId);
+  if (index >= 0) {
+    const previous = store.sessions[index];
+    store.sessions[index] = {
+      ...previous,
+      ...input.draft,
+      page: input.page || previous.page,
+      messageCount: input.messageCount,
+      lastUserMessage: input.lastUserMessage || previous.lastUserMessage,
+      leadReady: input.leadReady,
+      updatedAt: now,
+    };
+  } else {
+    store.sessions.unshift({
+      sessionId: input.sessionId,
+      page: input.page,
+      firstSeenAt: now,
+      updatedAt: now,
+      lastUserMessage: input.lastUserMessage,
+      messageCount: input.messageCount,
+      leadReady: input.leadReady,
+      forwarded: false,
+      imageUrls: [],
+      ...input.draft,
+    });
+  }
+  writeStore(store);
+}
+
+export function markSessionForwarded(sessionId: string) {
+  const store = readStore();
+  const index = store.sessions.findIndex((session) => session.sessionId === sessionId);
+  if (index < 0) return;
+  store.sessions[index] = {
+    ...store.sessions[index],
+    forwarded: true,
+    updatedAt: new Date().toISOString(),
+  };
+  writeStore(store);
+}
+
+export function addSessionImage(sessionId: string, imageUrl: string) {
+  const store = readStore();
+  const index = store.sessions.findIndex((session) => session.sessionId === sessionId);
+  const now = new Date().toISOString();
+  if (index >= 0) {
+    const current = store.sessions[index];
+    const nextImages = [imageUrl, ...current.imageUrls].slice(0, 8);
+    store.sessions[index] = {
+      ...current,
+      imageUrls: nextImages,
+      updatedAt: now,
+    };
+  } else {
+    store.sessions.unshift({
+      sessionId,
+      page: "unknown",
+      firstSeenAt: now,
+      updatedAt: now,
+      lastUserMessage: "",
+      messageCount: 0,
+      leadReady: false,
+      forwarded: false,
+      imageUrls: [imageUrl],
+      projectType: "",
+      dimensions: "",
+      style: "",
+      location: "",
+      summary: "Sesiune cu imagine incarcata.",
+    });
+  }
+  writeStore(store);
 }
 
 export function computeDailyOverview(leads: AssistantLead[]) {

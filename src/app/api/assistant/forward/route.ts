@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { buildLeadDraft } from "@/lib/assistant-lead-signals";
-import { buildRequestId, createLead } from "@/lib/assistant-leads-store";
+import { buildRequestId, createLead, markSessionForwarded } from "@/lib/assistant-leads-store";
 
 export const runtime = "nodejs";
 
@@ -14,6 +14,7 @@ type ForwardPayload = {
   messages?: ChatMessage[];
   contactType?: "email" | "phone";
   contactValue?: string;
+  sessionId?: string;
 };
 
 function normalizeMessages(messages: unknown): ChatMessage[] {
@@ -48,6 +49,10 @@ function isValidPhone(value: string) {
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as ForwardPayload;
   const page = typeof body.page === "string" ? body.page : "unknown";
+  const sessionId =
+    typeof body.sessionId === "string" && body.sessionId.trim() !== ""
+      ? body.sessionId.trim()
+      : "anonymous";
   const messages = normalizeMessages(body.messages);
   const contactType = body.contactType;
   const contactValue = (body.contactValue ?? "").trim();
@@ -88,6 +93,7 @@ export async function POST(request: Request) {
     transcript: messages,
     ...draft,
   });
+  markSessionForwarded(sessionId);
 
   return NextResponse.json({
     ok: true,

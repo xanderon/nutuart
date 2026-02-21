@@ -6,7 +6,11 @@ import {
   isLeadReady,
   leadInfoCount,
 } from "@/lib/assistant-lead-signals";
-import { getLeadByRequestId, type LeadStatus } from "@/lib/assistant-leads-store";
+import {
+  getLeadByRequestId,
+  type LeadStatus,
+  upsertSession,
+} from "@/lib/assistant-leads-store";
 
 type ChatRole = "user" | "assistant";
 type ChatMessage = {
@@ -17,6 +21,7 @@ type ChatMessage = {
 type AssistantPayload = {
   messages?: ChatMessage[];
   page?: string;
+  sessionId?: string;
 };
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -47,6 +52,10 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as AssistantPayload;
   const messages = normalizeMessages(body.messages);
   const page = typeof body.page === "string" ? body.page : "unknown";
+  const sessionId =
+    typeof body.sessionId === "string" && body.sessionId.trim() !== ""
+      ? body.sessionId.trim()
+      : "anonymous";
 
   const latestUserMessage = [...messages].reverse().find((m) => m.role === "user");
   if (!latestUserMessage) {
@@ -67,6 +76,22 @@ export async function POST(request: Request) {
   }
 
   const requestIdMatch = latestUserMessage.content.match(/\b([MGA]-\d{4})\b/i);
+  const draft = buildLeadDraft(messages);
+  const infoCount = leadInfoCount(messages);
+  const leadReadyFromSignals = isLeadReady(messages);
+  const latestUserContent = latestUserMessage.content || "";
+  const handoffIntent = isHumanHandoffIntent(messages);
+  const leadReadyNow = leadReadyFromSignals || (handoffIntent && infoCount >= 2);
+
+  upsertSession({
+    sessionId,
+    page,
+    messageCount: messages.length,
+    lastUserMessage: latestUserContent.slice(0, 400),
+    leadReady: leadReadyNow,
+    draft,
+  });
+
   if (requestIdMatch) {
     const requestId = requestIdMatch[1].toUpperCase();
     const lead = getLeadByRequestId(requestId);
@@ -76,7 +101,7 @@ export async function POST(request: Request) {
         reply:
           `Nu gasesc o solicitare cu ID ${requestId}. Verifica, te rog, formatul (ex: M-4821).`,
         leadReady: false,
-        leadDraft: buildLeadDraft(messages),
+        leadDraft: draft,
       });
     }
 
@@ -84,13 +109,11 @@ export async function POST(request: Request) {
     return NextResponse.json({
       reply: `Status ${requestId}: ${statusText}`,
       leadReady: false,
-      leadDraft: buildLeadDraft(messages),
+      leadDraft: draft,
     });
   }
 
-  const draft = buildLeadDraft(messages);
-  const infoCount = leadInfoCount(messages);
-  if (isHumanHandoffIntent(messages)) {
+  if (handoffIntent) {
     if (infoCount >= 2) {
       return NextResponse.json({
         reply:
@@ -159,10 +182,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const leadReady = isLeadReady(messages);
-    const leadDraft = draft;
-
-    return NextResponse.json({ reply, leadReady, leadDraft });
+    return NextResponse.json({ reply, leadReady: leadReadyNow, leadDraft: draft });
   } catch (error) {
     console.error("Assistant route error", error);
     return NextResponse.json(

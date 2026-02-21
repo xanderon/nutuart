@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { computeDailyOverview, listLeads } from "@/lib/assistant-leads-store";
+import { computeDailyOverview, listLeads, listSessions } from "@/lib/assistant-leads-store";
 import { AssistantDashboardTable } from "@/components/ai/assistant-dashboard-table";
+import { AssistantSessionTable } from "@/components/ai/assistant-session-table";
 
 export const metadata: Metadata = {
   title: "Assistant Dashboard",
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 
 export default function AssistantDashboardPage() {
   const leads = listLeads();
+  const sessions = listSessions();
   const overview = computeDailyOverview(leads);
 
   const tldr = [
@@ -38,7 +40,7 @@ export default function AssistantDashboardPage() {
       <section className="grid gap-4 sm:grid-cols-3">
         <Card title="Cererile de azi" value={String(overview.totalTodayLeads)} />
         <Card title="Total cereri" value={String(leads.length)} />
-        <Card title="Data raport" value={overview.today} />
+        <Card title="Sesiuni chat" value={String(sessions.length)} />
       </section>
 
       <section className="rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/55 p-5">
@@ -47,6 +49,15 @@ export default function AssistantDashboardPage() {
       </section>
 
       <AssistantDashboardTable initialLeads={leads} />
+
+      <section className="space-y-3">
+        <h2 className="font-display text-2xl">Sesiuni chat (si fara cerere oficiala)</h2>
+        <p className="text-sm text-muted">
+          Aici vezi sumarul conversatiilor si pozele urcate de utilizatori, chiar daca nu au trimis
+          inca cererea finala.
+        </p>
+        <AssistantSessionTable sessions={sessions} />
+      </section>
     </div>
   );
 }
