@@ -73,8 +73,14 @@
   --font-display: var(--font-display);
 }
 
+html,
 body {
-  min-height: 100vh;
+  width: 100%;
+  overflow-x: clip;
+}
+
+body {
+  min-height: 100dvh;
   background: radial-gradient(circle at top, rgba(244, 197, 108, 0.06), transparent 45%),
     var(--page-bg);
   color: var(--color-foreground);

@@ -365,9 +365,16 @@ export function AssistantWidget() {
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-[140]">
+      <div
+        className="fixed z-[140]"
+        style={{
+          left: "max(0.6rem, env(safe-area-inset-left))",
+          right: "max(0.6rem, env(safe-area-inset-right))",
+          bottom: "max(0.6rem, env(safe-area-inset-bottom))",
+        }}
+      >
         {open ? (
-          <div className="w-[min(92vw,400px)] overflow-hidden rounded-[20px] border border-[#d9e5e6] bg-white shadow-[0_28px_75px_-38px_rgba(12,34,35,0.35)]">
+          <div className="ml-auto w-full max-w-[400px] overflow-hidden rounded-[20px] border border-[#d9e5e6] bg-white shadow-[0_28px_75px_-38px_rgba(12,34,35,0.35)]">
             <div className="border-b border-[#e8eff0] bg-[#f4f7f7] px-4 py-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -477,7 +484,7 @@ export function AssistantWidget() {
                       }))
                     }
                     placeholder={contactType === "email" ? "email@exemplu.com" : "+40..."}
-                    className="w-full rounded-full border border-[#d7e4e5] bg-white px-4 py-2 text-sm text-[#1f3335] outline-none focus:border-[#2f6f73]"
+                    className="w-full rounded-full border border-[#d7e4e5] bg-white px-4 py-2 text-base text-[#1f3335] outline-none focus:border-[#2f6f73] sm:text-sm"
                   />
 
                   <button
@@ -549,7 +556,7 @@ export function AssistantWidget() {
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   placeholder="Scrie un mesaj..."
-                  className="w-full rounded-full border border-[#d7e4e5] bg-white px-4 py-2.5 text-sm text-[#1f3335] outline-none focus:border-[#2f6f73]"
+                  className="w-full rounded-full border border-[#d7e4e5] bg-white px-4 py-2.5 text-base text-[#1f3335] outline-none focus:border-[#2f6f73] sm:text-sm"
                 />
                 <button
                   type="submit"
@@ -562,7 +569,7 @@ export function AssistantWidget() {
             </div>
           </div>
         ) : (
-          <div className="relative flex flex-col items-end gap-2">
+          <div className="relative ml-auto flex w-full max-w-[220px] flex-col items-end gap-2">
             <div
               className={`max-w-[220px] rounded-2xl bg-white px-3 py-2 text-xs text-[#314f52] shadow-[0_14px_30px_-20px_rgba(13,38,39,0.4)] transition-all duration-300 ${
                 hintVisible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
