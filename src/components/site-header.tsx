@@ -81,8 +81,8 @@ export function SiteHeader() {
               </Link>
             );
           })}
-          <div className="flex justify-center">
-            <ThemeSwitcher />
+          <div className="flex justify-center pt-2">
+            <ThemeSwitcher compact />
           </div>
         </div>
       )}

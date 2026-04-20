@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Source_Sans_3 } from "next/font/google";
 import { JsonLd } from "@/components/seo/json-ld";
 import { absoluteUrl, siteConfig } from "@/lib/site";
+import { themeStorageKey } from "@/lib/themes";
 import "./globals.css";
 
 const display = Playfair_Display({
@@ -89,6 +90,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const themeInitScript = `
+    (() => {
+      const storageKey = ${JSON.stringify(themeStorageKey)};
+      const stored = window.localStorage.getItem(storageKey);
+      const preference = stored === "light" || stored === "dark" || stored === "system"
+        ? stored
+        : "system";
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      const resolvedTheme = preference === "system" ? systemTheme : preference;
+      document.documentElement.dataset.theme = resolvedTheme;
+      document.documentElement.style.colorScheme = resolvedTheme;
+    })();
+  `;
+
   const structuredData = [
     {
       "@context": "https://schema.org",
@@ -124,6 +139,7 @@ export default function RootLayout({
   return (
     <html lang="ro" suppressHydrationWarning>
       <body className={`${sans.variable} ${display.variable} antialiased`} suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <JsonLd data={structuredData} />
         {children}
       </body>
