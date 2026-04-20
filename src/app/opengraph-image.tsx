@@ -9,7 +9,9 @@ export const size = {
 export const contentType = "image/png";
 
 export default function OpenGraphImage() {
-  const subtitle = `Geamuri sablate, vitralii, autocolante decorative și proiecte personalizate realizate de ${siteConfig.ownerName}.`;
+  const subtitle =
+    "Geamuri sablate, vitralii și autocolante decorative pentru spații comerciale și rezidențiale.";
+  const cta = "Vezi portofoliul și proiectele realizate.";
 
   return new ImageResponse(
     (
@@ -61,16 +63,17 @@ export default function OpenGraphImage() {
                 background: "#ff7d64",
               }}
             />
-            {siteConfig.name}
+            {siteConfig.previewLabel}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "20px", maxWidth: 860 }}>
             <div style={{ fontSize: 72, lineHeight: 1.03, fontWeight: 700 }}>
-              Lucrări decorative pe sticlă pentru spații comerciale și rezidențiale
+              Lucrări decorative pe sticlă, realizate la comandă
             </div>
             <div style={{ fontSize: 28, lineHeight: 1.45, color: "rgba(243,244,248,0.76)" }}>
               {subtitle}
             </div>
+            <div style={{ fontSize: 24, lineHeight: 1.4, color: "#f6d28e" }}>{cta}</div>
           </div>
 
           <div

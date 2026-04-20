@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   applicationName: siteConfig.name,
   title: {
     default: siteConfig.title,
-    template: `%s · ${siteConfig.name}`,
+    template: `%s - ${siteConfig.name}`,
   },
   description: siteConfig.description,
   alternates: {
@@ -37,24 +37,24 @@ export const metadata: Metadata = {
     address: false,
   },
   openGraph: {
-    title: siteConfig.title,
+    title: siteConfig.socialTitle,
     description: siteConfig.description,
     url: siteConfig.url,
     siteName: siteConfig.name,
     locale: siteConfig.locale,
     type: "website",
     images: [
-      {
-        url: absoluteUrl(siteConfig.ogImagePath),
-        width: 1200,
-        height: 630,
-        alt: siteConfig.title,
-      },
-    ],
-  },
+        {
+          url: absoluteUrl(siteConfig.ogImagePath),
+          width: 1200,
+          height: 630,
+          alt: siteConfig.socialTitle,
+        },
+      ],
+    },
   twitter: {
     card: "summary_large_image",
-    title: siteConfig.title,
+    title: siteConfig.socialTitle,
     description: siteConfig.description,
     images: [absoluteUrl(siteConfig.ogImagePath)],
   },

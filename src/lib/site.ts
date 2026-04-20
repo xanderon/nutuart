@@ -3,9 +3,11 @@ import type { Metadata } from "next";
 export const siteConfig = {
   name: "NutuArt",
   ownerName: "Nuțu Marcel Marius",
-  title: "NutuArt — Nuțu Marcel Marius",
+  title: "NutuArt - Nuțu Marcel Marius",
+  socialTitle: "Artist Nuțu Marcel Marius - Lucrări decorative pe sticlă",
+  previewLabel: "Artist Nuțu Marcel Marius",
   description:
-    "Lucrări decorative pe sticlă, geamuri sablate, vitralii, autocolante și proiecte personalizate realizate de Nuțu Marcel Marius pentru spații comerciale și rezidențiale.",
+    "Geamuri sablate, vitralii și autocolante decorative pentru spații comerciale și rezidențiale. Realizate la comandă în București.",
   url: "https://marcelnutu.art",
   locale: "ro_RO",
   language: "ro-RO",
@@ -28,6 +30,7 @@ type BuildPageMetadataInput = {
   keywords?: string[];
   imagePath?: string;
   absoluteTitle?: boolean;
+  socialTitle?: string;
 };
 
 export function buildPageMetadata({
@@ -37,10 +40,12 @@ export function buildPageMetadata({
   keywords = [],
   imagePath = siteConfig.ogImagePath,
   absoluteTitle = false,
+  socialTitle,
 }: BuildPageMetadataInput): Metadata {
   const canonicalUrl = absoluteUrl(path);
   const imageUrl = absoluteUrl(imagePath);
-  const socialTitle = title === siteConfig.title ? title : `${title} · ${siteConfig.name}`;
+  const effectiveSocialTitle =
+    socialTitle || (title === siteConfig.title ? siteConfig.socialTitle : `${title} - ${siteConfig.name}`);
 
   return {
     title: absoluteTitle ? { absolute: title } : title,
@@ -50,7 +55,7 @@ export function buildPageMetadata({
       canonical: canonicalUrl,
     },
     openGraph: {
-      title: socialTitle,
+      title: effectiveSocialTitle,
       description,
       url: canonicalUrl,
       siteName: siteConfig.name,
@@ -61,13 +66,13 @@ export function buildPageMetadata({
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: socialTitle,
+          alt: effectiveSocialTitle,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: socialTitle,
+      title: effectiveSocialTitle,
       description,
       images: [imageUrl],
     },

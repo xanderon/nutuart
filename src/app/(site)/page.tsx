@@ -10,6 +10,7 @@ export const metadata: Metadata = buildPageMetadata({
   description: siteConfig.description,
   path: "/",
   absoluteTitle: true,
+  socialTitle: siteConfig.socialTitle,
   keywords: [
     "geamuri sablate",
     "vitralii",
