@@ -1,11 +1,13 @@
 import Link from "next/link";
+import { siteConfig } from "@/lib/site";
 
 const footerLinks = [
   {
     title: "Descoperă",
     items: [
+      { label: "Servicii", href: "/services" },
       { label: "Artistul", href: "/artist" },
-      { label: "Procesul de creație", href: "/contact" },
+      { label: "Artă decorativă", href: "/experimental" },
       { label: "Contact", href: "/contact" },
     ],
   },
@@ -25,6 +27,7 @@ export function SiteFooter() {
             Geamuri sablate, vitralii și autocolante decorative create la comandă.
             Realizăm piese unicat și proiecte pentru spații rezidențiale sau corporate.
           </p>
+          <p className="text-sm text-muted">{siteConfig.location}</p>
         </div>
         {footerLinks.map((group) => (
           <div key={group.title} className="space-y-4">
@@ -45,6 +48,31 @@ export function SiteFooter() {
             </ul>
           </div>
         ))}
+        <div className="space-y-4">
+          <p className="text-xs uppercase tracking-[0.3em] text-muted">Contact</p>
+          <div className="space-y-2 text-sm">
+            <a
+              href={`mailto:${siteConfig.email}`}
+              className="block transition-colors duration-150 hover:text-foreground"
+            >
+              {siteConfig.email}
+            </a>
+            <a
+              href={`tel:${siteConfig.phone}`}
+              className="block transition-colors duration-150 hover:text-foreground"
+            >
+              {siteConfig.phoneDisplay}
+            </a>
+            <a
+              href={siteConfig.whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="block transition-colors duration-150 hover:text-foreground"
+            >
+              WhatsApp
+            </a>
+          </div>
+        </div>
       </div>
       <div className="border-t border-[color:var(--color-outline)]">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-3 px-4 py-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">

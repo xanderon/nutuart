@@ -385,6 +385,7 @@ export function AssistantWidget() {
                           width={64}
                           height={90}
                           className="h-auto w-full drop-shadow-[0_6px_14px_rgba(0,0,0,0.2)]"
+                          style={{ height: "auto" }}
                           priority={false}
                         />
                       </div>
@@ -602,6 +603,7 @@ export function AssistantWidget() {
                     width={85}
                     height={120}
                     className="h-auto w-full drop-shadow-[0_6px_14px_rgba(0,0,0,0.2)]"
+                    style={{ height: "auto" }}
                     priority={false}
                   />
                 </div>

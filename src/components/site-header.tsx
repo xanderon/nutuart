@@ -8,6 +8,7 @@ import { ThemeSwitcher } from "./theme-switcher";
 
 const navLinks = [
   { href: "/", label: "Galerie" },
+  { href: "/services", label: "Servicii" },
   { href: "/experimental", label: "Artă" },
   { href: "/artist", label: "Artist" },
   { href: "/contact", label: "Contact" },
@@ -16,11 +17,11 @@ const navLinks = [
 export function SiteHeader() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const mobileTitle = pathname === "/contact" ? "Contact" : null;
+  const mobileTitle = navLinks.find((link) => pathname === link.href)?.label ?? null;
 
   return (
     <header className="fixed top-3 z-50 w-full px-4 sm:top-6">
-      <div className="relative mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/10 bg-black/35 px-3 py-2.5 text-xs uppercase tracking-[0.35em] text-white/70 backdrop-blur sm:px-4 sm:py-3">
+      <div className="relative mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/10 bg-black/35 px-3 py-2.5 text-xs uppercase tracking-[0.35em] text-white/80 backdrop-blur sm:px-4 sm:py-3">
         <Link href="/" className="font-display text-sm tracking-tight text-white">
           NutuArt
         </Link>
@@ -40,7 +41,7 @@ export function SiteHeader() {
                 href={link.href}
                 className={cn(
                   "transition duration-150",
-                  isActive ? "text-white" : "text-white/60 hover:text-white"
+                  isActive ? "text-white" : "text-white/75 hover:text-white"
                 )}
               >
                 {link.label}
@@ -73,7 +74,7 @@ export function SiteHeader() {
                 onClick={() => setMobileOpen(false)}
                 className={cn(
                   "block py-3",
-                  isActive ? "text-white" : "text-white/60"
+                  isActive ? "text-white" : "text-white/75"
                 )}
               >
                 {link.label}

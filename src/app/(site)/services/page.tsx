@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { buildPageMetadata } from "@/lib/site";
 
 const services = [
   {
@@ -54,11 +55,12 @@ const services = [
   },
 ];
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "Atelier & Servicii",
   description:
     "Serviciile NutuArt: autocolante corporate, geamuri sablate, vitralii, printuri outdoor și trofee personalizate realizate de Nuțu Marcel Marius.",
-};
+  path: "/services",
+});
 
 export default function ServicesPage() {
   return (

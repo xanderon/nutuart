@@ -3,15 +3,18 @@ import fs from "node:fs";
 import path from "node:path";
 import Image from "next/image";
 import { SilhouetteImage } from "@/components/gallery/silhouette-image";
-
-export const metadata: Metadata = {
-  title: "Artă",
-  description:
-    "Pagina de artă a artistului, cu selecții decorative și portretul lui Nuțu Marcel Marius.",
-};
+import { buildPageMetadata } from "@/lib/site";
 
 const topPortrait =
   "/images/collections/artist-nutu-marcel/ChatGPT Image Feb 14, 2026, 11_34_59 AM.png";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Artă",
+  description:
+    "Selecții de artă decorativă pe sticlă și obiecte de autor realizate de Nuțu Marcel Marius.",
+  path: "/experimental",
+  imagePath: topPortrait,
+});
 
 function getDecorationImages() {
   const dir = path.join(process.cwd(), "public", "images", "collections", "decorations");

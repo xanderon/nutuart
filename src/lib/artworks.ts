@@ -24,7 +24,11 @@ function toTitleFromFilename(filename: string) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function getArtworks(): Artwork[] {
+export function getArtworks({ includeDiscovered = false }: { includeDiscovered?: boolean } = {}) {
+  if (!includeDiscovered) {
+    return baseArtworks;
+  }
+
   const root = path.join(process.cwd(), "public", "images", "collections");
 
   const discovered: Artwork[] = [];

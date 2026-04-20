@@ -3,10 +3,11 @@
 :root {
   color-scheme: dark;
   --page-bg: #030409;
+  --color-background: #030409;
   --color-surface: #080a12;
   --color-elevated: #0f111b;
   --color-foreground: #f3f4f8;
-  --color-muted: #8b90a3;
+  --color-muted: #a7afc0;
   --color-accent: #f4c56c;
   --color-accent-strong: #ff7d64;
   --color-outline: rgba(255, 255, 255, 0.08);
@@ -17,10 +18,11 @@
 [data-theme="dark"] {
   color-scheme: dark;
   --page-bg: #030409;
+  --color-background: #030409;
   --color-surface: #080a12;
   --color-elevated: #0f111b;
   --color-foreground: #f3f4f8;
-  --color-muted: #8b90a3;
+  --color-muted: #a7afc0;
   --color-accent: #f4c56c;
   --color-accent-strong: #ff7d64;
   --color-outline: rgba(255, 255, 255, 0.08);
@@ -31,6 +33,7 @@
 [data-theme="light"] {
   color-scheme: light;
   --page-bg: #f8f9fb;
+  --color-background: #f8f9fb;
   --color-surface: #ffffff;
   --color-elevated: #f2f4f7;
   --color-foreground: #20232d;
@@ -45,6 +48,7 @@
 [data-theme="blue"] {
   color-scheme: dark;
   --page-bg: #1f2f3c;
+  --color-background: #1f2f3c;
   --color-surface: #324456;
   --color-elevated: #3c4f64;
   --color-foreground: #f8f9f9;
@@ -148,5 +152,16 @@ body {
   100% {
     transform: translate3d(var(--drift, 0px), 110vh, 0);
     opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

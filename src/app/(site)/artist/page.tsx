@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { buildPageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "Artistul",
   description:
-    "Despre Nuțu Marcel Marius: formare și lucrul cu sticla ca material principal.",
-};
+    "Despre Nuțu Marcel Marius, artist plastic specializat în lucrul cu sticla, geamuri sablate, vitralii și proiecte decorative personalizate.",
+  path: "/artist",
+  imagePath: "/images/artist_nutu_marcel_marius_at_work.jpg",
+});
 
 export default function ArtistPage() {
   return (
@@ -37,6 +40,7 @@ export default function ArtistPage() {
             width={960}
             height={960}
             className="h-full w-full object-cover"
+            sizes="(max-width: 1024px) 100vw, 50vw"
             priority
           />
         </div>
@@ -50,6 +54,7 @@ export default function ArtistPage() {
             width={960}
             height={720}
             className="h-full w-full object-cover"
+            sizes="(max-width: 1024px) 100vw, 50vw"
           />
         </div>
         <div className="space-y-4">
