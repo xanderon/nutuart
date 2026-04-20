@@ -376,16 +376,15 @@ export function AssistantWidget() {
             <div className="border-b border-[#e8eff0] bg-[#f4f7f7] px-4 py-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="relative h-16 w-16 shrink-0">
+                  <div className="relative h-16 w-[45px] shrink-0">
                     <div className="ai-breathe">
-                      <div className={waveNow ? "ai-wave" : ""}>
+                      <div className={`relative h-full w-full ${waveNow ? "ai-wave" : ""}`}>
                         <Image
                           src="/images/AIGlass.png"
                           alt="Asistent AI"
-                          width={64}
-                          height={90}
-                          className="h-auto w-full drop-shadow-[0_6px_14px_rgba(0,0,0,0.2)]"
-                          style={{ height: "auto" }}
+                          fill
+                          sizes="45px"
+                          className="object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.2)]"
                           priority={false}
                         />
                       </div>
@@ -596,14 +595,13 @@ export function AssistantWidget() {
               aria-label="Deschide asistentul AI"
             >
               <div className="ai-breathe">
-                <div className={waveNow ? "ai-wave" : ""}>
+                <div className={`relative h-[120px] w-[85px] ${waveNow ? "ai-wave" : ""}`}>
                   <Image
                     src="/images/AIGlass.png"
                     alt="Asistent AI"
-                    width={85}
-                    height={120}
-                    className="h-auto w-full drop-shadow-[0_6px_14px_rgba(0,0,0,0.2)]"
-                    style={{ height: "auto" }}
+                    fill
+                    sizes="85px"
+                    className="object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.2)]"
                     priority={false}
                   />
                 </div>
@@ -618,11 +616,17 @@ export function AssistantWidget() {
 
       <style jsx>{`
         .ai-breathe {
+          display: block;
+          width: 100%;
+          height: 100%;
           animation: ai-breathe 3s ease-in-out infinite;
           transform-origin: 50% 75%;
         }
 
         .ai-wave {
+          display: block;
+          width: 100%;
+          height: 100%;
           animation: ai-wave 1s ease-in-out;
           transform-origin: 50% 75%;
         }

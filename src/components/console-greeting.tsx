@@ -17,9 +17,16 @@ export function ConsoleGreeting() {
     window.__nutuArtConsoleGreetingShown = true;
 
     console.log(
-      "%cNutuArt%c Salut, curiosule. Daca ai deschis consola, inseamna ca avem gusturi similare.",
-      "background:#101827;color:#f6d28e;padding:6px 10px;border-radius:999px;font-weight:700;",
+      "%cArtist Nuțu Marcel Marius",
+      "background:#101827;color:#f6d28e;padding:6px 10px;border-radius:999px;font-weight:700;letter-spacing:0.04em;"
+    );
+    console.log(
+      "%cSticlă decorativă, vitralii și proiecte custom pentru spații care trebuie să rămână în minte.",
       "color:#8aa0a8;font-weight:500;"
+    );
+    console.log(
+      "%cDacă ai ajuns aici, probabil îți plac și ție detaliile bine făcute.",
+      "color:#4f6365;font-style:italic;"
     );
   }, []);
 
