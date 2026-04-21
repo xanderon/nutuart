@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 type Message = {
@@ -89,11 +89,7 @@ export function AssistantWidget() {
     phone: "",
   });
   const [leadError, setLeadError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [lastUploadUrl, setLastUploadUrl] = useState<string | null>(null);
   const messagesListRef = useRef<HTMLDivElement | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const sessionIdRef = useRef("anonymous");
 
   const hideHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -310,57 +306,6 @@ export function AssistantWidget() {
     await sendMessage(input);
   };
 
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file || uploading) return;
-
-    setUploadError(null);
-    if (!file.type.startsWith("image/")) {
-      setUploadError("Poti incarca doar imagini.");
-      return;
-    }
-    if (file.size > 4 * 1024 * 1024) {
-      setUploadError("Imaginea depaseste 4MB. Alege o varianta mai mica.");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("sessionId", sessionIdRef.current);
-
-      const response = await fetch("/api/assistant/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = (await response.json().catch(() => ({}))) as {
-        ok?: boolean;
-        url?: string;
-        error?: string;
-      };
-      if (!response.ok || !data.ok || !data.url) {
-        throw new Error(data.error || "Nu am putut incarca imaginea.");
-      }
-
-      setLastUploadUrl(data.url);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "Am primit poza. Daca vrei, iti pot trimite mai departe rezumatul discutiei ca sa nu repeti detaliile.",
-        },
-      ]);
-    } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Eroare la upload.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
   return (
     <>
       <div
@@ -524,37 +469,6 @@ export function AssistantWidget() {
                 Preferi direct? Pot trimite detaliile discutate ca cerere cu Request ID sau poti
                 contacta direct la marcelnutu@yahoo.com / +40 721 383 668.
               </p>
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className="rounded-full border border-[#d7e4e5] bg-[#f9fbfb] px-3 py-1.5 text-xs text-[#406466] hover:border-[#2f6f73] hover:text-[#2f6f73] disabled:opacity-70"
-                >
-                  {uploading ? "Se incarca..." : "Incarca poza (max 4MB)"}
-                </button>
-                {lastUploadUrl ? (
-                  <a
-                    href={lastUploadUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] text-[#2f6f73] underline underline-offset-2"
-                  >
-                    Vezi ultima poza
-                  </a>
-                ) : null}
-              </div>
-              <p className="mb-2 text-[11px] text-[#7a6a42]">
-                Nota: upload-ul de poze este momentan in constructie.
-              </p>
-              {uploadError ? <p className="mb-2 text-xs text-[#a64a4a]">{uploadError}</p> : null}
               <form onSubmit={handleSubmit} className="flex gap-2">
                 <input
                   value={input}
