@@ -54,8 +54,9 @@ export default async function HomePage() {
             Lucrări decorative pentru spații comerciale și rezidențiale.
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">
-            Atelierul NutuArt realizează geamuri sablate, vitralii, autocolante și
-            proiecte pe sticlă adaptate spațiului, luminii și identității vizuale.
+            Atelierul artistului Nuțu Marcel realizează geamuri sablate,
+            vitralii, autocolante și alte lucrări pe sticlă pentru case,
+            birouri și spații comerciale.
           </p>
         </div>
         <GalleryExplorer artworks={artworks} />
