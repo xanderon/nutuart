@@ -6,51 +6,51 @@ const services = [
   {
     title: "Autocolante corporate",
     description:
-      "Branding pentru birouri, recepții și fațade, de la autocolante sablate la printuri UV cu decupaj personalizat.",
+      "Branding pentru birouri, recepții și fațade, de la folii sablate până la printuri UV decupate.",
     deliverables: [
-      "Consultanță grafică și story de brand",
-      "Producție print & sablare în atelier",
-      "Aplicare rapidă fără întreruperea activității",
+      "Consultanță pe partea vizuală",
+      "Producție în atelier",
+      "Montaj rapid, fără să încurcăm activitatea",
     ],
   },
   {
     title: "Geamuri sablate",
     description:
-      "Modele custom pentru geamuri și paravane; combinații de sablare, gravură și autocolant transparent pentru efecte multiple.",
+      "Modele personalizate pentru geamuri și paravane. Putem combina sablare, gravură și folii pentru efecte diferite.",
     deliverables: [
-      "Pattern-uri inspirate din identitatea spațiului",
-      "Testare pe mostre și simulări digitale",
-      "Montaj curat și protecție pe termen lung",
+      "Pattern-uri adaptate spațiului",
+      "Testăm variante înainte de execuție",
+      "Montaj curat și durabil",
     ],
   },
   {
     title: "Vitralii & restaurare",
     description:
-      "Vitralii realizate în tehnici Tiffany și cu plumb, restaurare pentru spații sacre și proiectare de panouri contemporane.",
+      "Ne ocupăm de designul vitraliilor și de integrarea lor în spațiu, fie că e ceva clasic sau modern.",
     deliverables: [
-      "Relevee și plan de restaurare",
-      "Selecție de sticlă texturată și foiță metalică",
-      "Structură metalică și montaj la locație",
+      "Design personalizat",
+      "Alegerea materialelor potrivite",
+      "Montaj și integrare la locație",
     ],
   },
   {
     title: "Printuri outdoor",
     description:
-      "Mesh, bannere și casete luminoase gândite pentru vizibilitate în trafic și rezistență la intemperii.",
+      "Mesh, bannere și casete luminoase făcute să reziste afară și să fie vizibile.",
     deliverables: [
-      "Concept grafic și prepress",
-      "Producție pe suporturi premium",
-      "Sisteme de prindere și montaj în siguranță",
+      "Concept și pregătire pentru print",
+      "Materiale bune",
+      "Montaj sigur",
     ],
   },
   {
     title: "Trofee personalizate",
     description:
-      "Trofee din sticlă șlefuită și gravură laser, combinate cu lemn sau metal pentru gale corporate și culturale.",
+      "Trofee din sticlă șlefuită, cu sablare și finisaje manuale.",
     deliverables: [
-      "Design dedicat evenimentului tău",
-      "Prototipare și finisaje manuale",
-      "Packaging și livrare protejată",
+      "Design pentru eveniment",
+      "Prototip și ajustări",
+      "Ambalare și livrare ok",
     ],
   },
 ];
@@ -58,7 +58,7 @@ const services = [
 export const metadata: Metadata = buildPageMetadata({
   title: "Atelier & Servicii",
   description:
-    "Serviciile NutuArt: autocolante corporate, geamuri sablate, vitralii, printuri outdoor și trofee personalizate realizate de Nuțu Marcel Marius.",
+    "Soluții integrate NutuArt: autocolante corporate, geamuri sablate, vitralii, printuri outdoor și trofee personalizate.",
   path: "/services",
 });
 
@@ -70,12 +70,12 @@ export default function ServicesPage() {
           Atelier & Proces
         </span>
         <h1 className="font-display text-4xl leading-tight sm:text-5xl">
-          Soluții integrate: autocolante, sablare, vitralii, printuri, trofee.
+          Soluții integrate: autocolante, sablare, vitralii, printuri, trofee
         </h1>
         <p className="max-w-3xl text-base leading-relaxed text-muted">
-          Gândim și producem în atelier, astfel încât fiecare proiect – de la
-          branding interior la vitralii monumentale – să primească aceeași grijă
-          pentru detalii și durabilitate.
+          Gândim și producem în atelier, cap-coadă. Fie că e branding pentru un
+          spațiu sau un proiect mai complex, ne uităm la detalii și vrem să iasă
+          bine și să țină în timp.
         </p>
       </header>
 
@@ -107,9 +107,8 @@ export default function ServicesPage() {
         <div className="space-y-4">
           <h2 className="font-display text-2xl">Parteneriate creative</h2>
           <p className="text-sm leading-relaxed text-muted">
-            Lucrăm alături de studiouri de arhitectură, branduri și instituții
-            culturale. Putem integra proiectele în fluxul tău, de la măsurători la
-            montaj, cu echipe dedicate fiecărei etape.
+            Lucrăm cu arhitecți, branduri și echipe creative. Putem intra în
+            proiect de la început sau pe parcurs, în funcție de nevoie.
           </p>
         </div>
         <div className="space-y-4 rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-background)]/60 p-6">
@@ -117,9 +116,20 @@ export default function ServicesPage() {
             Pasul următor
           </p>
           <p className="text-sm text-muted">
-            Trimite-ne un moodboard sau planșe pentru a porni discuția despre
-            următorul tău proiect.
+            Dacă ai un moodboard sau niște idei, trimite-le și vedem cum le
+            ducem mai departe.
           </p>
+          <div className="space-y-2 border-t border-[color:var(--color-outline)] pt-4">
+            <p className="text-xs uppercase tracking-[0.3em] text-muted">
+              Contact rapid
+            </p>
+            <p className="font-display text-xl text-foreground">NutuArt</p>
+            <p className="text-sm leading-relaxed text-muted">
+              Geamuri sablate, vitralii și autocolante decorative făcute la
+              comandă. Proiecte pentru case și spații comerciale.
+            </p>
+            <p className="text-sm text-muted">București, România</p>
+          </div>
           <Link
             href="/contact"
             className="inline-flex items-center justify-center rounded-full bg-[color:var(--color-accent-strong)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--color-background)] transition duration-200 hover:-translate-y-0.5"

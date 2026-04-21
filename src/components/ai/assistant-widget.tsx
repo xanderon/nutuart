@@ -380,7 +380,7 @@ export function AssistantWidget() {
                     <div className="ai-breathe">
                       <div className={`relative h-full w-full ${waveNow ? "ai-wave" : ""}`}>
                         <Image
-                          src="/images/AIGlass.png"
+                          src="/images/AIGlass.webp"
                           alt="Asistent AI"
                           fill
                           sizes="45px"
@@ -597,7 +597,7 @@ export function AssistantWidget() {
               <div className="ai-breathe">
                 <div className={`relative h-[120px] w-[85px] ${waveNow ? "ai-wave" : ""}`}>
                   <Image
-                    src="/images/AIGlass.png"
+                    src="/images/AIGlass.webp"
                     alt="Asistent AI"
                     fill
                     sizes="85px"

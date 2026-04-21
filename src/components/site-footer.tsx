@@ -7,7 +7,7 @@ const footerLinks = [
     items: [
       { label: "Servicii", href: "/services" },
       { label: "Artistul", href: "/artist" },
-      { label: "Artă decorativă", href: "/experimental" },
+      { label: "Artă decorativă", href: "/arta" },
       { label: "Contact", href: "/contact" },
     ],
   },
@@ -39,6 +39,7 @@ export function SiteFooter() {
                 <li key={item.label}>
                   <Link
                     href={item.href}
+                    prefetch={false}
                     className="transition-colors duration-150 hover:text-foreground"
                   >
                     {item.label}

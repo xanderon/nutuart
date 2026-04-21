@@ -7,7 +7,7 @@ export const metadata: Metadata = buildPageMetadata({
   description:
     "Despre Nuțu Marcel Marius, artist plastic specializat în lucrul cu sticla, geamuri sablate, vitralii și proiecte decorative personalizate.",
   path: "/artist",
-  imagePath: "/images/artist_nutu_marcel_marius_at_work.jpg",
+  imagePath: "/images/artist_nutu_marcel_marius_at_work.webp",
 });
 
 export default function ArtistPage() {
@@ -35,12 +35,12 @@ export default function ArtistPage() {
         </div>
         <div className="relative overflow-hidden rounded-[calc(var(--radius-lg)*1.1)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/60 shadow-[var(--shadow-soft)]">
           <Image
-            src="/images/artist_nutu_marcel_marius_at_work.jpg"
+            src="/images/artist_nutu_marcel_marius_at_work.webp"
             alt="Nuțu Marcel Marius în atelier"
-            width={960}
-            height={960}
+            width={1600}
+            height={1067}
             className="h-full w-full object-cover"
-            sizes="(max-width: 1024px) 100vw, 50vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, 48vw"
             priority
           />
         </div>
@@ -49,12 +49,12 @@ export default function ArtistPage() {
       <section className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
         <div className="relative overflow-hidden rounded-[calc(var(--radius-lg)*1.1)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/60 shadow-[var(--shadow-soft)]">
           <Image
-            src="/images/artist_nutu_marcel_marius_two.jpg"
+            src="/images/artist_nutu_marcel_marius_two.webp"
             alt="Nuțu Marcel Marius, portret"
             width={960}
-            height={720}
+            height={1439}
             className="h-full w-full object-cover"
-            sizes="(max-width: 1024px) 100vw, 50vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, 48vw"
           />
         </div>
         <div className="space-y-4">

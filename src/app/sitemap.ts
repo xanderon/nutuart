@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { absoluteUrl } from "@/lib/site";
 
-const routes = ["/", "/services", "/experimental", "/artist", "/contact"];
+const routes = ["/", "/services", "/arta", "/artist", "/contact"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return routes.map((route) => ({
@@ -11,4 +11,3 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === "/" ? 1 : 0.7,
   }));
 }
-

@@ -8,7 +8,7 @@ export const metadata: Metadata = buildPageMetadata({
   description:
     "Contact NutuArt pentru geamuri sablate, vitralii, autocolante decorative și proiecte personalizate. Email, telefon și WhatsApp direct.",
   path: "/contact",
-  imagePath: "/images/collections/artist-nutu-marcel/ChatGPT Image Feb 14, 2026, 05_29_34 PM.png",
+  imagePath: "/images/collections/artist-nutu-marcel/contact-artist.webp",
 });
 
 export default function ContactPage() {

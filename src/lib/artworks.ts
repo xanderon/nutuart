@@ -14,6 +14,7 @@ const mediumByCollection: Record<Artwork["collection"], string> = {
 };
 
 const imageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
+const extensionPriority = [".avif", ".webp", ".jpg", ".jpeg", ".png"];
 
 function toTitleFromFilename(filename: string) {
   const name = path.parse(filename).name;
@@ -38,7 +39,26 @@ export function getArtworks({ includeDiscovered = false }: { includeDiscovered?:
     if (!fs.existsSync(dir)) continue;
 
     const files = fs.readdirSync(dir);
+    const preferredFiles = new Map<string, string>();
+
     for (const file of files) {
+      const ext = path.extname(file).toLowerCase();
+      if (!imageExtensions.has(ext)) continue;
+
+      const baseName = path.parse(file).name.toLowerCase();
+      const current = preferredFiles.get(baseName);
+      if (!current) {
+        preferredFiles.set(baseName, file);
+        continue;
+      }
+
+      const currentExt = path.extname(current).toLowerCase();
+      if (extensionPriority.indexOf(ext) < extensionPriority.indexOf(currentExt)) {
+        preferredFiles.set(baseName, file);
+      }
+    }
+
+    for (const file of preferredFiles.values()) {
       const ext = path.extname(file).toLowerCase();
       if (!imageExtensions.has(ext)) continue;
 

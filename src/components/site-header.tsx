@@ -9,7 +9,7 @@ import { ThemeSwitcher } from "./theme-switcher";
 const navLinks = [
   { href: "/", label: "Galerie" },
   { href: "/services", label: "Servicii" },
-  { href: "/experimental", label: "Artă" },
+  { href: "/arta", label: "Artă" },
   { href: "/artist", label: "Artist" },
   { href: "/contact", label: "Contact" },
 ];
@@ -39,6 +39,7 @@ export function SiteHeader() {
               <Link
                 key={link.href}
                 href={link.href}
+                prefetch={false}
                 className={cn(
                   "transition duration-150",
                   isActive ? "text-white" : "text-white/75 hover:text-white"
@@ -71,6 +72,7 @@ export function SiteHeader() {
               <Link
                 key={link.href}
                 href={link.href}
+                prefetch={false}
                 onClick={() => setMobileOpen(false)}
                 className={cn(
                   "block py-3",

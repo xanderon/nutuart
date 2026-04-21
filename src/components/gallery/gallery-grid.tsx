@@ -42,7 +42,7 @@ export function GalleryGrid({ artworks, layout = "masonry" }: GalleryGridProps) 
               className="object-cover transition duration-700 ease-out group-hover:scale-[1.04]"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               priority={index === 0}
-              loading={index === 0 ? undefined : index < 6 ? "eager" : "lazy"}
+              loading={index === 0 ? undefined : "lazy"}
             />
           </div>
         );

@@ -64,6 +64,7 @@ export default async function HomePage() {
       <section className="grid gap-5 lg:grid-cols-2">
         <Link
           href="/services"
+          prefetch={false}
           className="rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/60 p-7 transition duration-200 hover:-translate-y-1"
         >
           <p className="text-xs uppercase tracking-[0.35em] text-muted">Servicii</p>
@@ -75,6 +76,7 @@ export default async function HomePage() {
         </Link>
         <Link
           href="/artist"
+          prefetch={false}
           className="rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/45 p-7 transition duration-200 hover:-translate-y-1"
         >
           <p className="text-xs uppercase tracking-[0.35em] text-muted">Artist</p>
@@ -88,6 +90,7 @@ export default async function HomePage() {
       <section className="mx-auto w-full max-w-3xl">
         <Link
           href="/contact"
+          prefetch={false}
           className="block rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/65 p-8 text-center transition hover:-translate-y-1 hover:bg-[color:var(--color-elevated)]"
         >
           <p className="text-xs uppercase tracking-[0.35em] text-muted">
