@@ -10,7 +10,7 @@ export const contentType = "image/png";
 
 export default function OpenGraphImage() {
   const subtitle =
-    "Geamuri sablate, vitralii și autocolante decorative pentru spații comerciale și rezidențiale.";
+    "Autocolante, geamuri sablate, lucrari pentru biserici si trofee personalizate pentru spatii comerciale si rezidentiale.";
   const cta = "Vezi portofoliul și proiectele realizate.";
 
   return new ImageResponse(

@@ -6,7 +6,7 @@ import { ContactContent } from "./contact-content";
 export const metadata: Metadata = buildPageMetadata({
   title: "Contact",
   description:
-    "Contact NutuArt pentru geamuri sablate, vitralii, autocolante decorative și proiecte personalizate. Email, telefon și WhatsApp direct.",
+    "Contact NutuArt pentru autocolante, geamuri sablate, lucrări pentru biserici și trofee personalizate. Email, telefon și WhatsApp direct.",
   path: "/contact",
   imagePath: "/images/collections/artist-nutu-marcel/contact-artist.webp",
 });

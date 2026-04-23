@@ -5,7 +5,7 @@ import { buildPageMetadata } from "@/lib/site";
 export const metadata: Metadata = buildPageMetadata({
   title: "Galerie comercială",
   description:
-    "Lucrările comerciale NutuArt: autocolante corporate, geamuri sablate, vitralii, printuri outdoor și trofee personalizate.",
+    "Lucrările comerciale NutuArt: autocolante, geamuri sablate, lucrări pentru biserici și trofee personalizate.",
   path: "/gallery",
 });
 

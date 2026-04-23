@@ -7,7 +7,7 @@ export const siteConfig = {
   socialTitle: "Artist Nuțu Marcel Marius - Lucrări decorative pe sticlă",
   previewLabel: "Artist Nuțu Marcel Marius",
   description:
-    "Geamuri sablate, vitralii și autocolante decorative pentru spații comerciale și rezidențiale. Realizate la comandă în București.",
+    "Autocolante, geamuri sablate, lucrări pentru biserici și trofee personalizate pentru spații comerciale și rezidențiale. Realizate la comandă în București.",
   url: "https://marcelnutu.art",
   locale: "ro_RO",
   language: "ro-RO",

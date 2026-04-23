@@ -6,7 +6,7 @@ const services = [
   {
     title: "Autocolante corporate",
     description:
-      "Branding pentru birouri, recepții și fațade, de la folii sablate până la printuri UV decupate.",
+      "Branding pentru birouri, recepții și fațade, cu producție și montaj adaptate spațiului.",
     deliverables: [
       "Consultanță pe partea vizuală",
       "Producție în atelier",
@@ -24,23 +24,13 @@ const services = [
     ],
   },
   {
-    title: "Vitralii & restaurare",
+    title: "Lucrări pentru biserici",
     description:
-      "Ne ocupăm de designul vitraliilor și de integrarea lor în spațiu, fie că e ceva clasic sau modern.",
+      "Execuții decorative și intervenții vizuale pentru spații religioase, cu atenție la context și detaliu.",
     deliverables: [
       "Design personalizat",
       "Alegerea materialelor potrivite",
       "Montaj și integrare la locație",
-    ],
-  },
-  {
-    title: "Printuri outdoor",
-    description:
-      "Mesh, bannere și casete luminoase făcute să reziste afară și să fie vizibile.",
-    deliverables: [
-      "Concept și pregătire pentru print",
-      "Materiale bune",
-      "Montaj sigur",
     ],
   },
   {
@@ -58,7 +48,7 @@ const services = [
 export const metadata: Metadata = buildPageMetadata({
   title: "Atelier & Servicii",
   description:
-    "Soluții integrate NutuArt: autocolante corporate, geamuri sablate, vitralii, printuri outdoor și trofee personalizate.",
+    "Soluții integrate NutuArt: autocolante, geamuri sablate, lucrări pentru biserici și trofee personalizate.",
   path: "/services",
 });
 
@@ -70,7 +60,7 @@ export default function ServicesPage() {
           Atelier & Proces
         </span>
         <h1 className="font-display text-4xl leading-tight sm:text-5xl">
-          Soluții integrate: autocolante, sablare, vitralii, printuri, trofee
+          Soluții integrate: autocolante, sablare, biserici, trofee
         </h1>
         <p className="max-w-3xl text-base leading-relaxed text-muted">
           Gândim și producem în atelier, cap-coadă. Fie că e branding pentru un
@@ -125,8 +115,8 @@ export default function ServicesPage() {
             </p>
             <p className="font-display text-xl text-foreground">NutuArt</p>
             <p className="text-sm leading-relaxed text-muted">
-              Geamuri sablate, vitralii și autocolante decorative făcute la
-              comandă. Proiecte pentru case și spații comerciale.
+              Autocolante, geamuri sablate, lucrări pentru biserici și trofee
+              personalizate. Proiecte pentru case și spații comerciale.
             </p>
             <p className="text-sm text-muted">București, România</p>
           </div>

@@ -1,84 +1,67 @@
 import fs from "node:fs";
 import path from "node:path";
-import { artworks as baseArtworks, collectionLabels, type Artwork } from "@/data/artworks";
+import {
+  collectionLabels,
+  collectionMediums,
+  collectionTitlePrefixes,
+  type Artwork,
+  type CollectionSlug,
+} from "@/data/artworks";
 
-const collectionSlugs = Object.keys(collectionLabels) as Array<Artwork["collection"]>;
+const collectionSlugs = Object.keys(collectionLabels) as CollectionSlug[];
+const imageExtensions = [".webp", ".avif", ".jpg", ".jpeg", ".png"];
 
-const mediumByCollection: Record<Artwork["collection"], string> = {
-  decorations: "Artă în sticlă",
-  autocolante: "Autocolant / grafică aplicată",
-  "geamuri-sablate": "Sticlă sablată",
-  vitralii: "Sticlă colorată",
-  printuri: "Print",
-  trofee: "Obiect premiu",
-};
+function getPreferredImages(dir: string) {
+  const files = fs.readdirSync(dir);
+  const preferredFiles = new Map<string, string>();
 
-const imageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
-const extensionPriority = [".avif", ".webp", ".jpg", ".jpeg", ".png"];
+  for (const file of files) {
+    const ext = path.extname(file).toLowerCase();
+    if (!imageExtensions.includes(ext)) continue;
 
-function toTitleFromFilename(filename: string) {
-  const name = path.parse(filename).name;
-  return name
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
+    const baseName = path.parse(file).name.toLowerCase();
+    const current = preferredFiles.get(baseName);
+    if (!current) {
+      preferredFiles.set(baseName, file);
+      continue;
+    }
 
-export function getArtworks({ includeDiscovered = false }: { includeDiscovered?: boolean } = {}) {
-  if (!includeDiscovered) {
-    return baseArtworks;
+    const currentExt = path.extname(current).toLowerCase();
+    if (imageExtensions.indexOf(ext) < imageExtensions.indexOf(currentExt)) {
+      preferredFiles.set(baseName, file);
+    }
   }
 
-  const root = path.join(process.cwd(), "public", "images", "collections");
+  return Array.from(preferredFiles.values()).sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
+  );
+}
 
-  const discovered: Artwork[] = [];
+export function getArtworks() {
+  const root = path.join(process.cwd(), "public", "images", "collections");
+  const artworks: Artwork[] = [];
 
   for (const slug of collectionSlugs) {
     const dir = path.join(root, slug);
     if (!fs.existsSync(dir)) continue;
 
-    const files = fs.readdirSync(dir);
-    const preferredFiles = new Map<string, string>();
+    const files = getPreferredImages(dir);
 
-    for (const file of files) {
-      const ext = path.extname(file).toLowerCase();
-      if (!imageExtensions.has(ext)) continue;
+    files.forEach((file, index) => {
+      const sequence = String(index + 1).padStart(2, "0");
 
-      const baseName = path.parse(file).name.toLowerCase();
-      const current = preferredFiles.get(baseName);
-      if (!current) {
-        preferredFiles.set(baseName, file);
-        continue;
-      }
-
-      const currentExt = path.extname(current).toLowerCase();
-      if (extensionPriority.indexOf(ext) < extensionPriority.indexOf(currentExt)) {
-        preferredFiles.set(baseName, file);
-      }
-    }
-
-    for (const file of preferredFiles.values()) {
-      const ext = path.extname(file).toLowerCase();
-      if (!imageExtensions.has(ext)) continue;
-
-      const imagePath = `/images/collections/${slug}/${file}`;
-      const alreadyExists = baseArtworks.some((art) => art.image === imagePath);
-      if (alreadyExists) continue;
-
-      const title = toTitleFromFilename(file);
-      discovered.push({
-        id: `${slug}-${title.toLowerCase().replace(/\s+/g, "-")}`,
-        title: title || "Lucrare nouă",
-        medium: mediumByCollection[slug] || "Sticlă",
+      artworks.push({
+        id: `${slug}-${sequence}`,
+        title: `${collectionTitlePrefixes[slug]} ${sequence}`,
+        medium: collectionMediums[slug],
         year: "",
         dimensions: "",
-        image: imagePath,
-        description: "",
+        image: `/images/collections/${slug}/${file}`,
+        description: collectionLabels[slug],
         collection: slug,
       });
-    }
+    });
   }
 
-  return [...baseArtworks, ...discovered];
+  return artworks;
 }

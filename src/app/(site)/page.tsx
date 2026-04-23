@@ -13,18 +13,16 @@ export const metadata: Metadata = buildPageMetadata({
   socialTitle: siteConfig.socialTitle,
   keywords: [
     "geamuri sablate",
-    "vitralii",
-    "autocolante decorative",
-    "decor pe sticlă",
+    "biserici",
+    "autocolante",
+    "trofee personalizate",
     "Nuțu Marcel Marius",
     "NutuArt",
   ],
 });
 
 export default async function HomePage() {
-  const artworks = getArtworks().filter(
-    (artwork) => artwork.collection !== "decorations"
-  );
+  const artworks = getArtworks();
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
@@ -54,9 +52,9 @@ export default async function HomePage() {
             Lucrări decorative pentru spații comerciale și rezidențiale.
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">
-            Atelierul artistului Nuțu Marcel realizează geamuri sablate,
-            vitralii, autocolante și alte lucrări pe sticlă pentru case,
-            birouri și spații comerciale.
+            Atelierul artistului Nuțu Marcel realizează autocolante, geamuri
+            sablate, lucrări pentru biserici și trofee personalizate pentru
+            case, birouri și spații comerciale.
           </p>
         </div>
         <GalleryExplorer artworks={artworks} />
@@ -71,7 +69,7 @@ export default async function HomePage() {
           <p className="text-xs uppercase tracking-[0.35em] text-muted">Servicii</p>
           <h2 className="mt-3 font-display text-2xl">Vezi ce putem realiza pentru proiectul tău</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted">
-            Branding pe sticlă, vitralii, sablare, printuri outdoor și trofee
+            Autocolante, sablare pe sticlă, lucrări pentru biserici și trofee
             personalizate.
           </p>
         </Link>

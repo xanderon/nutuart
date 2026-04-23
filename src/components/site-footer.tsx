@@ -24,8 +24,9 @@ export function SiteFooter() {
             NutuArt
           </p>
           <p className="max-w-sm text-sm leading-relaxed text-muted">
-            Geamuri sablate, vitralii și autocolante decorative create la comandă.
-            Realizăm piese unicat și proiecte pentru spații rezidențiale sau corporate.
+            Autocolante, geamuri sablate, lucrări pentru biserici și trofee
+            realizate la comandă. Proiecte pentru spații rezidențiale sau
+            corporate.
           </p>
           <p className="text-sm text-muted">{siteConfig.location}</p>
         </div>

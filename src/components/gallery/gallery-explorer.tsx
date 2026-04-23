@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Artwork, CollectionSlug } from "@/data/artworks";
+import {
+  collectionDisplayOrder,
+  type Artwork,
+  type CollectionSlug,
+} from "@/data/artworks";
 import { GalleryGrid } from "./gallery-grid";
 import { GalleryFilters } from "./gallery-filters";
 
@@ -28,11 +32,13 @@ export function GalleryExplorer({
   const availableCollections = useMemo(() => {
     const unique = new Set<CollectionSlug>();
     artworks.forEach((artwork) => {
-      if (artwork.collection !== "decorations") {
-        unique.add(artwork.collection);
-      }
+      unique.add(artwork.collection);
     });
-    return Array.from(unique);
+
+    return Array.from(unique).sort(
+      (left, right) =>
+        collectionDisplayOrder.indexOf(left) - collectionDisplayOrder.indexOf(right)
+    );
   }, [artworks]);
 
   const effectiveActiveCollection =
