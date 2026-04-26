@@ -316,13 +316,13 @@ export function AssistantWidget() {
         }}
       >
         {open ? (
-          <div className="marcelino-panel ml-auto w-full max-w-[420px] overflow-hidden rounded-[26px]">
-            <div className="marcelino-header flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
+          <div className="marcelino-panel ml-auto flex max-h-[82dvh] w-full max-w-[430px] flex-col overflow-hidden rounded-[24px] sm:max-h-[760px] sm:max-w-[440px] sm:rounded-[26px]">
+            <div className="marcelino-header flex items-center justify-between gap-3 px-3.5 py-3.5 sm:px-5 sm:py-4">
               <div className="min-w-0">
-                <div className="truncate text-base font-semibold text-[var(--color-foreground)]">
+                <div className="truncate text-sm font-semibold text-[var(--color-foreground)] sm:text-base">
                   Marcelino
                 </div>
-                <div className="text-[12px] text-[var(--color-muted)]">
+                <div className="text-[11px] text-[var(--color-muted)] sm:text-[12px]">
                   Asistent pentru comenzi si recomandari.
                 </div>
               </div>
@@ -330,7 +330,7 @@ export function AssistantWidget() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="marcelino-button-secondary rounded-full px-3 py-1.5 text-[11px] font-medium"
+                className="marcelino-button-secondary rounded-full px-3 py-1.5 text-[10px] font-medium sm:text-[11px]"
               >
                 Inchide
               </button>
@@ -338,7 +338,7 @@ export function AssistantWidget() {
 
             <div
               ref={messagesListRef}
-              className="max-h-[52vh] min-h-[300px] space-y-4 overflow-y-auto px-4 py-4 sm:px-5"
+              className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3.5 py-3.5 sm:space-y-4 sm:px-5 sm:py-4"
             >
               {messages.map((message) => (
                 <div
@@ -346,7 +346,7 @@ export function AssistantWidget() {
                   className={`flex ${message.role === "assistant" ? "justify-start" : "justify-end"}`}
                 >
                   <div
-                    className={`max-w-[88%] rounded-[20px] px-4 py-3 text-[14px] leading-6 ${
+                    className={`max-w-[92%] rounded-[18px] px-3.5 py-2.5 text-[13.5px] leading-6 sm:max-w-[84%] sm:rounded-[20px] sm:px-4 sm:py-3 sm:text-[14px] ${
                       message.role === "assistant"
                         ? "marcelino-bubble-assistant"
                         : "marcelino-bubble-user"
@@ -369,7 +369,7 @@ export function AssistantWidget() {
               ) : null}
 
               {!leadSubmittedId && leadReady ? (
-                <div className="marcelino-card space-y-3 rounded-[20px] p-4">
+                <div className="marcelino-card space-y-3 rounded-[18px] p-3.5 sm:rounded-[20px] sm:p-4">
                   <div className="space-y-1">
                     <div className="text-sm font-semibold text-[var(--color-foreground)]">
                       Vrei sa trimitem cererea?
@@ -446,9 +446,9 @@ export function AssistantWidget() {
               ) : null}
             </div>
 
-            <div className="marcelino-footer px-4 py-4 sm:px-5">
+            <div className="marcelino-footer px-3.5 py-3.5 sm:px-5 sm:py-4">
               <form onSubmit={handleSubmit}>
-                <div className="marcelino-composer rounded-[22px] p-2">
+                <div className="marcelino-composer rounded-[20px] p-2 sm:rounded-[22px]">
                   <textarea
                     ref={textareaRef}
                     value={input}
@@ -461,14 +461,14 @@ export function AssistantWidget() {
                     }}
                     rows={1}
                     placeholder="Scrie un mesaj..."
-                    className="marcelino-textarea max-h-[120px] min-h-[44px] w-full resize-none bg-transparent px-3 py-2 text-[15px] outline-none"
+                    className="marcelino-textarea max-h-[120px] min-h-[42px] w-full resize-none bg-transparent px-3 py-2 text-[14px] outline-none sm:min-h-[44px] sm:text-[15px]"
                   />
 
-                  <div className="marcelino-composer-actions flex justify-end pt-2">
+                  <div className="marcelino-composer-actions flex justify-stretch pt-2 sm:justify-end">
                     <button
                       type="submit"
                       disabled={loading || !input.trim()}
-                      className="marcelino-button-primary rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-60"
+                      className="marcelino-button-primary w-full rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-60 sm:w-auto"
                     >
                       {loading ? "Se genereaza..." : "Trimite"}
                     </button>
@@ -481,7 +481,7 @@ export function AssistantWidget() {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className={`relative ml-auto block h-[88px] w-[62px] transition duration-200 hover:scale-[1.04] ${
+            className={`relative ml-auto block h-[78px] w-[56px] transition duration-200 hover:scale-[1.04] sm:h-[92px] sm:w-[66px] ${
               mounted ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
             }`}
             aria-label="Deschide asistentul AI"
@@ -492,7 +492,7 @@ export function AssistantWidget() {
                   src={assistantAvatar}
                   alt="Marcelino"
                   fill
-                  sizes="62px"
+                  sizes="(max-width: 640px) 56px, 66px"
                   className="object-contain drop-shadow-[0_16px_30px_rgba(0,0,0,0.28)]"
                   priority={false}
                 />
@@ -512,6 +512,12 @@ export function AssistantWidget() {
               color-mix(in srgb, var(--color-elevated) 92%, transparent) 100%
             );
           box-shadow: 0 28px 70px -38px rgba(0, 0, 0, 0.55);
+        }
+
+        @media (max-width: 640px) {
+          .marcelino-panel {
+            box-shadow: 0 18px 48px -28px rgba(0, 0, 0, 0.5);
+          }
         }
 
         .marcelino-header,
