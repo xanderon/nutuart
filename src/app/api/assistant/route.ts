@@ -8,16 +8,16 @@ import {
   isLeadReady,
   leadInfoCount,
 } from "@/lib/assistant-lead-signals";
-import {
-  getLeadByRequestId,
-  type LeadStatus,
-  upsertSession,
-} from "@/lib/assistant-leads-store";
+import { getLeadByRequestId, type LeadStatus, upsertSession } from "@/lib/assistant-leads-store";
+import { readAssistantUpload } from "@/lib/assistant-upload-store";
+
+export const runtime = "nodejs";
 
 type ChatRole = "user" | "assistant";
 type ChatMessage = {
   role: ChatRole;
   content: string;
+  attachments?: string[];
 };
 
 type AssistantPayload = {
@@ -26,8 +26,17 @@ type AssistantPayload = {
   sessionId?: string;
 };
 
+type LeadDraft = ReturnType<typeof buildLeadDraft>;
+type StreamEvent =
+  | { type: "meta"; leadReady: boolean; leadDraft: LeadDraft }
+  | { type: "delta"; content: string }
+  | { type: "replace"; content: string }
+  | { type: "done" }
+  | { type: "error"; error: string };
+
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const AI_MODEL = process.env.AI_MODEL || "gpt-4.1-mini";
+const encoder = new TextEncoder();
 
 function normalizeMessages(messages: unknown): ChatMessage[] {
   if (!Array.isArray(messages)) return [];
@@ -37,17 +46,144 @@ function normalizeMessages(messages: unknown): ChatMessage[] {
       if (!item || typeof item !== "object") return false;
       const role = (item as ChatMessage).role;
       const content = (item as ChatMessage).content;
-      return (
-        (role === "user" || role === "assistant") &&
-        typeof content === "string" &&
-        content.trim().length > 0
-      );
+      const attachments = (item as ChatMessage).attachments;
+      const hasContent = typeof content === "string" && content.trim().length > 0;
+      const hasAttachments =
+        Array.isArray(attachments) &&
+        attachments.some((attachment) => typeof attachment === "string" && attachment.trim());
+
+      return (role === "user" || role === "assistant") && (hasContent || hasAttachments);
     })
     .map((item) => ({
       role: item.role,
-      content: item.content.trim().slice(0, 1500),
+      content: typeof item.content === "string" ? item.content.trim().slice(0, 2000) : "",
+      attachments: Array.isArray(item.attachments)
+        ? item.attachments
+            .filter((attachment): attachment is string => typeof attachment === "string")
+            .map((attachment) => attachment.trim())
+            .filter(Boolean)
+            .slice(0, 3)
+        : [],
     }))
-    .slice(-12);
+    .slice(-16);
+}
+
+function sse(event: StreamEvent) {
+  return encoder.encode(`data: ${JSON.stringify(event)}\n\n`);
+}
+
+function streamResponse(run: (send: (event: StreamEvent) => void) => Promise<void>) {
+  return new Response(
+    new ReadableStream({
+      async start(controller) {
+        const send = (event: StreamEvent) => controller.enqueue(sse(event));
+
+        try {
+          await run(send);
+        } catch (error) {
+          console.error("Assistant stream error", error);
+          send({
+            type: "error",
+            error: error instanceof Error ? error.message : "A aparut o eroare la asistent.",
+          });
+        } finally {
+          controller.close();
+        }
+      },
+    }),
+    {
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+      },
+    }
+  );
+}
+
+async function streamSingleReply(options: {
+  reply: string;
+  leadReady: boolean;
+  leadDraft: LeadDraft;
+}) {
+  return streamResponse(async (send) => {
+    send({
+      type: "meta",
+      leadReady: options.leadReady,
+      leadDraft: options.leadDraft,
+    });
+    send({ type: "replace", content: options.reply });
+    send({ type: "done" });
+  });
+}
+
+function extractUploadName(url: string) {
+  const match = url.match(/\/api\/assistant\/uploads\/([^/?#]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+async function buildImagePart(url: string) {
+  const uploadName = extractUploadName(url);
+  if (!uploadName) return null;
+
+  const stored = await readAssistantUpload(uploadName);
+  if (!stored) return null;
+
+  return {
+    type: "image_url" as const,
+    image_url: {
+      url: `data:${stored.contentType};base64,${stored.buffer.toString("base64")}`,
+    },
+  };
+}
+
+async function buildOpenAiMessages(messages: ChatMessage[]) {
+  const openAiMessages: Array<{
+    role: ChatRole | "system";
+    content:
+      | string
+      | Array<
+          | { type: "text"; text: string }
+          | { type: "image_url"; image_url: { url: string } }
+        >;
+  }> = [];
+
+  for (const message of messages) {
+    if (message.role === "assistant" || !message.attachments?.length) {
+      openAiMessages.push({
+        role: message.role,
+        content: message.content || "Continua conversatia.",
+      });
+      continue;
+    }
+
+    const imageParts = (
+      await Promise.all(message.attachments.map((attachment) => buildImagePart(attachment)))
+    ).filter(Boolean) as Array<{ type: "image_url"; image_url: { url: string } }>;
+
+    if (!imageParts.length) {
+      openAiMessages.push({
+        role: message.role,
+        content: message.content || "Am atasat o imagine de referinta.",
+      });
+      continue;
+    }
+
+    openAiMessages.push({
+      role: message.role,
+      content: [
+        {
+          type: "text",
+          text:
+            message.content ||
+            "Analizeaza imaginea ca referinta pentru o piesa din sticla si raspunde in contextul site-ului.",
+        },
+        ...imageParts,
+      ],
+    });
+  }
+
+  return openAiMessages;
 }
 
 export async function POST(request: Request) {
@@ -59,10 +195,10 @@ export async function POST(request: Request) {
       ? body.sessionId.trim()
       : "anonymous";
 
-  const latestUserMessage = [...messages].reverse().find((m) => m.role === "user");
+  const latestUserMessage = [...messages].reverse().find((message) => message.role === "user");
   if (!latestUserMessage) {
     return NextResponse.json(
-      { error: "Trimite o întrebare pentru a primi răspuns." },
+      { error: "Trimite o intrebare sau o imagine pentru a primi raspuns." },
       { status: 400 }
     );
   }
@@ -71,7 +207,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Asistentul nu este configurat încă. Lipseste OPENAI_API_KEY în variabilele de mediu.",
+          "Asistentul nu este configurat inca. Lipseste OPENAI_API_KEY in variabilele de mediu.",
       },
       { status: 503 }
     );
@@ -81,19 +217,19 @@ export async function POST(request: Request) {
   const draft = buildLeadDraft(messages);
   const infoCount = leadInfoCount(messages);
   const leadReadyFromSignals = isLeadReady(messages);
-  const latestUserContent = latestUserMessage.content || "";
+  const latestUserContent =
+    latestUserMessage.content || (latestUserMessage.attachments?.length ? "[imagine atasata]" : "");
   const handoffIntent = isHumanHandoffIntent(messages);
   const userMessageCount = messages.filter((message) => message.role === "user").length;
   const uncertainReplies = countUncertainReplies(messages);
   const assistantQuestionCount = countAssistantQuestions(messages);
-  const proactiveLeadCapture = userMessageCount >= 2;
-  const earlyContactOffer = uncertainReplies >= 2 && userMessageCount >= 3;
-  const tooManyClarifications = assistantQuestionCount >= 3 && userMessageCount >= 3;
-  const lowProgressReminder = userMessageCount >= 6 && infoCount <= 1;
+  const earlyContactOffer = uncertainReplies >= 2 && userMessageCount >= 4;
+  const tooManyClarifications = assistantQuestionCount >= 5 && userMessageCount >= 4;
+  const lowProgressReminder = userMessageCount >= 7 && infoCount <= 1;
   const leadReadyNow =
     leadReadyFromSignals ||
-    proactiveLeadCapture ||
-    (handoffIntent && infoCount >= 2) ||
+    (handoffIntent && infoCount >= 1) ||
+    (userMessageCount >= 4 && infoCount >= 2) ||
     earlyContactOffer ||
     tooManyClarifications ||
     lowProgressReminder;
@@ -112,53 +248,42 @@ export async function POST(request: Request) {
     const lead = await getLeadByRequestId(requestId);
 
     if (!lead) {
-      return NextResponse.json({
-        reply:
-          `Nu gasesc o solicitare cu ID ${requestId}. Verifica, te rog, formatul (ex: M-4821).`,
+      return streamSingleReply({
+        reply: `Nu gasesc o solicitare cu ID ${requestId}. Verifica, te rog, formatul (ex: M-4821).`,
         leadReady: false,
         leadDraft: draft,
       });
     }
 
-    const statusText = statusMessage(lead.status);
-    return NextResponse.json({
-      reply: `Status ${requestId}: ${statusText}`,
+    return streamSingleReply({
+      reply: `Status ${requestId}: ${statusMessage(lead.status)}`,
       leadReady: false,
       leadDraft: draft,
     });
   }
 
   if (handoffIntent) {
-    if (infoCount >= 2) {
-      return NextResponse.json({
+    if (infoCount >= 1) {
+      return streamSingleReply({
         reply:
-          "Sigur. Pot inregistra acum cererea folosind detaliile discutate, ca sa nu mai fie nevoie sa le explici din nou. Ai prefera sa fii contactat pe email sau telefon?",
+          "Sigur. Pot pregati acum cererea pe baza a ceea ce am discutat, ca sa nu mai repeti detaliile. Daca vrei, lasa-mi emailul sau telefonul in formularul de mai jos.",
         leadReady: true,
         leadDraft: draft,
       });
     }
 
-    return NextResponse.json({
+    return streamSingleReply({
       reply:
-        "Sigur. Pot sa te conectez direct cu artistul. Ca sa inregistrez util cererea, spune-mi te rog 1-2 detalii (tipul piesei si dimensiunea aproximativa), apoi iti cer email sau telefon.",
+        "Sigur. Inainte sa trimit cererea, ajuta-ma cu un singur detaliu util: ce tip de piesa cauti sau unde va fi folosita?",
       leadReady: false,
       leadDraft: draft,
     });
   }
 
-  if (earlyContactOffer) {
-    return NextResponse.json({
+  if (earlyContactOffer || tooManyClarifications || lowProgressReminder) {
+    return streamSingleReply({
       reply:
-        "Perfect, e suficient pentru inceput. Pentru a stabili mai exact detaliile, poti contacta direct: Email: marcelnutu@yahoo.com | Telefon / WhatsApp: +40 721 383 668. Sau, daca preferi, imi poti lasa aici emailul sau numarul tau de telefon, iar eu inregistrez cererea cu detaliile discutate si vei fi contactat. Ai prefera email sau telefon?",
-      leadReady: true,
-      leadDraft: draft,
-    });
-  }
-
-  if (tooManyClarifications || lowProgressReminder) {
-    return NextResponse.json({
-      reply:
-        "Ca sa nu pierdem timp cu prea multe detalii acum, iti propun varianta rapida: poti contacta direct la marcelnutu@yahoo.com / +40 721 383 668 sau imi lasi aici emailul ori telefonul si inregistrez cererea cu ce am discutat. Ai prefera email sau telefon?",
+        "Putem continua aici, dar daca vrei varianta mai rapida pot trimite direct mai departe ce am discutat pana acum. Lasa emailul sau telefonul in formularul de mai jos, iar artistul revine cu detaliile potrivite.",
       leadReady: true,
       leadDraft: draft,
     });
@@ -166,24 +291,33 @@ export async function POST(request: Request) {
 
   const systemPrompt = [
     "Numele tau este Marcelino, asistentul AI al site-ului NutuArt.",
-    "Raspunzi in romana, scurt, clar, prietenos si natural.",
-    "Nu fii agresiv comercial; ofera idei si ghidare.",
-    "Pune cel mult o intrebare pe raspuns si maxim 2-3 intrebari de clarificare pe intreaga conversatie.",
-    "Dupa ce ai inteles pe scurt nevoia, propune contact direct sau trimitere cerere (Request ID).",
-    "Cand utilizatorul cere exemple concrete, personalizare sau discutie cu o persoana, ofera contactul imediat.",
-    "Mesaj standard de contact: Email: marcelnutu@yahoo.com | Telefon / WhatsApp: +40 721 383 668, plus optiunea sa lase datele de contact in chat pentru Request ID.",
-    "Daca utilizatorul refuza contactul, continua normal cu idei scurte fara insistenta.",
+    "Raspunzi in romana, natural, clar si util.",
+    "Rolul tau este sa ajuti vizitatorul sa inteleaga ce i s-ar potrivi si care este urmatorul pas.",
+    "Daca utilizatorul trimite o imagine, descrie pe scurt ce observi relevant si leaga raspunsul de proiecte din sticla, vitralii, sablare sau decor personalizat.",
+    "Preferi raspunsuri scurte sau medii, cu 0 sau 1 intrebare utila pe mesaj.",
+    "Nu bloca discutia prea devreme cu cereri de contact. Contactul este o optiune utila, nu final obligatoriu.",
+    "Propune contact direct sau cerere doar cand utilizatorul cere pret exact, termen exact, oferta finala, montaj, discutie directa sau dupa mai multe mesaje fara progres.",
+    "Cand ai inteles pe scurt nevoia, ofera 2-3 directii simple si apoi intreaba daca vrea sa continue in chat sau sa lase o cerere.",
+    "Mesaj standard de contact: Email: marcelnutu@yahoo.com | Telefon / WhatsApp: +40 721 383 668.",
     "Foloseste doar informatia din contextul intern.",
-    "Daca informatia lipseste, spune clar ce lipseste si recomanda contact direct la marcelnutu@yahoo.com sau +40 721 383 668.",
+    "Daca informatia lipseste, spune clar ce lipseste si cere un detaliu scurt.",
     "Nu inventa preturi, termene ferme, disponibilitate sau date neverificate.",
-    "Nu promite ca trimiti emailuri, imagini, oferte, modele sau variante concrete.",
+    "Nu promite ca trimiti emailuri, imagini, oferte sau variante finale.",
     "Nu cere buget orientativ.",
-    `Context pagină curentă: ${page}`,
+    `Context pagina curenta: ${page}`,
     "",
     buildKnowledgeContext(),
   ].join("\n");
 
-  try {
+  const openAiMessages = await buildOpenAiMessages(messages);
+
+  return streamResponse(async (send) => {
+    send({
+      type: "meta",
+      leadReady: leadReadyNow,
+      leadDraft: draft,
+    });
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -192,69 +326,87 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         model: AI_MODEL,
-        temperature: 0.3,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages.map((m) => ({ role: m.role, content: m.content })),
-        ],
+        temperature: 0.45,
+        max_tokens: 260,
+        stream: true,
+        messages: [{ role: "system", content: systemPrompt }, ...openAiMessages],
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Assistant API upstream error", response.status, errorText);
-      return NextResponse.json(
-        { error: "Asistentul este momentan indisponibil. Încearcă din nou." },
-        { status: 502 }
-      );
+      throw new Error("Asistentul este momentan indisponibil. Incearca din nou.");
     }
 
-    const data = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const reply = data.choices?.[0]?.message?.content?.trim();
-
-    if (!reply) {
-      return NextResponse.json(
-        { error: "Nu am putut genera un răspuns acum." },
-        { status: 500 }
-      );
+    if (!response.body) {
+      throw new Error("Asistentul nu a returnat un flux de raspuns.");
     }
 
-    return NextResponse.json({
-      reply: enforceAssistantPolicy(reply),
-      leadReady: leadReadyNow,
-      leadDraft: draft,
-    });
-  } catch (error) {
-    console.error("Assistant route error", error);
-    return NextResponse.json(
-      { error: "A apărut o eroare la asistent." },
-      { status: 500 }
-    );
-  }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let fullReply = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line.startsWith("data:")) continue;
+
+        const payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
+
+        const data = JSON.parse(payload) as {
+          choices?: Array<{ delta?: { content?: string } }>;
+        };
+
+        const delta = data.choices?.[0]?.delta?.content;
+        if (!delta) continue;
+
+        fullReply += delta;
+        send({ type: "delta", content: delta });
+      }
+
+      if (done) break;
+    }
+
+    const finalReply = enforceAssistantPolicy(fullReply.trim());
+
+    if (!finalReply) {
+      throw new Error("Nu am putut genera un raspuns acum.");
+    }
+
+    if (finalReply !== fullReply.trim()) {
+      send({ type: "replace", content: finalReply });
+    }
+
+    send({ type: "done" });
+  });
 }
 
 function enforceAssistantPolicy(reply: string) {
   let text = reply;
 
   const forbiddenPromiseRegex =
-    /\b(iti\s+trimit|îți\s+trimit|pot\s+sa\s+trimit|o\s+sa\s+trimit|voi\s+trimite)\b[\s\S]{0,80}\b(email|e-mail|model|modele|exempl|poza|imagine|fisier|fișier)\b/i;
+    /\b(iti\s+trimit|pot\s+sa\s+trimit|o\s+sa\s+trimit|voi\s+trimite)\b[\s\S]{0,80}\b(email|e-mail|model|modele|exempl|poza|imagine|fisier)\b/i;
   if (forbiddenPromiseRegex.test(text)) {
-    return "Pot sa-ti ofer idei generale aici. Pentru exemple concrete, poti contacta direct la marcelnutu@yahoo.com / +40 721 383 668 sau imi lasi emailul ori telefonul si inregistrez cererea pentru contact.";
+    return "Pot sa-ti ofer idei generale aici. Pentru exemple concrete sau discutie aplicata, poti continua in chat ori poti contacta direct la marcelnutu@yahoo.com / +40 721 383 668.";
   }
 
   const replacements: Array<[RegExp, string]> = [
     [
-      /\b(pot|iti pot|îți pot|o sa|voi)\s+(sa\s+)?(trimite|trimitem|trimit)\b/gi,
-      "pot sa inregistrez",
+      /\b(pot|iti pot|o sa|voi)\s+(sa\s+)?(trimite|trimitem|trimit)\b/gi,
+      "pot sa pregatesc",
     ],
-    [/\bvrei sa le primesti pe email\??/gi, "vrei sa inregistram o cerere catre artist?"],
+    [/\bvrei sa le primesti pe email\??/gi, "daca vrei, putem lasa o cerere"],
     [/\bai un buget orientativ\??/gi, "daca vrei, spune-mi tipul piesei si dimensiunea"],
     [/\biti trimit\b/gi, "iti pot propune"],
-    [/\biti raspund cu oferta\b/gi, "iti pot oferi o directie generala"],
-    [/\bpreferi sa discutam mai mult aici(?: in chat)?\??/gi, "vrei sa inregistram cererea acum?"],
-    [/\bvrei sa continuam aici(?: in chat)?\??/gi, "vrei sa inregistram cererea acum?"],
   ];
 
   for (const [pattern, value] of replacements) {
@@ -265,7 +417,7 @@ function enforceAssistantPolicy(reply: string) {
   if (questions > 1) {
     const firstQuestionIdx = text.indexOf("?");
     if (firstQuestionIdx >= 0) {
-      text = `${text.slice(0, firstQuestionIdx + 1)}`.trim();
+      text = text.slice(0, firstQuestionIdx + 1).trim();
     }
   }
 
@@ -275,7 +427,7 @@ function enforceAssistantPolicy(reply: string) {
 function statusMessage(status: LeadStatus) {
   switch (status) {
     case "NEW":
-      return "cererea ta a fost primita si urmeaza sa fie analizata. De obicei revenim in 24–48 de ore.";
+      return "cererea ta a fost primita si urmeaza sa fie analizata. De obicei revenim in 24-48 de ore.";
     case "SEEN":
       return "cererea ta este in curs de analiza. Vei primi un raspuns in curand.";
     case "IN_PROGRESS":

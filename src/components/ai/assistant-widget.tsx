@@ -1,12 +1,19 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+
+type Attachment = {
+  name: string;
+  url: string;
+};
 
 type Message = {
+  id: string;
   role: "assistant" | "user";
   content: string;
+  attachments?: Attachment[];
 };
 
 type LeadDraft = {
@@ -17,40 +24,66 @@ type LeadDraft = {
   summary: string;
 };
 
+type ComposerImage = {
+  id: string;
+  file: File;
+  previewUrl: string;
+  uploadedUrl?: string;
+};
+
+const assistantAvatar = "/images/AIGlass.webp";
+const maxComposerImages = 3;
+
 const rotatingHints = [
-  "Pot sa te ajut?",
-  "Vrei idei rapide?",
-  "Cauti un cadou?",
-  "Vrei ceva personalizat?",
-  "Spune-mi dimensiunea aproximativa.",
-  "Iti recomand un model potrivit spatiului.",
-  "Sunt asistentul AI al site-ului.",
+  "Arata-mi o referinta.",
+  "Spune-mi pe scurt ce cauti.",
+  "Pot sa-ti recomand o directie.",
+  "Trimite o poza daca ai una.",
+  "Te ajut cu idei rapide.",
 ] as const;
 
 const contextualOpeners = {
   gallery:
-    "Iti place ceva de aici? Spune-mi ce model si ce dimensiune ai in minte.",
-  artist: "Vrei o piesa personalizata? Pot sa-ti recomand 2-3 variante.",
-  contact: "Spune-mi pe scurt ce proiect ai in minte si unde vrei sa folosesti piesa.",
+    "Salut, sunt Marcelino. Daca ai vazut o lucrare care iti place, spune-mi modelul sau trimite-mi o referinta si iti spun ce directie s-ar potrivi.",
+  artist:
+    "Salut, sunt Marcelino. Daca vrei o piesa personalizata, imi poti spune spatiul, stilul sau poti trimite direct o imagine de referinta.",
+  contact:
+    "Salut, sunt Marcelino. Spune-mi ce proiect ai in minte sau trimite-mi o imagine, iar eu te ajut sa formulezi rapid cererea.",
 } as const;
 
-const universalStarters = [
-  "Vreau ceva personalizat",
-  "Caut un cadou",
-  "Cum decurge o comanda?",
-  "Cat dureaza realizarea?",
-] as const;
+const suggestionMap = {
+  gallery: [
+    "Vreau ceva personalizat",
+    "Am o poza de referinta",
+    "Cum decurge comanda?",
+    "Ce s-ar potrivi pentru living?",
+  ],
+  artist: [
+    "Vreau sa discut o lucrare",
+    "Ce stil mi se potriveste?",
+    "Am nevoie de un cadou",
+    "Cat de personalizat se poate?",
+  ],
+  contact: [
+    "Vreau sa las o cerere",
+    "Am nevoie de recomandare",
+    "Cum trimit detaliile?",
+    "Prefer sa fiu contactat",
+  ],
+} as const;
 
 const headerNudges = [
-  "Cu ce te pot ajuta azi?",
-  "Vrei ceva personalizat?",
-  "Cauti un cadou?",
-  "Pot sa-ti recomand o varianta potrivita?",
-  "Vrei sa-ti explic rapid cum decurge comanda?",
+  "Raspund despre vitralii, sablare, decor si comenzi personalizate.",
+  "Poti scrie simplu sau poti trimite o imagine de referinta.",
+  "Te ajut sa formulezi rapid ideea si pasul urmator.",
 ] as const;
 
 function pickRandom<T>(items: readonly T[]) {
   return items[Math.floor(Math.random() * items.length)];
+}
+
+function createId() {
+  return `m-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function getContextFromPath(pathname: string) {
@@ -89,8 +122,13 @@ export function AssistantWidget() {
     phone: "",
   });
   const [leadError, setLeadError] = useState<string | null>(null);
+  const [composerImages, setComposerImages] = useState<ComposerImage[]>([]);
   const messagesListRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const sessionIdRef = useRef("anonymous");
+  const composerImagesRef = useRef<ComposerImage[]>([]);
+  const initialContextRef = useRef(context);
 
   const hideHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastScrollHintAtRef = useRef(0);
@@ -98,11 +136,19 @@ export function AssistantWidget() {
   const mountedAtRef = useRef<number>(0);
   const hasOpenedRef = useRef(false);
 
-  const starters = useMemo(() => universalStarters, []);
+  const starters = useMemo(() => suggestionMap[context], [context]);
   const hasUserMessage = useMemo(
     () => messages.some((message) => message.role === "user"),
     [messages]
   );
+  const canSend = input.trim().length > 0 || composerImages.length > 0;
+
+  const syncTextareaHeight = () => {
+    const element = textareaRef.current;
+    if (!element) return;
+    element.style.height = "0px";
+    element.style.height = `${Math.min(element.scrollHeight, 140)}px`;
+  };
 
   const showHint = (duration = 3000) => {
     if (hasOpenedRef.current) return;
@@ -124,7 +170,7 @@ export function AssistantWidget() {
       sessionIdRef.current = existing;
       return;
     }
-    const next = `m-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    const next = createId();
     window.localStorage.setItem(key, next);
     sessionIdRef.current = next;
   }, []);
@@ -133,12 +179,18 @@ export function AssistantWidget() {
     setMounted(true);
     mountedAtRef.current = Date.now();
 
-    const typingTimer = setTimeout(() => setBootTyping(true), 900);
+    const typingTimer = setTimeout(() => setBootTyping(true), 450);
     const firstMessageTimer = setTimeout(() => {
       setBootTyping(false);
-      setMessages([{ role: "assistant", content: contextualOpeners[context] }]);
-    }, 1700);
-    const firstHintTimer = setTimeout(() => showHint(3000), 2800);
+      setMessages([
+        {
+          id: createId(),
+          role: "assistant",
+          content: contextualOpeners[initialContextRef.current],
+        },
+      ]);
+    }, 850);
+    const firstHintTimer = setTimeout(() => showHint(2800), 1800);
 
     return () => {
       clearTimeout(typingTimer);
@@ -146,7 +198,7 @@ export function AssistantWidget() {
       clearTimeout(firstHintTimer);
       if (hideHintTimerRef.current) clearTimeout(hideHintTimerRef.current);
     };
-  }, [context]);
+  }, []);
 
   useEffect(() => {
     if (open) return;
@@ -154,12 +206,12 @@ export function AssistantWidget() {
     const interval = setInterval(() => {
       if (hasOpenedRef.current || hintCountRef.current >= 3) return;
       setWaveNow(true);
-      showHint(3000);
+      showHint(2800);
 
       setTimeout(() => {
         setWaveNow(false);
-      }, 1000);
-    }, 30000);
+      }, 900);
+    }, 28000);
 
     return () => clearInterval(interval);
   }, [open]);
@@ -199,59 +251,192 @@ export function AssistantWidget() {
 
     const onScroll = () => {
       if (hasOpenedRef.current || hintCountRef.current >= 3) return;
-      if (Date.now() - mountedAtRef.current < 10000) return;
+      if (Date.now() - mountedAtRef.current < 8000) return;
       const now = Date.now();
-      if (now - lastScrollHintAtRef.current < 20000) {
-        return;
-      }
+      if (now - lastScrollHintAtRef.current < 18000) return;
       lastScrollHintAtRef.current = now;
-      showHint(2500);
+      showHint(2400);
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [open]);
 
-  const sendMessage = async (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed || loading) return;
+  useEffect(() => {
+    syncTextareaHeight();
+  }, [input]);
 
-    setError(null);
-    const nextMessages = [...messages, { role: "user" as const, content: trimmed }];
-    setMessages(nextMessages);
-    setInput("");
-    setLoading(true);
+  useEffect(() => {
+    composerImagesRef.current = composerImages;
+  }, [composerImages]);
 
-    try {
-      const response = await fetch("/api/assistant", {
+  useEffect(() => {
+    return () => {
+      composerImagesRef.current.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+    };
+  }, []);
+
+  const clearComposerImages = () => {
+    setComposerImages((prev) => {
+      prev.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+      return [];
+    });
+  };
+
+  const updateAssistantMessage = (id: string, updater: (current: string) => string) => {
+    setMessages((prev) =>
+      prev.map((message) =>
+        message.id === id ? { ...message, content: updater(message.content) } : message
+      )
+    );
+  };
+
+  const uploadComposerImages = async () => {
+    const uploaded: Attachment[] = [];
+
+    for (const image of composerImages) {
+      if (image.uploadedUrl) {
+        uploaded.push({ name: image.file.name, url: image.uploadedUrl });
+        continue;
+      }
+
+      const formData = new FormData();
+      formData.append("file", image.file);
+      formData.append("sessionId", sessionIdRef.current);
+
+      const response = await fetch("/api/assistant/upload", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          page: pathname,
-          messages: nextMessages,
-          sessionId: sessionIdRef.current,
-        }),
+        body: formData,
       });
 
       const data = (await response.json().catch(() => ({}))) as {
-        reply?: string;
+        ok?: boolean;
+        url?: string;
         error?: string;
-        leadReady?: boolean;
-        leadDraft?: LeadDraft;
       };
 
-      if (!response.ok || !data.reply) {
-        throw new Error(data.error || "Asistentul nu a putut raspunde acum.");
+      if (!response.ok || !data.ok || !data.url) {
+        throw new Error(data.error || "Nu am putut incarca imaginea.");
       }
 
-      setMessages((prev) => [...prev, { role: "assistant", content: data.reply || "" }]);
-      if (data.leadReady) {
-        setLeadReady(true);
+      uploaded.push({ name: image.file.name, url: data.url });
+    }
+
+    return uploaded;
+  };
+
+  const streamAssistantReply = async (conversation: Message[], assistantId: string) => {
+    const response = await fetch("/api/assistant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        page: pathname,
+        messages: conversation.map((message) => ({
+          role: message.role,
+          content: message.content,
+          attachments: message.attachments?.map((attachment) => attachment.url) ?? [],
+        })),
+        sessionId: sessionIdRef.current,
+      }),
+    });
+
+    if (!response.ok) {
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      throw new Error(data.error || "Asistentul nu a putut raspunde acum.");
+    }
+
+    if (!response.body) {
+      throw new Error("Fluxul de raspuns nu este disponibil.");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+
+      const events = buffer.split("\n\n");
+      buffer = events.pop() ?? "";
+
+      for (const eventBlock of events) {
+        const line = eventBlock
+          .split("\n")
+          .find((entry) => entry.startsWith("data: "));
+
+        if (!line) continue;
+
+        const payload = line.slice(6).trim();
+        if (!payload) continue;
+
+        const data = JSON.parse(payload) as
+          | { type: "delta"; content: string }
+          | { type: "replace"; content: string }
+          | { type: "meta"; leadReady?: boolean; leadDraft?: LeadDraft | null }
+          | { type: "done" }
+          | { type: "error"; error: string };
+
+        if (data.type === "delta") {
+          updateAssistantMessage(assistantId, (current) => `${current}${data.content}`);
+        }
+
+        if (data.type === "replace") {
+          updateAssistantMessage(assistantId, () => data.content);
+        }
+
+        if (data.type === "meta") {
+          setLeadReady(Boolean(data.leadReady));
+          setLeadDraft(data.leadDraft ?? null);
+        }
+
+        if (data.type === "error") {
+          throw new Error(data.error || "Asistentul a intrerupt raspunsul.");
+        }
       }
-      if (data.leadDraft) {
-        setLeadDraft(data.leadDraft);
-      }
+
+      if (done) break;
+    }
+  };
+
+  const sendMessage = async (text: string) => {
+    if (loading) return;
+
+    const trimmed = text.trim();
+    if (!trimmed && composerImages.length === 0) return;
+
+    setError(null);
+    setLeadError(null);
+    setLoading(true);
+
+    let assistantId: string | null = null;
+
+    try {
+      const uploadedAttachments = await uploadComposerImages();
+      const userMessage: Message = {
+        id: createId(),
+        role: "user",
+        content:
+          trimmed || (uploadedAttachments.length ? "Analizeaza, te rog, imaginile atasate." : ""),
+        attachments: uploadedAttachments.length ? uploadedAttachments : undefined,
+      };
+      assistantId = createId();
+      const assistantMessage: Message = {
+        id: assistantId,
+        role: "assistant",
+        content: "",
+      };
+      const nextMessages = [...messages, userMessage, assistantMessage];
+
+      setMessages(nextMessages);
+      setInput("");
+      clearComposerImages();
+
+      await streamAssistantReply(nextMessages, assistantId);
     } catch (err) {
+      if (assistantId) {
+        setMessages((prev) => prev.filter((message) => message.id !== assistantId));
+      }
       setError(err instanceof Error ? err.message : "Eroare la asistent.");
     } finally {
       setLoading(false);
@@ -269,7 +454,10 @@ export function AssistantWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           page: pathname,
-          messages,
+          messages: messages.map((message) => ({
+            role: message.role,
+            content: message.content,
+          })),
           contactType,
           contactValue: contactValues[contactType],
           sessionId: sessionIdRef.current,
@@ -293,7 +481,10 @@ export function AssistantWidget() {
 
       setLeadSubmittedId(data.requestId);
       setLeadReady(false);
-      setMessages((prev) => [...prev, { role: "assistant", content: confirmation }]);
+      setMessages((prev) => [
+        ...prev,
+        { id: createId(), role: "assistant", content: confirmation },
+      ]);
     } catch (err) {
       setLeadError(err instanceof Error ? err.message : "Eroare la trimitere.");
     } finally {
@@ -306,72 +497,126 @@ export function AssistantWidget() {
     await sendMessage(input);
   };
 
+  const handleImageSelection = (files: FileList | null) => {
+    if (!files?.length) return;
+
+    const availableSlots = Math.max(0, maxComposerImages - composerImages.length);
+    const nextFiles = Array.from(files)
+      .filter((file) => file.type.startsWith("image/"))
+      .slice(0, availableSlots);
+
+    if (!nextFiles.length) return;
+
+    setComposerImages((prev) => [
+      ...prev,
+      ...nextFiles.map((file) => ({
+        id: createId(),
+        file,
+        previewUrl: URL.createObjectURL(file),
+      })),
+    ]);
+  };
+
+  const removeComposerImage = (id: string) => {
+    setComposerImages((prev) => {
+      const target = prev.find((image) => image.id === id);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((image) => image.id !== id);
+    });
+  };
+
   return (
     <>
       <div
         className="fixed z-[140]"
         style={{
-          left: "max(0.6rem, env(safe-area-inset-left))",
-          right: "max(0.6rem, env(safe-area-inset-right))",
-          bottom: "max(0.6rem, env(safe-area-inset-bottom))",
+          left: "max(0.75rem, env(safe-area-inset-left))",
+          right: "max(0.75rem, env(safe-area-inset-right))",
+          bottom: "max(0.75rem, env(safe-area-inset-bottom))",
         }}
       >
         {open ? (
-          <div className="ml-auto w-full max-w-[400px] overflow-hidden rounded-[20px] border border-[#d9e5e6] bg-white shadow-[0_28px_75px_-38px_rgba(12,34,35,0.35)]">
-            <div className="border-b border-[#e8eff0] bg-[#f4f7f7] px-4 py-3">
+          <div className="ml-auto w-full max-w-[440px] overflow-hidden rounded-[28px] border border-[rgba(214,198,176,0.55)] bg-[linear-gradient(180deg,#fffdf9_0%,#fff8ef_100%)] shadow-[0_32px_90px_-42px_rgba(32,20,8,0.42)]">
+            <div className="border-b border-[rgba(131,94,58,0.12)] bg-[linear-gradient(180deg,rgba(255,252,247,0.95)_0%,rgba(248,240,230,0.95)_100%)] px-4 pb-3 pt-4 sm:px-5">
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="relative h-16 w-[45px] shrink-0">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-[rgba(131,94,58,0.15)] bg-white shadow-[0_10px_30px_-20px_rgba(38,26,16,0.4)]">
                     <div className="ai-breathe">
                       <div className={`relative h-full w-full ${waveNow ? "ai-wave" : ""}`}>
                         <Image
-                          src="/images/AIGlass.webp"
-                          alt="Asistent AI"
+                          src={assistantAvatar}
+                          alt="Marcelino"
                           fill
-                          sizes="45px"
-                          className="object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.2)]"
+                          sizes="48px"
+                          className="object-cover"
                           priority={false}
                         />
                       </div>
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="inline-flex rounded-full bg-white px-3 py-1 text-[13px] font-semibold text-[#1f2f31] shadow-[0_8px_18px_-14px_rgba(10,30,31,0.35)]">
-                      Salut! Sunt Marcelino.
-                    </p>
-                    <p className="text-[12px] text-[#4f6365]">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#241912]">Marcelino</p>
+                    <p className="text-[12px] text-[#6d5544]">
                       {hasUserMessage
-                        ? "Iti raspund rapid despre modele, comenzi si personalizare."
+                        ? "Asistent pentru recomandari, comenzi si referinte vizuale."
                         : headerNudges[headerNudgeIndex]}
                     </p>
                   </div>
                 </div>
+
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="rounded-full border border-[#dce7e8] px-2 py-1 text-[10px] text-[#5f6a6b] hover:bg-[#f4f7f7]"
+                  className="rounded-full border border-[rgba(131,94,58,0.14)] bg-white/85 px-3 py-1.5 text-[11px] font-medium text-[#6d5544] transition hover:bg-white"
                 >
                   Inchide
                 </button>
               </div>
             </div>
 
-            <div ref={messagesListRef} className="max-h-[50vh] space-y-4 overflow-y-auto px-4 py-4">
-              {messages.map((message, index) => (
+            <div
+              ref={messagesListRef}
+              className="max-h-[54vh] min-h-[320px] space-y-4 overflow-y-auto px-4 py-4 sm:max-h-[58vh] sm:px-5"
+            >
+              {messages.map((message) => (
                 <div
-                  key={`${message.role}-${index}`}
-                  className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                    message.role === "assistant"
-                      ? "bg-[#f4f7f7] text-[#223638]"
-                      : "ml-8 bg-[#2f6f73] text-white"
-                  }`}
+                  key={message.id}
+                  className={`flex ${message.role === "assistant" ? "justify-start" : "justify-end"}`}
                 >
-                  {message.content}
+                  <div
+                    className={`max-w-[88%] space-y-2 rounded-[22px] px-4 py-3 text-[14px] leading-6 shadow-[0_12px_30px_-24px_rgba(34,25,18,0.35)] ${
+                      message.role === "assistant"
+                        ? "bg-white text-[#2f241d]"
+                        : "bg-[#2d5b67] text-white"
+                    }`}
+                  >
+                    {message.attachments?.length ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        {message.attachments.map((attachment) => (
+                          <div
+                            key={attachment.url}
+                            className="relative h-24 w-full overflow-hidden rounded-2xl border border-white/15"
+                          >
+                            <Image
+                              src={attachment.url}
+                              alt={attachment.name}
+                              fill
+                              sizes="(max-width: 640px) 120px, 160px"
+                              className="object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {message.content ? <p>{message.content}</p> : null}
+                  </div>
                 </div>
               ))}
-              {(loading || bootTyping) ? (
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#eef4f4] px-3 py-1.5 text-xs text-[#627274]">
-                  <span>Marcelino scrie</span>
+
+              {(loading || bootTyping) && !messages.at(-1)?.content ? (
+                <div className="inline-flex items-center gap-2 rounded-full bg-[#f0e7da] px-3 py-1.5 text-xs text-[#705847]">
+                  <span>{composerImages.length ? "Marcelino analizeaza" : "Marcelino scrie"}</span>
                   <span className="typing-dots" aria-hidden="true">
                     <span />
                     <span />
@@ -381,29 +626,26 @@ export function AssistantWidget() {
               ) : null}
 
               {!leadSubmittedId && leadReady ? (
-                <div className="space-y-3 rounded-2xl border border-[#d7e4e5] bg-[#f6fbfb] p-3">
-                  <p className="text-[11px] text-[#7a6a42]">
-                    Nota: partea de referinte (Request ID) este inca in constructie.
-                  </p>
-                  <p className="text-xs text-[#36585b]">
-                    Daca vrei, pot trimite mai departe detaliile discutate pana acum, ca sa nu mai
-                    fie nevoie sa le explici din nou.
-                  </p>
-
-                  {leadDraft ? (
-                    <p className="text-[11px] text-[#557073]">
-                      Rezumat: {leadDraft.summary}
+                <div className="space-y-3 rounded-[22px] border border-[rgba(131,94,58,0.14)] bg-[rgba(255,255,255,0.86)] p-4">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-[#2f241d]">Vrei sa lasi cererea acum?</p>
+                    <p className="text-xs leading-5 text-[#6d5544]">
+                      Daca vrei, trimit mai departe contextul discutat pana acum, impreuna cu
+                      datele tale de contact.
                     </p>
-                  ) : null}
+                    {leadDraft?.summary ? (
+                      <p className="text-[11px] text-[#8a6f5b]">Rezumat: {leadDraft.summary}</p>
+                    ) : null}
+                  </div>
 
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => setContactType("email")}
-                      className={`rounded-full px-3 py-1 text-xs ${
+                      className={`rounded-full px-3 py-1.5 text-xs font-medium ${
                         contactType === "email"
-                          ? "bg-[#2f6f73] text-white"
-                          : "border border-[#cfe0e2] bg-white text-[#456466]"
+                          ? "bg-[#2d5b67] text-white"
+                          : "border border-[rgba(131,94,58,0.14)] bg-white text-[#6d5544]"
                       }`}
                     >
                       Email
@@ -411,10 +653,10 @@ export function AssistantWidget() {
                     <button
                       type="button"
                       onClick={() => setContactType("phone")}
-                      className={`rounded-full px-3 py-1 text-xs ${
+                      className={`rounded-full px-3 py-1.5 text-xs font-medium ${
                         contactType === "phone"
-                          ? "bg-[#2f6f73] text-white"
-                          : "border border-[#cfe0e2] bg-white text-[#456466]"
+                          ? "bg-[#2d5b67] text-white"
+                          : "border border-[rgba(131,94,58,0.14)] bg-white text-[#6d5544]"
                       }`}
                     >
                       Telefon
@@ -430,66 +672,138 @@ export function AssistantWidget() {
                       }))
                     }
                     placeholder={contactType === "email" ? "email@exemplu.com" : "+40..."}
-                    className="w-full rounded-full border border-[#d7e4e5] bg-white px-4 py-2 text-base text-[#1f3335] outline-none focus:border-[#2f6f73] sm:text-sm"
+                    className="w-full rounded-full border border-[rgba(131,94,58,0.16)] bg-white px-4 py-2.5 text-sm text-[#2f241d] outline-none transition focus:border-[#2d5b67]"
                   />
 
                   <button
                     type="button"
                     onClick={() => void submitLeadForward()}
                     disabled={leadSubmitting}
-                    className="rounded-full bg-[#2f6f73] px-4 py-2 text-sm font-semibold text-white hover:bg-[#3c8a90] disabled:opacity-70"
+                    className="rounded-full bg-[#2d5b67] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#234853] disabled:opacity-70"
                   >
-                    {leadSubmitting ? "Se trimite..." : "Trimite cererea catre artist"}
+                    {leadSubmitting ? "Se trimite..." : "Trimite cererea"}
                   </button>
 
                   {leadError ? <p className="text-xs text-[#a64a4a]">{leadError}</p> : null}
-                  <p className="text-[11px] text-[#5a6f71]">
-                    Sau, daca preferi direct: marcelnutu@yahoo.com / +40 721 383 668
+                  <p className="text-[11px] text-[#7a6352]">
+                    Sau direct: marcelnutu@yahoo.com / +40 721 383 668
                   </p>
                 </div>
               ) : null}
 
-              {error ? <p className="text-xs text-[#a64a4a]">{error}</p> : null}
+              {error ? (
+                <div className="rounded-2xl border border-[#e4c7c7] bg-[#fff4f4] px-3 py-2 text-xs text-[#9c3d3d]">
+                  {error}
+                </div>
+              ) : null}
             </div>
 
-            <div className="border-t border-[#e8eff0] px-4 py-3">
-              <div className="mb-3 flex flex-wrap gap-2">
-                {starters.map((starter) => (
-                  <button
-                    key={starter}
-                    type="button"
-                    onClick={() => void sendMessage(starter)}
-                    className="rounded-full border border-[#d7e4e5] bg-[#f9fbfb] px-3 py-1.5 text-xs text-[#406466] hover:border-[#2f6f73] hover:text-[#2f6f73]"
-                  >
-                    {starter}
-                  </button>
-                ))}
-              </div>
-              <p className="mb-2 text-[11px] text-[#5a6f71]">
-                Preferi direct? Pot trimite detaliile discutate ca cerere cu Request ID sau poti
-                contacta direct la marcelnutu@yahoo.com / +40 721 383 668.
-              </p>
-              <form onSubmit={handleSubmit} className="flex gap-2">
+            <div className="border-t border-[rgba(131,94,58,0.12)] bg-[rgba(255,252,248,0.88)] px-4 py-4 sm:px-5">
+              {!hasUserMessage ? (
+                <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+                  {starters.map((starter) => (
+                    <button
+                      key={starter}
+                      type="button"
+                      onClick={() => void sendMessage(starter)}
+                      className="shrink-0 rounded-full border border-[rgba(131,94,58,0.14)] bg-white px-3 py-1.5 text-xs text-[#5d4a3c] transition hover:border-[#2d5b67] hover:text-[#2d5b67]"
+                    >
+                      {starter}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
+              {composerImages.length ? (
+                <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+                  {composerImages.map((image) => (
+                    <div
+                      key={image.id}
+                      className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-[rgba(131,94,58,0.14)] bg-white"
+                    >
+                      <Image
+                        src={image.previewUrl}
+                        alt={image.file.name}
+                        fill
+                        unoptimized
+                        sizes="64px"
+                        className="object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeComposerImage(image.id)}
+                        className="absolute right-1 top-1 rounded-full bg-[rgba(36,25,18,0.72)] px-1.5 py-0.5 text-[10px] text-white"
+                        aria-label={`Sterge ${image.file.name}`}
+                      >
+                        x
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="rounded-[24px] border border-[rgba(131,94,58,0.16)] bg-white p-2 shadow-[0_18px_35px_-30px_rgba(34,25,18,0.3)]">
+                  <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(event) => setInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && !event.shiftKey) {
+                        event.preventDefault();
+                        void sendMessage(input);
+                      }
+                    }}
+                    rows={1}
+                    placeholder="Scrie un mesaj sau descrie imaginea..."
+                    className="max-h-[140px] min-h-[44px] w-full resize-none bg-transparent px-3 py-2 text-[15px] text-[#2f241d] outline-none placeholder:text-[#9b8778]"
+                  />
+
+                  <div className="flex items-center justify-between gap-3 border-t border-[rgba(131,94,58,0.08)] px-2 pt-2">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="rounded-full border border-[rgba(131,94,58,0.14)] px-3 py-1.5 text-xs font-medium text-[#6d5544] transition hover:border-[#2d5b67] hover:text-[#2d5b67]"
+                      >
+                        Adauga imagine
+                      </button>
+                      <span className="text-[11px] text-[#8a6f5b]">maxim 3 imagini</span>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading || !canSend}
+                      className="rounded-full bg-[#2d5b67] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#234853] disabled:opacity-60"
+                    >
+                      {loading ? "Se genereaza..." : "Trimite"}
+                    </button>
+                  </div>
+                </div>
+
                 <input
-                  value={input}
-                  onChange={(event) => setInput(event.target.value)}
-                  placeholder="Scrie un mesaj..."
-                  className="w-full rounded-full border border-[#d7e4e5] bg-white px-4 py-2.5 text-base text-[#1f3335] outline-none focus:border-[#2f6f73] sm:text-sm"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(event) => {
+                    handleImageSelection(event.target.files);
+                    event.target.value = "";
+                  }}
                 />
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="rounded-full bg-[#2f6f73] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#3c8a90] disabled:opacity-70"
-                >
-                  Trimite
-                </button>
+
+                <p className="text-[11px] leading-5 text-[#7a6352]">
+                  Poti scrie liber, poti cere o recomandare rapida sau poti trimite o referinta
+                  vizuala pentru un raspuns mai precis.
+                </p>
               </form>
             </div>
           </div>
         ) : (
-          <div className="relative ml-auto flex w-full max-w-[220px] flex-col items-end gap-2">
+          <div className="relative ml-auto flex w-full max-w-[280px] flex-col items-end gap-2">
             <div
-              className={`max-w-[220px] rounded-2xl bg-white px-3 py-2 text-xs text-[#314f52] shadow-[0_14px_30px_-20px_rgba(13,38,39,0.4)] transition-all duration-300 ${
+              className={`max-w-[240px] rounded-2xl border border-[rgba(131,94,58,0.1)] bg-white px-3 py-2 text-xs text-[#4b3b2f] shadow-[0_16px_34px_-24px_rgba(35,22,11,0.38)] transition-all duration-300 ${
                 hintVisible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
               }`}
             >
@@ -503,26 +817,30 @@ export function AssistantWidget() {
                 setHintVisible(false);
                 setOpen(true);
               }}
-              className={`relative w-[85px] transition duration-200 hover:scale-110 ${
+              className={`group flex items-center gap-3 rounded-full border border-[rgba(131,94,58,0.12)] bg-white/95 px-3 py-2 shadow-[0_24px_50px_-30px_rgba(35,22,11,0.42)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_28px_60px_-30px_rgba(35,22,11,0.5)] ${
                 mounted ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
               }`}
               aria-label="Deschide asistentul AI"
             >
-              <div className="ai-breathe">
-                <div className={`relative h-[120px] w-[85px] ${waveNow ? "ai-wave" : ""}`}>
-                  <Image
-                    src="/images/AIGlass.webp"
-                    alt="Asistent AI"
-                    fill
-                    sizes="85px"
-                    className="object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.2)]"
-                    priority={false}
-                  />
+              <div className="relative h-11 w-11 overflow-hidden rounded-full border border-[rgba(131,94,58,0.12)] bg-[#fff7ed]">
+                <div className="ai-breathe">
+                  <div className={`relative h-full w-full ${waveNow ? "ai-wave" : ""}`}>
+                    <Image
+                      src={assistantAvatar}
+                      alt="Marcelino"
+                      fill
+                      sizes="44px"
+                      className="object-cover"
+                      priority={false}
+                    />
+                  </div>
                 </div>
               </div>
-              <span className="mt-1 block text-center text-[10px] font-semibold uppercase tracking-[0.12em] text-[#2f6f73]">
-                Marcelino AI
-              </span>
+
+              <div className="text-left">
+                <span className="block text-sm font-semibold text-[#2f241d]">Marcelino</span>
+                <span className="block text-[11px] text-[#7a6352]">Intreaba sau trimite o poza</span>
+              </div>
             </button>
           </div>
         )}
@@ -555,7 +873,7 @@ export function AssistantWidget() {
           width: 4px;
           height: 4px;
           border-radius: 999px;
-          background: #5b6f71;
+          background: #7f6654;
           opacity: 0.35;
           animation: typing-bounce 1s ease-in-out infinite;
         }

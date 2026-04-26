@@ -17,11 +17,11 @@ export function AssistantWidgetSlot() {
     const enable = () => setEnabled(true);
 
     if (typeof globalThis.requestIdleCallback === "function") {
-      const idleId = globalThis.requestIdleCallback(enable, { timeout: 2500 });
+      const idleId = globalThis.requestIdleCallback(enable, { timeout: 1200 });
       return () => globalThis.cancelIdleCallback(idleId);
     }
 
-    const timeoutId = globalThis.setTimeout(enable, 1500);
+    const timeoutId = globalThis.setTimeout(enable, 600);
     return () => globalThis.clearTimeout(timeoutId);
   }, []);
 
