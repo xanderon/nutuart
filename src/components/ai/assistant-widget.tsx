@@ -316,17 +316,21 @@ export function AssistantWidget() {
         }}
       >
         {open ? (
-          <div className="ml-auto w-full max-w-[420px] overflow-hidden rounded-[26px] border border-[rgba(214,198,176,0.45)] bg-[linear-gradient(180deg,#fffdf9_0%,#fff8ef_100%)] shadow-[0_28px_70px_-38px_rgba(32,20,8,0.42)]">
-            <div className="flex items-center justify-between gap-3 border-b border-[rgba(131,94,58,0.12)] px-4 py-4 sm:px-5">
+          <div className="marcelino-panel ml-auto w-full max-w-[420px] overflow-hidden rounded-[26px]">
+            <div className="marcelino-header flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
               <div className="min-w-0">
-                <p className="truncate text-base font-semibold text-[#241912]">Marcelino</p>
-                <p className="text-[12px] text-[#6d5544]">Asistent pentru comenzi si recomandari.</p>
+                <div className="truncate text-base font-semibold text-[var(--color-foreground)]">
+                  Marcelino
+                </div>
+                <div className="text-[12px] text-[var(--color-muted)]">
+                  Asistent pentru comenzi si recomandari.
+                </div>
               </div>
 
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-full border border-[rgba(131,94,58,0.14)] bg-white px-3 py-1.5 text-[11px] font-medium text-[#6d5544] transition hover:bg-[#fff8ef]"
+                className="marcelino-button-secondary rounded-full px-3 py-1.5 text-[11px] font-medium"
               >
                 Inchide
               </button>
@@ -344,17 +348,17 @@ export function AssistantWidget() {
                   <div
                     className={`max-w-[88%] rounded-[20px] px-4 py-3 text-[14px] leading-6 ${
                       message.role === "assistant"
-                        ? "bg-white text-[#2f241d] shadow-[0_12px_30px_-24px_rgba(34,25,18,0.35)]"
-                        : "bg-[#2d5b67] text-white"
+                        ? "marcelino-bubble-assistant"
+                        : "marcelino-bubble-user"
                     }`}
                   >
-                    <p>{message.content}</p>
+                    <div className="text-current">{message.content}</div>
                   </div>
                 </div>
               ))}
 
               {(loading || bootTyping) && !messages.at(-1)?.content ? (
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#f0e7da] px-3 py-1.5 text-xs text-[#705847]">
+                <div className="marcelino-typing inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs">
                   <span>Marcelino scrie</span>
                   <span className="typing-dots" aria-hidden="true">
                     <span />
@@ -365,14 +369,18 @@ export function AssistantWidget() {
               ) : null}
 
               {!leadSubmittedId && leadReady ? (
-                <div className="space-y-3 rounded-[20px] border border-[rgba(131,94,58,0.14)] bg-[rgba(255,255,255,0.86)] p-4">
+                <div className="marcelino-card space-y-3 rounded-[20px] p-4">
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-[#2f241d]">Vrei sa trimitem cererea?</p>
-                    <p className="text-xs leading-5 text-[#6d5544]">
+                    <div className="text-sm font-semibold text-[var(--color-foreground)]">
+                      Vrei sa trimitem cererea?
+                    </div>
+                    <div className="text-xs leading-5 text-[var(--color-muted)]">
                       Daca vrei, trimit mai departe contextul discutat pana acum.
-                    </p>
+                    </div>
                     {leadDraft?.summary ? (
-                      <p className="text-[11px] text-[#8a6f5b]">Rezumat: {leadDraft.summary}</p>
+                      <div className="text-[11px] text-[var(--color-muted)]">
+                        Rezumat: {leadDraft.summary}
+                      </div>
                     ) : null}
                   </div>
 
@@ -382,8 +390,8 @@ export function AssistantWidget() {
                       onClick={() => setContactType("email")}
                       className={`rounded-full px-3 py-1.5 text-xs font-medium ${
                         contactType === "email"
-                          ? "bg-[#2d5b67] text-white"
-                          : "border border-[rgba(131,94,58,0.14)] bg-white text-[#6d5544]"
+                          ? "marcelino-button-primary"
+                          : "marcelino-button-secondary"
                       }`}
                     >
                       Email
@@ -393,8 +401,8 @@ export function AssistantWidget() {
                       onClick={() => setContactType("phone")}
                       className={`rounded-full px-3 py-1.5 text-xs font-medium ${
                         contactType === "phone"
-                          ? "bg-[#2d5b67] text-white"
-                          : "border border-[rgba(131,94,58,0.14)] bg-white text-[#6d5544]"
+                          ? "marcelino-button-primary"
+                          : "marcelino-button-secondary"
                       }`}
                     >
                       Telefon
@@ -410,35 +418,37 @@ export function AssistantWidget() {
                       }))
                     }
                     placeholder={contactType === "email" ? "email@exemplu.com" : "+40..."}
-                    className="w-full rounded-full border border-[rgba(131,94,58,0.16)] bg-white px-4 py-2.5 text-sm text-[#2f241d] outline-none transition focus:border-[#2d5b67]"
+                    className="marcelino-input w-full rounded-full px-4 py-2.5 text-sm outline-none transition"
                   />
 
                   <button
                     type="button"
                     onClick={() => void submitLeadForward()}
                     disabled={leadSubmitting}
-                    className="rounded-full bg-[#2d5b67] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#234853] disabled:opacity-70"
+                    className="marcelino-button-primary rounded-full px-4 py-2.5 text-sm font-semibold transition disabled:opacity-70"
                   >
                     {leadSubmitting ? "Se trimite..." : "Trimite cererea"}
                   </button>
 
-                  {leadError ? <p className="text-xs text-[#a64a4a]">{leadError}</p> : null}
-                  <p className="text-[11px] text-[#7a6352]">
+                  {leadError ? (
+                    <div className="text-xs text-[#ff8a8a]">{leadError}</div>
+                  ) : null}
+                  <div className="text-[11px] text-[var(--color-muted)]">
                     Sau direct: marcelnutu@yahoo.com / +40 721 383 668
-                  </p>
+                  </div>
                 </div>
               ) : null}
 
               {error ? (
-                <div className="rounded-2xl border border-[#e4c7c7] bg-[#fff4f4] px-3 py-2 text-xs text-[#9c3d3d]">
+                <div className="marcelino-error rounded-2xl px-3 py-2 text-xs">
                   {error}
                 </div>
               ) : null}
             </div>
 
-            <div className="border-t border-[rgba(131,94,58,0.12)] px-4 py-4 sm:px-5">
+            <div className="marcelino-footer px-4 py-4 sm:px-5">
               <form onSubmit={handleSubmit}>
-                <div className="rounded-[22px] border border-[rgba(131,94,58,0.16)] bg-white p-2 shadow-[0_18px_35px_-30px_rgba(34,25,18,0.3)]">
+                <div className="marcelino-composer rounded-[22px] p-2">
                   <textarea
                     ref={textareaRef}
                     value={input}
@@ -451,14 +461,14 @@ export function AssistantWidget() {
                     }}
                     rows={1}
                     placeholder="Scrie un mesaj..."
-                    className="max-h-[120px] min-h-[44px] w-full resize-none bg-transparent px-3 py-2 text-[15px] text-[#2f241d] outline-none placeholder:text-[#9b8778]"
+                    className="marcelino-textarea max-h-[120px] min-h-[44px] w-full resize-none bg-transparent px-3 py-2 text-[15px] outline-none"
                   />
 
-                  <div className="flex justify-end border-t border-[rgba(131,94,58,0.08)] pt-2">
+                  <div className="marcelino-composer-actions flex justify-end pt-2">
                     <button
                       type="submit"
                       disabled={loading || !input.trim()}
-                      className="rounded-full bg-[#2d5b67] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#234853] disabled:opacity-60"
+                      className="marcelino-button-primary rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-60"
                     >
                       {loading ? "Se genereaza..." : "Trimite"}
                     </button>
@@ -493,6 +503,114 @@ export function AssistantWidget() {
       </div>
 
       <style jsx>{`
+        .marcelino-panel {
+          border: 1px solid var(--color-outline);
+          background:
+            linear-gradient(
+              180deg,
+              color-mix(in srgb, var(--color-surface) 96%, white 4%) 0%,
+              color-mix(in srgb, var(--color-elevated) 92%, transparent) 100%
+            );
+          box-shadow: 0 28px 70px -38px rgba(0, 0, 0, 0.55);
+        }
+
+        .marcelino-header,
+        .marcelino-footer {
+          border-color: var(--color-outline);
+          background: color-mix(in srgb, var(--color-surface) 86%, transparent);
+        }
+
+        .marcelino-header {
+          border-bottom-width: 1px;
+          border-bottom-style: solid;
+        }
+
+        .marcelino-footer {
+          border-top-width: 1px;
+          border-top-style: solid;
+        }
+
+        .marcelino-bubble-assistant {
+          background: color-mix(in srgb, var(--color-elevated) 94%, white 6%);
+          color: var(--color-foreground);
+          box-shadow: 0 12px 30px -24px rgba(0, 0, 0, 0.45);
+        }
+
+        .marcelino-bubble-user {
+          background: var(--color-accent);
+          color: var(--color-background);
+        }
+
+        .marcelino-typing {
+          background: color-mix(in srgb, var(--color-elevated) 92%, transparent);
+          color: var(--color-muted);
+        }
+
+        .marcelino-card {
+          border: 1px solid var(--color-outline);
+          background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+        }
+
+        .marcelino-input,
+        .marcelino-composer {
+          border: 1px solid var(--color-outline);
+          background: color-mix(in srgb, var(--color-surface) 96%, transparent);
+          color: var(--color-foreground);
+        }
+
+        .marcelino-input::placeholder,
+        .marcelino-textarea::placeholder {
+          color: color-mix(in srgb, var(--color-muted) 78%, transparent);
+        }
+
+        .marcelino-input:focus,
+        .marcelino-textarea:focus {
+          outline: none;
+        }
+
+        .marcelino-input:focus-visible,
+        .marcelino-composer:focus-within {
+          border-color: color-mix(in srgb, var(--color-accent) 72%, white 8%);
+          box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 42%, transparent);
+        }
+
+        .marcelino-composer {
+          box-shadow: 0 18px 35px -30px rgba(0, 0, 0, 0.45);
+        }
+
+        .marcelino-composer-actions {
+          border-top: 1px solid color-mix(in srgb, var(--color-outline) 85%, transparent);
+        }
+
+        .marcelino-textarea {
+          color: var(--color-foreground);
+        }
+
+        .marcelino-button-primary {
+          background: var(--color-accent);
+          color: var(--color-background);
+        }
+
+        .marcelino-button-primary:hover {
+          background: color-mix(in srgb, var(--color-accent-strong) 82%, var(--color-accent));
+        }
+
+        .marcelino-button-secondary {
+          border: 1px solid var(--color-outline);
+          background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+          color: var(--color-foreground);
+        }
+
+        .marcelino-button-secondary:hover {
+          background: color-mix(in srgb, var(--color-elevated) 96%, transparent);
+        }
+
+        .marcelino-error {
+          border: 1px solid rgba(255, 138, 138, 0.25);
+          background: rgba(127, 20, 20, 0.16);
+          color: #ffb3b3;
+        }
+
         .ai-breathe {
           display: block;
           width: 100%;
@@ -519,7 +637,7 @@ export function AssistantWidget() {
           width: 4px;
           height: 4px;
           border-radius: 999px;
-          background: #7f6654;
+          background: currentColor;
           opacity: 0.35;
           animation: typing-bounce 1s ease-in-out infinite;
         }
