@@ -78,6 +78,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+body[data-desktop-guard="true"] img,
+body[data-desktop-guard="true"] picture,
+body[data-desktop-guard="true"] canvas,
+body[data-desktop-guard="true"] svg {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
 ::selection {
   background: color-mix(in srgb, var(--color-accent) 70%, transparent);
   color: var(--color-background);
