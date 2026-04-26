@@ -61,7 +61,6 @@ export const aiKnowledge = {
     "Dupa clarificare minima, ofera 2-3 directii generale, simple, ne-tehnice.",
     "Nu folosi limbaj tehnic daca nu este cerut.",
     "Nu insista pe vanzare.",
-    "Daca utilizatorul trimite o imagine, leaga observatiile de tipul de lucrare potrivit.",
     "Cand utilizatorul intreaba de pret sau termen, explica pe scurt ca depind de dimensiune/complexitate/tehnica.",
   ],
   constraints: [

@@ -9,7 +9,6 @@ import {
   leadInfoCount,
 } from "@/lib/assistant-lead-signals";
 import { getLeadByRequestId, type LeadStatus, upsertSession } from "@/lib/assistant-leads-store";
-import { readAssistantUpload } from "@/lib/assistant-upload-store";
 
 export const runtime = "nodejs";
 
@@ -17,7 +16,6 @@ type ChatRole = "user" | "assistant";
 type ChatMessage = {
   role: ChatRole;
   content: string;
-  attachments?: string[];
 };
 
 type AssistantPayload = {
@@ -46,24 +44,15 @@ function normalizeMessages(messages: unknown): ChatMessage[] {
       if (!item || typeof item !== "object") return false;
       const role = (item as ChatMessage).role;
       const content = (item as ChatMessage).content;
-      const attachments = (item as ChatMessage).attachments;
-      const hasContent = typeof content === "string" && content.trim().length > 0;
-      const hasAttachments =
-        Array.isArray(attachments) &&
-        attachments.some((attachment) => typeof attachment === "string" && attachment.trim());
-
-      return (role === "user" || role === "assistant") && (hasContent || hasAttachments);
+      return (
+        (role === "user" || role === "assistant") &&
+        typeof content === "string" &&
+        content.trim().length > 0
+      );
     })
     .map((item) => ({
       role: item.role,
-      content: typeof item.content === "string" ? item.content.trim().slice(0, 2000) : "",
-      attachments: Array.isArray(item.attachments)
-        ? item.attachments
-            .filter((attachment): attachment is string => typeof attachment === "string")
-            .map((attachment) => attachment.trim())
-            .filter(Boolean)
-            .slice(0, 3)
-        : [],
+      content: item.content.trim().slice(0, 2000),
     }))
     .slice(-16);
 }
@@ -101,7 +90,7 @@ function streamResponse(run: (send: (event: StreamEvent) => void) => Promise<voi
   );
 }
 
-async function streamSingleReply(options: {
+function streamSingleReply(options: {
   reply: string;
   leadReady: boolean;
   leadDraft: LeadDraft;
@@ -117,75 +106,6 @@ async function streamSingleReply(options: {
   });
 }
 
-function extractUploadName(url: string) {
-  const match = url.match(/\/api\/assistant\/uploads\/([^/?#]+)/);
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-async function buildImagePart(url: string) {
-  const uploadName = extractUploadName(url);
-  if (!uploadName) return null;
-
-  const stored = await readAssistantUpload(uploadName);
-  if (!stored) return null;
-
-  return {
-    type: "image_url" as const,
-    image_url: {
-      url: `data:${stored.contentType};base64,${stored.buffer.toString("base64")}`,
-    },
-  };
-}
-
-async function buildOpenAiMessages(messages: ChatMessage[]) {
-  const openAiMessages: Array<{
-    role: ChatRole | "system";
-    content:
-      | string
-      | Array<
-          | { type: "text"; text: string }
-          | { type: "image_url"; image_url: { url: string } }
-        >;
-  }> = [];
-
-  for (const message of messages) {
-    if (message.role === "assistant" || !message.attachments?.length) {
-      openAiMessages.push({
-        role: message.role,
-        content: message.content || "Continua conversatia.",
-      });
-      continue;
-    }
-
-    const imageParts = (
-      await Promise.all(message.attachments.map((attachment) => buildImagePart(attachment)))
-    ).filter(Boolean) as Array<{ type: "image_url"; image_url: { url: string } }>;
-
-    if (!imageParts.length) {
-      openAiMessages.push({
-        role: message.role,
-        content: message.content || "Am atasat o imagine de referinta.",
-      });
-      continue;
-    }
-
-    openAiMessages.push({
-      role: message.role,
-      content: [
-        {
-          type: "text",
-          text:
-            message.content ||
-            "Analizeaza imaginea ca referinta pentru o piesa din sticla si raspunde in contextul site-ului.",
-        },
-        ...imageParts,
-      ],
-    });
-  }
-
-  return openAiMessages;
-}
-
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as AssistantPayload;
   const messages = normalizeMessages(body.messages);
@@ -197,10 +117,7 @@ export async function POST(request: Request) {
 
   const latestUserMessage = [...messages].reverse().find((message) => message.role === "user");
   if (!latestUserMessage) {
-    return NextResponse.json(
-      { error: "Trimite o intrebare sau o imagine pentru a primi raspuns." },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Trimite o intrebare pentru a primi raspuns." }, { status: 400 });
   }
 
   if (!OPENAI_API_KEY) {
@@ -217,8 +134,6 @@ export async function POST(request: Request) {
   const draft = buildLeadDraft(messages);
   const infoCount = leadInfoCount(messages);
   const leadReadyFromSignals = isLeadReady(messages);
-  const latestUserContent =
-    latestUserMessage.content || (latestUserMessage.attachments?.length ? "[imagine atasata]" : "");
   const handoffIntent = isHumanHandoffIntent(messages);
   const userMessageCount = messages.filter((message) => message.role === "user").length;
   const uncertainReplies = countUncertainReplies(messages);
@@ -238,7 +153,7 @@ export async function POST(request: Request) {
     sessionId,
     page,
     messageCount: messages.length,
-    lastUserMessage: latestUserContent.slice(0, 400),
+    lastUserMessage: latestUserMessage.content.slice(0, 400),
     leadReady: leadReadyNow,
     draft,
   });
@@ -293,7 +208,6 @@ export async function POST(request: Request) {
     "Numele tau este Marcelino, asistentul AI al site-ului NutuArt.",
     "Raspunzi in romana, natural, clar si util.",
     "Rolul tau este sa ajuti vizitatorul sa inteleaga ce i s-ar potrivi si care este urmatorul pas.",
-    "Daca utilizatorul trimite o imagine, descrie pe scurt ce observi relevant si leaga raspunsul de proiecte din sticla, vitralii, sablare sau decor personalizat.",
     "Preferi raspunsuri scurte sau medii, cu 0 sau 1 intrebare utila pe mesaj.",
     "Nu bloca discutia prea devreme cu cereri de contact. Contactul este o optiune utila, nu final obligatoriu.",
     "Propune contact direct sau cerere doar cand utilizatorul cere pret exact, termen exact, oferta finala, montaj, discutie directa sau dupa mai multe mesaje fara progres.",
@@ -308,8 +222,6 @@ export async function POST(request: Request) {
     "",
     buildKnowledgeContext(),
   ].join("\n");
-
-  const openAiMessages = await buildOpenAiMessages(messages);
 
   return streamResponse(async (send) => {
     send({
@@ -329,7 +241,7 @@ export async function POST(request: Request) {
         temperature: 0.45,
         max_tokens: 260,
         stream: true,
-        messages: [{ role: "system", content: systemPrompt }, ...openAiMessages],
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
       }),
     });
 
