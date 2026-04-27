@@ -9,6 +9,7 @@ const footerLinks = [
       { label: "Artistul", href: "/artist" },
       { label: "Artă decorativă", href: "/arta" },
       { label: "Contact", href: "/contact" },
+      { label: "Editor de design", href: "/editor" },
     ],
   },
 ];

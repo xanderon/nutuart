@@ -1,0 +1,80 @@
+.editor-shell {
+  --editor-bg: #ece8df;
+  --editor-surface: rgba(255, 255, 255, 0.88);
+  --editor-surface-strong: #fffdf8;
+  --editor-panel: rgba(255, 255, 255, 0.78);
+  --editor-ink: #181712;
+  --editor-muted: #615b51;
+  --editor-line: rgba(24, 23, 18, 0.12);
+  --editor-line-strong: rgba(24, 23, 18, 0.2);
+  --editor-accent: #0d6b72;
+  --editor-accent-soft: #d7eef0;
+  --editor-danger: #b04635;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at top left, rgba(13, 107, 114, 0.14), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(148, 109, 48, 0.12), transparent 30%),
+    linear-gradient(180deg, #f4f1ea 0%, var(--editor-bg) 100%);
+  color: var(--editor-ink);
+}
+
+.editor-shell h1,
+.editor-shell h2,
+.editor-shell h3,
+.editor-shell h4,
+.editor-shell h5,
+.editor-shell h6 {
+  font-family: var(--font-sans), "Avenir Next", "Segoe UI", sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.editor-shell p {
+  color: var(--editor-muted);
+}
+
+.editor-shell button,
+.editor-shell input,
+.editor-shell select {
+  font: inherit;
+}
+
+.editor-shell [data-editor-scroll] {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.editor-shell [data-editor-scroll]::-webkit-scrollbar {
+  display: none;
+}
+
+.editor-shell .editor-grid-bg {
+  background-image:
+    linear-gradient(rgba(24, 23, 18, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 23, 18, 0.05) 1px, transparent 1px);
+  background-position: center center;
+  background-size: 22px 22px;
+}
+
+.editor-shell .editor-panel {
+  background: var(--editor-panel);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .editor-shell [data-editor-fade-in="true"] {
+    animation: editorFadeIn 320ms ease-out both;
+  }
+}
+
+@keyframes editorFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
