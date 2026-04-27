@@ -54,15 +54,12 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default function ServicesPage() {
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-16 px-4 py-16 sm:px-6 lg:px-8">
-      <header className="space-y-6">
-        <span className="text-xs uppercase tracking-[0.35em] text-muted">
-          Atelier & Proces
-        </span>
-        <h1 className="font-display text-4xl leading-tight sm:text-5xl">
+    <div className="mx-auto w-full max-w-6xl space-y-10 px-4 pb-12 pt-5 sm:space-y-12 sm:px-6 sm:pb-14 sm:pt-6 lg:px-0">
+      <header className="space-y-3 text-center sm:space-y-4">
+        <h1 className="font-display text-3xl leading-tight sm:text-4xl">
           Soluții integrate: autocolante, sablare, biserici, trofee
         </h1>
-        <p className="max-w-3xl text-base leading-relaxed text-muted">
+        <p className="mx-auto max-w-4xl text-pretty text-sm leading-relaxed text-muted sm:text-base">
           Gândim și producem în atelier, cap-coadă. Fie că e branding pentru un
           spațiu sau un proiect mai complex, ne uităm la detalii și vrem să iasă
           bine și să țină în timp.
@@ -93,41 +90,57 @@ export default function ServicesPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/60 p-6 sm:grid-cols-[1.2fr_0.8fr] sm:p-10">
-        <div className="space-y-4">
-          <h2 className="font-display text-2xl">Parteneriate creative</h2>
-          <p className="text-sm leading-relaxed text-muted">
-            Lucrăm cu arhitecți, branduri și echipe creative. Putem intra în
-            proiect de la început sau pe parcurs, în funcție de nevoie.
+      <section className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/45 p-7 sm:p-8">
+          <p className="text-xs uppercase tracking-[0.35em] text-muted">
+            Parteneriate creative
           </p>
+          <h2 className="mt-3 font-display text-2xl sm:text-[2rem]">
+            Intrăm în proiect când ai nevoie să iasă bine.
+          </h2>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
+            De la idee la execuție, lucrăm clar, fără complicații. Fie că
+            pornești de la zero sau ai deja o direcție, o ducem mai departe cum
+            trebuie.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2.5 text-xs uppercase tracking-[0.28em] text-muted">
+            <span className="rounded-full border border-[color:var(--color-outline)] px-3 py-2">
+              Branding
+            </span>
+            <span className="rounded-full border border-[color:var(--color-outline)] px-3 py-2">
+              Prototip
+            </span>
+            <span className="rounded-full border border-[color:var(--color-outline)] px-3 py-2">
+              Execuție
+            </span>
+            <span className="rounded-full border border-[color:var(--color-outline)] px-3 py-2">
+              Montaj
+            </span>
+          </div>
         </div>
-        <div className="space-y-4 rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-background)]/60 p-6">
-          <p className="text-xs uppercase tracking-[0.3em] text-muted">
+
+        <div className="rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/6 p-7 sm:p-8">
+          <p className="text-xs uppercase tracking-[0.35em] text-muted">
             Pasul următor
           </p>
-          <p className="text-sm text-muted">
-            Dacă ai un moodboard sau niște idei, trimite-le și vedem cum le
-            ducem mai departe.
+          <h2 className="mt-3 font-display text-2xl">Trimite ideea. Ne ocupăm noi de restul.</h2>
+          <p className="mt-4 text-sm leading-relaxed text-muted sm:text-base">
+            Ai un moodboard sau doar o idee vagă? E suficient. O transformăm
+            într-un rezultat concret.
           </p>
-          <div className="space-y-2 border-t border-[color:var(--color-outline)] pt-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-muted">
-              Contact rapid
-            </p>
-            <p className="font-display text-xl text-foreground">NutuArt</p>
-            <p className="text-sm leading-relaxed text-muted">
-              Autocolante, geamuri sablate, lucrări pentru biserici și trofee
-              personalizate. Proiecte pentru case și spații comerciale.
-            </p>
-            <p className="text-sm text-muted">București, România</p>
+          <div className="mt-6 space-y-2 text-sm text-muted">
+            <p>NutuArt</p>
+            <p>București</p>
+            <p>Autocolante, sticlă sablată, lucrări personalizate</p>
           </div>
           <Link
             href="/contact"
-            className="inline-flex items-center justify-center rounded-full bg-[color:var(--color-accent-strong)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--color-background)] transition duration-200 hover:-translate-y-0.5"
+            className="mt-7 inline-flex items-center justify-center rounded-full bg-[color:var(--color-accent-strong)] px-6 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--color-background)] transition duration-200 hover:-translate-y-0.5"
           >
             Contact rapid
           </Link>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

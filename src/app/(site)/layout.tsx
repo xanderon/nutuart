@@ -18,7 +18,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
         <div className="relative z-10 flex min-h-screen flex-col">
           <ConsoleGreeting />
           <SiteHeader />
-          <main className="flex-1 pt-10 sm:pt-14 lg:pt-18">{children}</main>
+          <main className="flex-1 pt-16 sm:pt-14 lg:pt-18">{children}</main>
           <SiteFooter />
           <BackToTopButton />
           <AssistantWidgetSlot />

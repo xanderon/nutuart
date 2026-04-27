@@ -96,13 +96,13 @@ export function GalleryExplorer({
   return (
     <div
       ref={explorerTopRef}
-      className="space-y-5 scroll-mt-[84px] sm:scroll-mt-[108px] lg:scroll-mt-[124px]"
+      className="space-y-2 scroll-mt-[84px] sm:space-y-3 sm:scroll-mt-[108px] lg:scroll-mt-[124px]"
     >
       {showFilters ? (
         <div
           className={
-            "sticky top-[64px] z-20 -mx-4 border-b border-[color:var(--color-outline)]/70 bg-[color:var(--page-bg)]/88 px-4 backdrop-blur transition-[padding] duration-200 sm:top-[84px] sm:px-0 lg:top-[96px] " +
-            (compactFilters ? "py-1 sm:py-2" : "py-2 sm:py-3")
+            "sticky top-[64px] z-20 -mx-4 bg-[color:var(--page-bg)]/88 px-4 backdrop-blur transition-[padding] duration-200 sm:top-[84px] sm:px-0 lg:top-[96px] " +
+            (compactFilters ? "py-0.5" : "py-0.5 sm:py-1")
           }
         >
           <GalleryFilters

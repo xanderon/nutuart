@@ -44,14 +44,14 @@ export default async function HomePage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-12 px-4 py-12 sm:space-y-14 sm:px-6 lg:px-0">
+    <div className="mx-auto w-full max-w-6xl space-y-8 px-4 pb-12 pt-0 sm:space-y-10 sm:px-6 sm:pb-14 sm:pt-2 lg:px-0">
       <JsonLd data={structuredData} />
-      <section>
-        <div className="mb-5 rounded-[var(--radius-lg)] border border-[color:var(--color-outline)] bg-[color:var(--color-elevated)]/50 p-6">
-          <h1 className="font-display text-3xl leading-tight sm:text-4xl">
+      <section className="space-y-2 sm:space-y-3">
+        <div className="px-2 py-1 text-center sm:px-8 sm:py-2">
+          <h1 className="font-display text-2xl leading-tight sm:text-4xl">
             Lucrări decorative pentru spații comerciale și rezidențiale.
           </h1>
-          <p className="mt-3 text-pretty text-sm leading-relaxed text-muted sm:text-base">
+          <p className="mx-auto mt-2 max-w-3xl text-pretty text-[13px] leading-relaxed text-muted sm:mt-3 sm:text-base">
             Atelierul artistului Nuțu Marcel realizează autocolante, geamuri
             sablate, lucrări pentru biserici{" "}
             <span className="whitespace-nowrap">și trofee personalizate</span>{" "}
