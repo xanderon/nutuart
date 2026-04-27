@@ -51,10 +51,11 @@ export default async function HomePage() {
           <h1 className="font-display text-3xl leading-tight sm:text-4xl">
             Lucrări decorative pentru spații comerciale și rezidențiale.
           </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted sm:text-base">
+          <p className="mt-3 text-pretty text-sm leading-relaxed text-muted sm:text-base">
             Atelierul artistului Nuțu Marcel realizează autocolante, geamuri
-            sablate, lucrări pentru biserici și trofee personalizate pentru
-            case, birouri și spații comerciale.
+            sablate, lucrări pentru biserici{" "}
+            <span className="whitespace-nowrap">și trofee personalizate</span>{" "}
+            pentru case, birouri și spații comerciale.
           </p>
         </div>
         <GalleryExplorer artworks={artworks} />
@@ -69,8 +70,8 @@ export default async function HomePage() {
           <p className="text-xs uppercase tracking-[0.35em] text-muted">Servicii</p>
           <h2 className="mt-3 font-display text-2xl">Vezi ce putem realiza pentru proiectul tău</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted">
-            Autocolante, sablare pe sticlă, lucrări pentru biserici și trofee
-            personalizate.
+            Autocolante, sablare pe sticlă, lucrări pentru biserici și{" "}
+            <span className="whitespace-nowrap">trofee personalizate</span>.
           </p>
         </Link>
         <Link
