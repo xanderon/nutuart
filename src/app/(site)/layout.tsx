@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AssistantWidgetSlot } from "@/components/ai/assistant-widget-slot";
+import { BackToTopButton } from "@/components/back-to-top-button";
 import { ConsoleGreeting } from "@/components/console-greeting";
 import { DesktopInteractionGuard } from "@/components/desktop-interaction-guard";
 import { SiteFooter } from "@/components/site-footer";
@@ -19,6 +20,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
           <SiteHeader />
           <main className="flex-1 pt-10 sm:pt-14 lg:pt-18">{children}</main>
           <SiteFooter />
+          <BackToTopButton />
           <AssistantWidgetSlot />
         </div>
       </div>

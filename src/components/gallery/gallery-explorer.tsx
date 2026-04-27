@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   collectionDisplayOrder,
   type Artwork,
@@ -24,6 +24,7 @@ export function GalleryExplorer({
   layout = "masonry",
   showFilters = true,
 }: GalleryExplorerProps) {
+  const explorerTopRef = useRef<HTMLDivElement>(null);
   const [activeCollection, setActiveCollection] = useState<
     Artwork["collection"] | "toate"
   >(initialCollection);
@@ -73,8 +74,30 @@ export function GalleryExplorer({
     return collectionFiltered;
   }, [artworks, effectiveActiveCollection, maxItems]);
 
+  const handleCollectionChange = (collection: Artwork["collection"] | "toate") => {
+    setActiveCollection(collection);
+    scrollToExplorerTop();
+  };
+
+  const scrollToExplorerTop = () => {
+    const explorerTop = explorerTopRef.current;
+    if (!explorerTop) return;
+
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    explorerTop.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start",
+    });
+  };
+
   return (
-    <div className="space-y-5">
+    <div
+      ref={explorerTopRef}
+      className="space-y-5 scroll-mt-[84px] sm:scroll-mt-[108px] lg:scroll-mt-[124px]"
+    >
       {showFilters ? (
         <div
           className={
@@ -82,14 +105,12 @@ export function GalleryExplorer({
             (compactFilters ? "py-1 sm:py-2" : "py-2 sm:py-3")
           }
         >
-          <div className="flex">
-            <GalleryFilters
-              activeCollection={effectiveActiveCollection}
-              onChange={setActiveCollection}
-              collections={availableCollections}
-              compact={compactFilters}
-            />
-          </div>
+          <GalleryFilters
+            activeCollection={effectiveActiveCollection}
+            onChange={handleCollectionChange}
+            collections={availableCollections}
+            compact={compactFilters}
+          />
         </div>
       ) : null}
       <GalleryGrid artworks={filteredArtworks} layout={layout} />
