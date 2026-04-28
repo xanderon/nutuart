@@ -288,6 +288,7 @@ export function EditorApp() {
           >
             <ElementControls
               element={selectedElement}
+              shape={document.shape}
               onRotate={(rotation) =>
                 selectedElement && updateElement(selectedElement.id, { rotation })
               }
@@ -379,6 +380,7 @@ export function EditorApp() {
               <MobilePanel title="Edit">
                 <ElementControls
                   element={selectedElement}
+                  shape={document.shape}
                   onRotate={(rotation) =>
                     selectedElement && updateElement(selectedElement.id, { rotation })
                   }

@@ -10,6 +10,7 @@ type TransformHandlesProps = {
   nodeMapRef: MutableRefObject<Record<string, Konva.Image | null>>;
   artboardWidth: number;
   artboardHeight: number;
+  onTransform: () => void;
   onTransformEnd: () => void;
 };
 
@@ -18,6 +19,7 @@ export function TransformHandles({
   nodeMapRef,
   artboardWidth,
   artboardHeight,
+  onTransform,
   onTransformEnd,
 }: TransformHandlesProps) {
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -35,6 +37,7 @@ export function TransformHandles({
   return (
     <Transformer
       ref={transformerRef}
+      onTransform={onTransform}
       onTransformEnd={onTransformEnd}
       padding={10}
       enabledAnchors={[

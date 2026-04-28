@@ -64,13 +64,131 @@ export function getDisplayDimensions(widthCm: number, heightCm: number) {
   return `${sanitizeDimension(widthCm)} × ${sanitizeDimension(heightCm)} cm`;
 }
 
-export function isElementOutOfBounds(element: EditorElement) {
-  const left = element.x - element.width / 2;
-  const right = element.x + element.width / 2;
-  const top = element.y - element.height / 2;
-  const bottom = element.y + element.height / 2;
+function getElementBoundaryPoints(element: EditorElement): Point[] {
+  const halfWidth = element.width / 2;
+  const halfHeight = element.height / 2;
+  const radians = (element.rotation * Math.PI) / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  const offsets = [
+    { x: -halfWidth, y: -halfHeight },
+    { x: 0, y: -halfHeight },
+    { x: halfWidth, y: -halfHeight },
+    { x: halfWidth, y: 0 },
+    { x: halfWidth, y: halfHeight },
+    { x: 0, y: halfHeight },
+    { x: -halfWidth, y: halfHeight },
+    { x: -halfWidth, y: 0 },
+  ];
 
-  return left < 0 || right > 1 || top < 0 || bottom > 1;
+  return offsets.map((offset) => ({
+    x: element.x + offset.x * cos - offset.y * sin,
+    y: element.y + offset.x * sin + offset.y * cos,
+  }));
+}
+
+function pointInPolygon(point: Point, polygon: Point[]) {
+  let inside = false;
+
+  for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index++) {
+    const currentPoint = polygon[index];
+    const previousPoint = polygon[previous];
+
+    if (!currentPoint || !previousPoint) {
+      continue;
+    }
+
+    const intersects =
+      currentPoint.y > point.y !== previousPoint.y > point.y &&
+      point.x <
+        ((previousPoint.x - currentPoint.x) * (point.y - currentPoint.y)) /
+          (previousPoint.y - currentPoint.y) +
+          currentPoint.x;
+
+    if (intersects) {
+      inside = !inside;
+    }
+  }
+
+  return inside;
+}
+
+function cubicBezierPoint(
+  start: Point,
+  cp1: Point,
+  cp2: Point,
+  end: Point,
+  t: number
+) {
+  const oneMinusT = 1 - t;
+
+  return {
+    x:
+      oneMinusT ** 3 * start.x +
+      3 * oneMinusT ** 2 * t * cp1.x +
+      3 * oneMinusT * t ** 2 * cp2.x +
+      t ** 3 * end.x,
+    y:
+      oneMinusT ** 3 * start.y +
+      3 * oneMinusT ** 2 * t * cp1.y +
+      3 * oneMinusT * t ** 2 * cp2.y +
+      t ** 3 * end.y,
+  };
+}
+
+function pointInArch(point: Point) {
+  const archHeight = 0.42;
+  const shoulderY = archHeight;
+  const cpOffsetX = 0.18;
+  const cpTopY = -archHeight * 0.08;
+  const leftCurveStart = { x: 0, y: shoulderY };
+  const leftCurveCp1 = { x: 0, y: archHeight * 0.28 };
+  const leftCurveCp2 = { x: cpOffsetX, y: cpTopY };
+  const topCenter = { x: 0.5, y: 0 };
+  const rightCurveCp1 = { x: 1 - cpOffsetX, y: cpTopY };
+  const rightCurveCp2 = { x: 1, y: archHeight * 0.28 };
+  const rightCurveEnd = { x: 1, y: shoulderY };
+  const curveSamples = Array.from({ length: 13 }, (_, index) => index / 12);
+  const polygon: Point[] = [{ x: 0, y: 1 }, leftCurveStart];
+
+  curveSamples.slice(1).forEach((t) => {
+    polygon.push(
+      cubicBezierPoint(leftCurveStart, leftCurveCp1, leftCurveCp2, topCenter, t)
+    );
+  });
+
+  curveSamples.slice(1).forEach((t) => {
+    polygon.push(
+      cubicBezierPoint(topCenter, rightCurveCp1, rightCurveCp2, rightCurveEnd, t)
+    );
+  });
+
+  polygon.push({ x: 1, y: 1 });
+
+  return pointInPolygon(point, polygon);
+}
+
+function pointInShape(point: Point, shape: EditorShape) {
+  if (shape === "rectangle") {
+    return point.x >= 0 && point.x <= 1 && point.y >= 0 && point.y <= 1;
+  }
+
+  if (shape === "oval") {
+    const normalizedX = (point.x - 0.5) / 0.5;
+    const normalizedY = (point.y - 0.5) / 0.5;
+    return normalizedX ** 2 + normalizedY ** 2 <= 1;
+  }
+
+  return pointInArch(point);
+}
+
+export function isElementOutOfBounds(
+  element: EditorElement,
+  shape: EditorShape = "rectangle"
+) {
+  return getElementBoundaryPoints(element).some(
+    (point) => !pointInShape(point, shape)
+  );
 }
 
 export function duplicateElement(element: EditorElement): EditorElement {
@@ -103,7 +221,7 @@ export function getSelectionStatus(
 
   return {
     element,
-    isOutOfBounds: isElementOutOfBounds(element),
+    isOutOfBounds: isElementOutOfBounds(element, document.shape),
   };
 }
 

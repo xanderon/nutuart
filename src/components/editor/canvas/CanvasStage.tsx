@@ -72,6 +72,9 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     const artboardGroupRef = useRef<Konva.Group>(null);
     const nodeMapRef = useRef<Record<string, Konva.Image | null>>({});
     const [containerSize, setContainerSize] = useState<Size>({ width: 0, height: 0 });
+    const [transientElements, setTransientElements] = useState<
+      Record<string, Partial<EditorElement>>
+    >({});
     const panStateRef = useRef<{ pointerId: number; startX: number; startY: number } | null>(
       null
     );
@@ -125,9 +128,23 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     const selectedElement = useMemo(
       () =>
         selectedElementId
-          ? designDocument.elements.find((item) => item.id === selectedElementId) ?? null
+          ? (designDocument.elements
+              .map((element) => ({
+                ...element,
+                ...transientElements[element.id],
+              }))
+              .find((item) => item.id === selectedElementId) ?? null)
           : null,
-      [designDocument.elements, selectedElementId]
+      [designDocument.elements, selectedElementId, transientElements]
+    );
+
+    const renderedElements = useMemo(
+      () =>
+        designDocument.elements.map((element) => ({
+          ...element,
+          ...transientElements[element.id],
+        })),
+      [designDocument.elements, transientElements]
     );
 
     const setZoomStep = useCallback(
@@ -252,6 +269,65 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         });
       },
       [fitArtboard, getElementBounds, onUpdateElement]
+    );
+
+    const setTransientElement = useCallback(
+      (id: string, patch: Partial<EditorElement> | null) => {
+        setTransientElements((current) => {
+          if (!patch) {
+            if (!(id in current)) {
+              return current;
+            }
+
+            const next = { ...current };
+            delete next[id];
+            return next;
+          }
+
+          return {
+            ...current,
+            [id]: {
+              ...current[id],
+              ...patch,
+            },
+          };
+        });
+      },
+      []
+    );
+
+    const getNodePatch = useCallback(
+      (node: Konva.Image) => {
+        const scaleX = node.scaleX();
+        const scaleY = node.scaleY();
+        const flipX = scaleX < 0;
+        const flipY = scaleY < 0;
+        const widthPx = clamp(
+          node.width() * Math.abs(scaleX),
+          fitArtboard.width * 0.04,
+          fitArtboard.width
+        );
+        const heightPx = clamp(
+          node.height() * Math.abs(scaleY),
+          fitArtboard.height * 0.04,
+          fitArtboard.height
+        );
+        const normalized = getNormalizedPoint(
+          { x: node.x(), y: node.y() },
+          fitArtboard,
+          { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 }
+        );
+
+        return {
+          ...normalized,
+          width: widthPx / fitArtboard.width,
+          height: heightPx / fitArtboard.height,
+          rotation: node.rotation(),
+          flipX,
+          flipY,
+        };
+      },
+      [fitArtboard]
     );
 
     const isPointNearSelectedElement = useCallback(
@@ -468,7 +544,18 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 }
       );
 
+      setTransientElement(id, null);
       onUpdateElement(id, normalized);
+    };
+
+    const handleDragMove = (id: string, x: number, y: number) => {
+      const normalized = getNormalizedPoint(
+        { x, y },
+        fitArtboard,
+        { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 }
+      );
+
+      setTransientElement(id, normalized);
     };
 
     const handleTransformEnd = useCallback(() => {
@@ -479,8 +566,22 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       if (!selectedElementId || !selectedNode) {
         return;
       }
-        commitNodeTransform(selectedElementId, selectedNode);
-    }, [commitNodeTransform, selectedElementId]);
+
+      commitNodeTransform(selectedElementId, selectedNode);
+      setTransientElement(selectedElementId, null);
+    }, [commitNodeTransform, selectedElementId, setTransientElement]);
+
+    const handleTransform = useCallback(() => {
+      const selectedNode = selectedElementId
+        ? nodeMapRef.current[selectedElementId]
+        : null;
+
+      if (!selectedElementId || !selectedNode) {
+        return;
+      }
+
+      setTransientElement(selectedElementId, getNodePatch(selectedNode));
+    }, [getNodePatch, selectedElementId, setTransientElement]);
 
     const viewportCenter: Point = {
       x: containerSize.width / 2 + viewport.offsetX,
@@ -519,8 +620,8 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                 scaleX={viewport.scale}
                 scaleY={viewport.scale}
               >
-                {designDocument.elements
-                  .filter((element) => isElementOutOfBounds(element))
+                {renderedElements
+                  .filter((element) => isElementOutOfBounds(element, designDocument.shape))
                   .map((element) => (
                     <SvgElement
                       key={`overflow-${element.id}`}
@@ -568,6 +669,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                           nodeMapRef.current[id] = node;
                         }}
                         onSelect={onSelectElement}
+                        onDragMove={handleDragMove}
                         onDragEnd={handleDragEnd}
                       />
                     ))}
@@ -580,11 +682,13 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                     nodeMapRef={nodeMapRef}
                     artboardWidth={fitArtboard.width}
                     artboardHeight={fitArtboard.height}
+                    onTransform={handleTransform}
                     onTransformEnd={handleTransformEnd}
                   />
                 ) : null}
 
-                {selectedElement && isElementOutOfBounds(selectedElement) ? (
+                {selectedElement &&
+                isElementOutOfBounds(selectedElement, designDocument.shape) ? (
                   <Rect
                     x={-fitArtboard.width / 2}
                     y={-fitArtboard.height / 2}

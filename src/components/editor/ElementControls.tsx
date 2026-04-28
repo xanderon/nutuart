@@ -1,9 +1,10 @@
 import { editorAssetMap } from "@/lib/editor/editorAssets";
 import { isElementOutOfBounds } from "@/lib/editor/geometryUtils";
-import type { EditorElement } from "@/lib/editor/editorTypes";
+import type { EditorElement, EditorShape } from "@/lib/editor/editorTypes";
 
 type ElementControlsProps = {
   element: EditorElement | null;
+  shape: EditorShape;
   onRotate: (rotation: number) => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -13,6 +14,7 @@ type ElementControlsProps = {
 
 export function ElementControls({
   element,
+  shape,
   onRotate,
   onDuplicate,
   onDelete,
@@ -28,10 +30,10 @@ export function ElementControls({
   }
 
   const asset = editorAssetMap[element.assetId];
-  const outOfBounds = isElementOutOfBounds(element);
+  const outOfBounds = isElementOutOfBounds(element, shape);
 
-    return (
-      <div className="space-y-4">
+  return (
+    <div className="space-y-4">
       <div className="rounded-[1.1rem] border border-[var(--editor-line)] bg-white/78 p-3">
         <div className="flex items-start justify-between gap-4">
           <div>
