@@ -265,7 +265,6 @@ export function EditorApp() {
               onShapeChange={handleShapeChange}
               onWidthChange={handleWidthChange}
               onHeightChange={handleHeightChange}
-              compact
             />
           </PanelCard>
         </aside>
