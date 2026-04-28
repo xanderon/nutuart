@@ -49,18 +49,23 @@ function DimensionField({
   onChange,
   compact = false,
 }: DimensionFieldProps) {
-  const [draft, setDraft] = useState(String(value));
+  const [draft, setDraft] = useState("");
   const [warning, setWarning] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const inputValue = isEditing ? draft : String(value);
 
   const commitDraft = () => {
-    const nextWarning = getDimensionWarning(draft);
+    const candidate = isEditing ? draft : String(value);
+    const nextWarning = getDimensionWarning(candidate);
     setWarning(nextWarning);
 
     if (nextWarning) {
       return;
     }
 
-    onChange(Number(draft));
+    onChange(Number(candidate));
+    setIsEditing(false);
   };
 
   const stepBy = (delta: number) => {
@@ -68,7 +73,8 @@ function DimensionField({
       MAX_DIMENSION_CM,
       Math.max(MIN_DIMENSION_CM, value + delta)
     );
-    setDraft(String(nextValue));
+    setIsEditing(false);
+    setDraft("");
     setWarning(null);
     onChange(nextValue);
   };
@@ -124,8 +130,15 @@ function DimensionField({
         <input
           type="text"
           inputMode="numeric"
-          value={draft}
+          value={inputValue}
+          onFocus={() => {
+            setIsEditing(true);
+            setDraft(String(value));
+          }}
           onChange={(event) => {
+            if (!isEditing) {
+              setIsEditing(true);
+            }
             setDraft(event.target.value.replace(/[^\d]/g, ""));
             setWarning(null);
           }}
@@ -134,7 +147,9 @@ function DimensionField({
               commitDraft();
             }
           }}
-          onBlur={commitDraft}
+          onBlur={() => {
+            commitDraft();
+          }}
           className="h-11 rounded-[0.9rem] border border-[var(--editor-line)] bg-white px-3 text-base text-[var(--editor-ink)] outline-none transition focus:border-[var(--editor-accent)]"
           aria-label={`${label} în centimetri`}
         />
@@ -180,14 +195,12 @@ export function SizeSelector({
 
       <div className={`grid gap-3 ${compact ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}>
         <DimensionField
-          key={`width-${widthCm}`}
           label="Lățime"
           value={widthCm}
           onChange={onWidthChange}
           compact={compact}
         />
         <DimensionField
-          key={`height-${heightCm}`}
           label="Înălțime"
           value={heightCm}
           onChange={onHeightChange}

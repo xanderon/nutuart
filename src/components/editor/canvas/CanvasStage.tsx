@@ -488,7 +488,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     };
 
     return (
-      <div ref={wrapperRef} className="h-full min-h-[420px] w-full rounded-[2rem]">
+      <div ref={wrapperRef} className="h-full min-h-[320px] w-full rounded-[2rem]">
         {containerSize.width > 0 && containerSize.height > 0 ? (
           <Stage
             ref={stageRef}

@@ -74,7 +74,7 @@ export function EditorToolbar({
   const router = useRouter();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-black/8 bg-[rgba(244,241,234,0.94)] px-2 py-2 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-black/8 bg-[rgba(244,241,234,0.94)] px-2 py-1.5 backdrop-blur-xl">
       <div className="mx-auto flex max-w-[1460px] items-center justify-between gap-2">
         <button
           type="button"
@@ -138,7 +138,7 @@ export function EditorToolbar({
             <ScanSearch className="h-4 w-4" strokeWidth={2.2} />
             Fit
           </button>
-          <div className="hidden rounded-full bg-black/5 px-2.5 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--editor-muted)] sm:block">
+          <div className="hidden rounded-full bg-black/5 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--editor-muted)] sm:block">
             {scaleLabel}
           </div>
         </div>
