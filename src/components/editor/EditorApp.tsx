@@ -224,9 +224,14 @@ export function EditorApp() {
         scaleLabel={scaleLabel}
         canUndo={canUndo}
         canRedo={canRedo}
+        hasSelection={Boolean(selectedElementId)}
         onUndo={undo}
         onRedo={redo}
         onFit={resetViewport}
+        onDuplicate={duplicateSelectedElement}
+        onDelete={deleteSelectedElement}
+        onFlipX={() => flipSelectedElement("x")}
+        onFlipY={() => flipSelectedElement("y")}
       />
 
       <div className="mx-auto flex w-full max-w-[1460px] flex-1 gap-3 px-0 py-0 sm:px-4 sm:py-4">
