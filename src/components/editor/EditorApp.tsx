@@ -256,7 +256,7 @@ export function EditorApp() {
           </PanelCard>
 
           <PanelCard
-            title="Suprafață"
+            title="Model"
           >
             <SizeSelector
               shape={document.shape}
@@ -265,6 +265,7 @@ export function EditorApp() {
               onShapeChange={handleShapeChange}
               onWidthChange={handleWidthChange}
               onHeightChange={handleHeightChange}
+              dense
             />
           </PanelCard>
         </aside>

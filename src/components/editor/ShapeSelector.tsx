@@ -6,6 +6,7 @@ type ShapeSelectorProps = {
   value: EditorShape;
   onChange: (shape: EditorShape) => void;
   compact?: boolean;
+  dense?: boolean;
 };
 
 function ShapePreview({ shape }: { shape: EditorShape }) {
@@ -41,9 +42,12 @@ export function ShapeSelector({
   value,
   onChange,
   compact = false,
+  dense = false,
 }: ShapeSelectorProps) {
+  const concise = compact || dense;
+
   return (
-    <div className={cn("grid gap-2", compact ? "grid-cols-3" : "grid-cols-1 sm:grid-cols-3")}>
+    <div className={cn("grid gap-2", concise ? "grid-cols-3" : "grid-cols-1 sm:grid-cols-3")}>
       {shapeOptions.map((option) => {
         const isActive = option.value === value;
 
@@ -62,11 +66,11 @@ export function ShapeSelector({
             <div
               className={cn(
                 "flex items-center gap-2.5",
-                compact ? "justify-center px-1 py-2.5 text-center" : "justify-between p-2.5"
+                concise ? "justify-center px-1 py-2.5 text-center" : "justify-between p-2.5"
               )}
             >
               <ShapePreview shape={option.value} />
-              {!compact ? (
+              {!concise ? (
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[var(--editor-ink)]">{option.label}</p>
                   <p className="mt-0.5 text-[10px] leading-relaxed text-[var(--editor-muted)]">
