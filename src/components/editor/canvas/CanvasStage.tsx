@@ -43,6 +43,9 @@ export type CanvasStageHandle = {
   zoomOut: () => void;
 };
 
+const ROTATION_UNLOCK_DEGREES = 12;
+const SELECTED_GESTURE_PADDING = 44;
+
 type CanvasStageProps = {
   document: EditorDocument;
   selectedElementId: string | null;
@@ -93,6 +96,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       center: Point;
       angle: number;
       viewportScale: number;
+      rotateUnlocked: boolean;
     } | null>(null);
     const selectedTouchSeedRef = useRef(false);
 
@@ -219,6 +223,9 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       target.attrs.name === "artboard-hit-area" ||
       target.attrs.name === "artboard-surface";
 
+    const getAngleDeltaDegrees = (currentAngle: number, baselineAngle: number) =>
+      ((((currentAngle - baselineAngle) * 180) / Math.PI) + 540) % 360 - 180;
+
     const getElementBounds = useCallback(
       (node: Konva.Image) => {
         const scaleX = node.scaleX();
@@ -270,7 +277,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     );
 
     const isTouchWithinSelectedElement = useCallback(
-      (touches: TouchList, padding = 24) => {
+      (touches: TouchList, padding = SELECTED_GESTURE_PADDING) => {
         const stage = stageRef.current;
         const selectedNode = selectedElementId
           ? nodeMapRef.current[selectedElementId]
@@ -344,7 +351,10 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         if (
           selectedElementId &&
           selectedNode &&
-          (selectedTouchSeedRef.current || isTouchWithinSelectedElement(touches, 28))
+          (
+            selectedTouchSeedRef.current ||
+            isTouchWithinSelectedElement(touches, SELECTED_GESTURE_PADDING)
+          )
         ) {
           event.evt.preventDefault();
           if (selectedNode.isDragging()) {
@@ -366,6 +376,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
             center: getTouchCenter(touches),
             angle: getTouchAngle(touches),
             viewportScale: viewport.scale,
+            rotateUnlocked: false,
           };
           pinchStateRef.current = null;
           panStateRef.current = null;
@@ -382,7 +393,10 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         return;
       }
 
-      selectedTouchSeedRef.current = isTouchWithinSelectedElement(touches, 28);
+      selectedTouchSeedRef.current = isTouchWithinSelectedElement(
+        touches,
+        SELECTED_GESTURE_PADDING
+      );
 
       const targetIsStage = isViewportTarget(event.target);
 
@@ -412,8 +426,8 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         const distance = Math.max(getTouchDistance(touches), 1);
         const scale = distance / gesture.distance;
         const center = getTouchCenter(touches);
-        const angleDelta =
-          ((((getTouchAngle(touches) - gesture.angle) * 180) / Math.PI) + 540) % 360 - 180;
+        const currentAngle = getTouchAngle(touches);
+        const angleDelta = getAngleDeltaDegrees(currentAngle, gesture.angle);
         const nextX =
           gesture.x + (center.x - gesture.center.x) / Math.max(gesture.viewportScale, 1);
         const nextY =
@@ -428,12 +442,21 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
           fitArtboard.height * 0.04,
           fitArtboard.height
         );
+        let nextRotation = gesture.rotation;
+
+        if (gesture.rotateUnlocked) {
+          nextRotation = gesture.rotation + angleDelta;
+        } else if (Math.abs(angleDelta) >= ROTATION_UNLOCK_DEGREES) {
+          gesture.rotateUnlocked = true;
+          gesture.angle = currentAngle;
+          gesture.rotation = gesture.node.rotation();
+        }
 
         gesture.node.x(nextX);
         gesture.node.y(nextY);
         gesture.node.width(nextWidth);
         gesture.node.height(nextHeight);
-        gesture.node.rotation(gesture.rotation + angleDelta);
+        gesture.node.rotation(nextRotation);
         gesture.node.scaleX(gesture.flipX ? -1 : 1);
         gesture.node.scaleY(gesture.flipY ? -1 : 1);
         gesture.node.getLayer()?.batchDraw();
