@@ -36,6 +36,7 @@ export function TransformHandles({
     <Transformer
       ref={transformerRef}
       onTransformEnd={onTransformEnd}
+      padding={10}
       enabledAnchors={[
         "top-left",
         "top-right",
@@ -43,14 +44,14 @@ export function TransformHandles({
         "bottom-right",
       ]}
       rotateEnabled
-      rotateAnchorOffset={26}
+      rotateAnchorOffset={34}
       borderStroke="#0d6b72"
       borderStrokeWidth={1.2}
       borderDash={[6, 4]}
-      anchorSize={14}
+      anchorSize={20}
       anchorStroke="#0d6b72"
       anchorFill="#ffffff"
-      anchorCornerRadius={10}
+      anchorCornerRadius={14}
       keepRatio={false}
       flipEnabled={false}
       ignoreStroke

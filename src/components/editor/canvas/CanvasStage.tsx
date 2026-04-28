@@ -26,7 +26,6 @@ import type {
 } from "@/lib/editor/editorTypes";
 import {
   clampZoom,
-  getTouchAngle,
   getFitArtboardSize,
   getStepZoom,
   getTouchCenter,
@@ -42,9 +41,7 @@ export type CanvasStageHandle = {
   zoomIn: () => void;
   zoomOut: () => void;
 };
-
-const ROTATION_UNLOCK_DEGREES = 12;
-const SELECTED_GESTURE_PADDING = 44;
+const SELECTION_HANDLE_PADDING = 24;
 
 type CanvasStageProps = {
   document: EditorDocument;
@@ -82,23 +79,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       center: Point;
       viewport: EditorViewport;
     } | null>(null);
-    const elementGestureRef = useRef<{
-      id: string;
-      node: Konva.Image;
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-      rotation: number;
-      flipX: boolean;
-      flipY: boolean;
-      distance: number;
-      center: Point;
-      angle: number;
-      viewportScale: number;
-      rotateUnlocked: boolean;
-    } | null>(null);
-    const selectedTouchSeedRef = useRef(false);
 
     useEffect(() => {
       if (!wrapperRef.current) {
@@ -223,9 +203,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       target.attrs.name === "artboard-hit-area" ||
       target.attrs.name === "artboard-surface";
 
-    const getAngleDeltaDegrees = (currentAngle: number, baselineAngle: number) =>
-      ((((currentAngle - baselineAngle) * 180) / Math.PI) + 540) % 360 - 180;
-
     const getElementBounds = useCallback(
       (node: Konva.Image) => {
         const scaleX = node.scaleX();
@@ -276,36 +253,27 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       [fitArtboard, getElementBounds, onUpdateElement]
     );
 
-    const isTouchWithinSelectedElement = useCallback(
-      (touches: TouchList, padding = SELECTED_GESTURE_PADDING) => {
-        const stage = stageRef.current;
+    const isPointNearSelectedElement = useCallback(
+      (point: Point, padding = SELECTION_HANDLE_PADDING) => {
         const selectedNode = selectedElementId
           ? nodeMapRef.current[selectedElementId]
           : null;
 
-        if (!stage || !selectedNode) {
+        if (!selectedNode) {
           return false;
         }
 
-        const containerBounds = stage.container().getBoundingClientRect();
         const bounds = selectedNode.getClientRect({
           skipShadow: true,
           skipStroke: true,
         });
 
-        return Array.from(touches)
-          .slice(0, 2)
-          .some((touch) => {
-            const x = touch.clientX - containerBounds.left;
-            const y = touch.clientY - containerBounds.top;
-
-            return (
-              x >= bounds.x - padding &&
-              x <= bounds.x + bounds.width + padding &&
-              y >= bounds.y - padding &&
-              y <= bounds.y + bounds.height + padding
-            );
-          });
+        return (
+          point.x >= bounds.x - padding &&
+          point.x <= bounds.x + bounds.width + padding &&
+          point.y >= bounds.y - padding &&
+          point.y <= bounds.y + bounds.height + padding
+        );
       },
       [selectedElementId]
     );
@@ -344,59 +312,28 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       const touches = event.evt.touches;
 
       if (touches.length === 2) {
-        const selectedNode = selectedElementId
-          ? nodeMapRef.current[selectedElementId]
-          : null;
-
-        if (
-          selectedElementId &&
-          selectedNode &&
-          (
-            selectedTouchSeedRef.current ||
-            isTouchWithinSelectedElement(touches, SELECTED_GESTURE_PADDING)
-          )
-        ) {
-          event.evt.preventDefault();
-          if (selectedNode.isDragging()) {
-            selectedNode.stopDrag();
-          }
-
-          const { flipX, flipY, widthPx, heightPx } = getElementBounds(selectedNode);
-          elementGestureRef.current = {
-            id: selectedElementId,
-            node: selectedNode,
-            x: selectedNode.x(),
-            y: selectedNode.y(),
-            width: widthPx,
-            height: heightPx,
-            rotation: selectedNode.rotation(),
-            flipX,
-            flipY,
-            distance: Math.max(getTouchDistance(touches), 1),
-            center: getTouchCenter(touches),
-            angle: getTouchAngle(touches),
-            viewportScale: viewport.scale,
-            rotateUnlocked: false,
-          };
-          pinchStateRef.current = null;
-          panStateRef.current = null;
-          return;
-        }
-
         pinchStateRef.current = {
           distance: getTouchDistance(touches),
           center: getTouchCenter(touches),
           viewport,
         };
-        elementGestureRef.current = null;
         panStateRef.current = null;
         return;
       }
 
-      selectedTouchSeedRef.current = isTouchWithinSelectedElement(
-        touches,
-        SELECTED_GESTURE_PADDING
-      );
+      const stage = stageRef.current;
+      const touch = touches[0];
+      const containerBounds = stage?.container().getBoundingClientRect();
+      const point = touch && containerBounds
+        ? {
+            x: touch.clientX - containerBounds.left,
+            y: touch.clientY - containerBounds.top,
+          }
+        : null;
+
+      if (point && isPointNearSelectedElement(point)) {
+        return;
+      }
 
       const targetIsStage = isViewportTarget(event.target);
 
@@ -408,8 +345,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       }
 
       onSelectElement(null);
-
-      const touch = touches[0];
       panStateRef.current = {
         pointerId: touch.identifier,
         startX: touch.clientX - viewport.offsetX,
@@ -419,49 +354,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
 
     const handleTouchMove = (event: Konva.KonvaEventObject<TouchEvent>) => {
       const touches = event.evt.touches;
-
-      if (touches.length === 2 && elementGestureRef.current) {
-        event.evt.preventDefault();
-        const gesture = elementGestureRef.current;
-        const distance = Math.max(getTouchDistance(touches), 1);
-        const scale = distance / gesture.distance;
-        const center = getTouchCenter(touches);
-        const currentAngle = getTouchAngle(touches);
-        const angleDelta = getAngleDeltaDegrees(currentAngle, gesture.angle);
-        const nextX =
-          gesture.x + (center.x - gesture.center.x) / Math.max(gesture.viewportScale, 1);
-        const nextY =
-          gesture.y + (center.y - gesture.center.y) / Math.max(gesture.viewportScale, 1);
-        const nextWidth = clamp(
-          gesture.width * scale,
-          fitArtboard.width * 0.04,
-          fitArtboard.width
-        );
-        const nextHeight = clamp(
-          gesture.height * scale,
-          fitArtboard.height * 0.04,
-          fitArtboard.height
-        );
-        let nextRotation = gesture.rotation;
-
-        if (gesture.rotateUnlocked) {
-          nextRotation = gesture.rotation + angleDelta;
-        } else if (Math.abs(angleDelta) >= ROTATION_UNLOCK_DEGREES) {
-          gesture.rotateUnlocked = true;
-          gesture.angle = currentAngle;
-          gesture.rotation = gesture.node.rotation();
-        }
-
-        gesture.node.x(nextX);
-        gesture.node.y(nextY);
-        gesture.node.width(nextWidth);
-        gesture.node.height(nextHeight);
-        gesture.node.rotation(nextRotation);
-        gesture.node.scaleX(gesture.flipX ? -1 : 1);
-        gesture.node.scaleY(gesture.flipY ? -1 : 1);
-        gesture.node.getLayer()?.batchDraw();
-        return;
-      }
 
       if (touches.length === 2 && pinchStateRef.current && containerSize.width && containerSize.height) {
         event.evt.preventDefault();
@@ -509,17 +401,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       });
     };
 
-    const handleTouchEnd = (event: Konva.KonvaEventObject<TouchEvent>) => {
-      if (elementGestureRef.current && event.evt.touches.length < 2) {
-        const { id, node } = elementGestureRef.current;
-        commitNodeTransform(id, node);
-        elementGestureRef.current = null;
-      }
-
-      if (event.evt.touches.length === 0) {
-        selectedTouchSeedRef.current = false;
-      }
-
+    const handleTouchEnd = () => {
       if (pinchStateRef.current) {
         pinchStateRef.current = null;
       }
@@ -530,6 +412,19 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     };
 
     const handlePointerDown = (event: Konva.KonvaEventObject<PointerEvent>) => {
+      const stage = stageRef.current;
+      const containerBounds = stage?.container().getBoundingClientRect();
+      const point = containerBounds
+        ? {
+            x: event.evt.clientX - containerBounds.left,
+            y: event.evt.clientY - containerBounds.top,
+          }
+        : null;
+
+      if (point && isPointNearSelectedElement(point)) {
+        return;
+      }
+
       const targetIsStage = isViewportTarget(event.target);
 
       if (!targetIsStage) {
