@@ -629,9 +629,10 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                       isSelected={false}
                       artboardWidth={fitArtboard.width}
                       artboardHeight={fitArtboard.height}
-                      onSelect={() => {}}
+                      onSelect={onSelectElement}
                       onDragEnd={() => {}}
-                      interactive={false}
+                      interactive
+                      allowDrag={false}
                       opacity={0.62}
                     />
                   ))}

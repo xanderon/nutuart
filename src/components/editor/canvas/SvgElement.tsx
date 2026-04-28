@@ -17,6 +17,7 @@ type SvgElementProps = {
   onDragEnd: (id: string, x: number, y: number) => void;
   registerNode?: (id: string, node: Konva.Image | null) => void;
   interactive?: boolean;
+  allowDrag?: boolean;
   opacity?: number;
 };
 
@@ -30,6 +31,7 @@ function SvgElementComponent({
   onDragEnd,
   registerNode,
   interactive = true,
+  allowDrag,
   opacity = 1,
 }: SvgElementProps) {
   const asset = editorAssetMap[element.assetId];
@@ -59,7 +61,7 @@ function SvgElementComponent({
       scaleY={element.flipY ? -1 : 1}
       opacity={opacity}
       listening={interactive}
-      draggable={interactive && isSelected}
+      draggable={allowDrag ?? (interactive && isSelected)}
       perfectDrawEnabled={false}
       onClick={interactive ? () => onSelect(element.id) : undefined}
       onTap={interactive ? () => onSelect(element.id) : undefined}
