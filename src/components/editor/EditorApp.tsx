@@ -36,6 +36,25 @@ function PanelCard({
   );
 }
 
+function MobilePanel({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-2">
+      <div className="px-1">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--editor-muted)]">
+          {title}
+        </h2>
+      </div>
+      {children}
+    </section>
+  );
+}
+
 export function EditorApp() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<CanvasStageHandle>(null);
@@ -261,7 +280,7 @@ export function EditorApp() {
           </PanelCard>
         </aside>
 
-        <main className="flex min-h-0 flex-1 flex-col pb-20 md:pb-4">
+        <main className="flex min-h-0 flex-1 flex-col pb-16 md:pb-4">
           <EditorCanvas
             ref={canvasRef}
             document={document}
@@ -335,14 +354,12 @@ export function EditorApp() {
           />
 
           <div
-            className="absolute inset-x-3 bottom-[4.5rem]"
+            className="absolute inset-x-0 bottom-[3.7rem]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="editor-panel max-h-[54dvh] overflow-y-auto rounded-[1.35rem] border border-white/70 p-3 shadow-[0_30px_70px_-36px_rgba(0,0,0,0.45)]">
+            <div className="max-h-[46dvh] overflow-y-auto border-t border-black/8 bg-[rgba(244,241,234,0.98)] px-3 py-2 shadow-[0_-18px_40px_-30px_rgba(0,0,0,0.28)] backdrop-blur-xl">
             {activePanel === "library" ? (
-              <PanelCard
-                title="Bibliotecă SVG"
-              >
+              <MobilePanel title="SVG">
                 <SvgLibrary
                   activeCategory={activeAssetCategory}
                   onCategoryChange={setActiveAssetCategory}
@@ -351,13 +368,11 @@ export function EditorApp() {
                     handleClosePanel();
                   }}
                 />
-              </PanelCard>
+              </MobilePanel>
             ) : null}
 
             {activePanel === "shapeSize" ? (
-              <PanelCard
-                title="Suprafață"
-              >
+              <MobilePanel title="Formă">
                 <SizeSelector
                   shape={document.shape}
                   widthCm={document.widthCm}
@@ -367,13 +382,11 @@ export function EditorApp() {
                   onHeightChange={handleHeightChange}
                   compact
                 />
-              </PanelCard>
+              </MobilePanel>
             ) : null}
 
             {activePanel === "element" ? (
-              <PanelCard
-                title="Editare"
-              >
+              <MobilePanel title="Edit">
                 <ElementControls
                   element={selectedElement}
                   onRotate={(rotation) =>
@@ -384,23 +397,21 @@ export function EditorApp() {
                   onFlipX={() => flipSelectedElement("x")}
                   onFlipY={() => flipSelectedElement("y")}
                 />
-              </PanelCard>
+              </MobilePanel>
             ) : null}
 
             {activePanel === "export" ? (
-              <PanelCard
-                title="Export"
-              >
-                <div className="space-y-3">
+              <MobilePanel title="Save">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => {
                       handleClosePanel();
                       goToSetup();
                     }}
-                    className="w-full rounded-[1rem] border border-[var(--editor-line)] bg-white/88 px-4 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--editor-ink)]"
+                    className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--editor-ink)]"
                   >
-                    Ecran start
+                    Start
                   </button>
                   <button
                     type="button"
@@ -408,9 +419,9 @@ export function EditorApp() {
                       handleExportPng();
                       handleClosePanel();
                     }}
-                    className="w-full rounded-[1rem] bg-[var(--editor-ink)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-white"
+                    className="rounded-[0.95rem] bg-[var(--editor-ink)] px-3 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-white"
                   >
-                    Export PNG
+                    PNG
                   </button>
                   <button
                     type="button"
@@ -418,9 +429,9 @@ export function EditorApp() {
                       handleExportJson();
                       handleClosePanel();
                     }}
-                    className="w-full rounded-[1rem] border border-[var(--editor-line)] bg-white/88 px-4 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--editor-ink)]"
+                    className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--editor-ink)]"
                   >
-                    Salvează JSON
+                    JSON
                   </button>
                   <button
                     type="button"
@@ -428,12 +439,12 @@ export function EditorApp() {
                       handleClosePanel();
                       handleOpenJson();
                     }}
-                    className="w-full rounded-[1rem] border border-[var(--editor-line)] bg-white/88 px-4 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--editor-ink)]"
+                    className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--editor-ink)]"
                   >
-                    Încarcă JSON
+                    Load
                   </button>
                 </div>
-              </PanelCard>
+              </MobilePanel>
             ) : null}
             </div>
           </div>

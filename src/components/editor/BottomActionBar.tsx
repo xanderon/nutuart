@@ -6,9 +6,9 @@ const actions: Array<{
   label: string;
 }> = [
   { id: "library", label: "SVG" },
-  { id: "shapeSize", label: "Suprafață" },
-  { id: "element", label: "Editare" },
-  { id: "export", label: "Export" },
+  { id: "shapeSize", label: "Formă" },
+  { id: "element", label: "Edit" },
+  { id: "export", label: "Save" },
 ];
 
 type BottomActionBarProps = {
@@ -23,8 +23,8 @@ export function BottomActionBar({
   onChange,
 }: BottomActionBarProps) {
   return (
-    <div className="editor-panel fixed inset-x-3 bottom-3 z-40 rounded-[1.4rem] border border-white/70 px-2 py-2 shadow-[0_22px_60px_-30px_rgba(0,0,0,0.45)] md:hidden">
-      <div className="grid grid-cols-4 gap-2">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/8 bg-[rgba(244,241,234,0.96)] px-2 py-2 backdrop-blur-xl md:hidden">
+      <div className="grid grid-cols-4 gap-1.5">
         {actions.map((action) => {
           const disabled = action.id === "element" && !hasSelection;
           const isActive = activePanel === action.id;
@@ -36,10 +36,10 @@ export function BottomActionBar({
               disabled={disabled}
               onClick={() => onChange(isActive ? null : action.id)}
               className={cn(
-                "rounded-[1rem] px-2 py-2.5 text-center text-[11px] font-semibold uppercase tracking-[0.12em] transition",
+                "rounded-[0.9rem] px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-[0.12em] transition",
                 isActive
                   ? "bg-[var(--editor-ink)] text-white"
-                  : "bg-white/75 text-[var(--editor-muted)]",
+                  : "bg-white/72 text-[var(--editor-muted)]",
                 disabled && "opacity-45"
               )}
             >

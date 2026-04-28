@@ -321,7 +321,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       past: [...get().past, document].slice(-HISTORY_LIMIT),
       future: [],
       selectedElementId: clone.id,
-      activePanel: "element",
     });
   },
   flipSelectedElement: (axis) => {
