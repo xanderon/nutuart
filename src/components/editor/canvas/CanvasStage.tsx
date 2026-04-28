@@ -14,6 +14,8 @@ import { Group, Layer, Rect, Stage } from "react-konva";
 import {
   clamp,
   drawArtboardPath,
+  ELEMENT_POSITION_MAX,
+  ELEMENT_POSITION_MIN,
   getAspectRatio,
   getNormalizedPoint,
   isElementOutOfBounds,
@@ -256,7 +258,9 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         const normalized = getNormalizedPoint(
           { x: node.x(), y: node.y() },
           fitArtboard,
-          { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 }
+          { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 },
+          ELEMENT_POSITION_MIN,
+          ELEMENT_POSITION_MAX
         );
 
         onUpdateElement(id, {
@@ -315,7 +319,9 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         const normalized = getNormalizedPoint(
           { x: node.x(), y: node.y() },
           fitArtboard,
-          { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 }
+          { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 },
+          ELEMENT_POSITION_MIN,
+          ELEMENT_POSITION_MAX
         );
 
         return {
@@ -541,7 +547,9 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       const normalized = getNormalizedPoint(
         { x, y },
         fitArtboard,
-        { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 }
+        { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 },
+        ELEMENT_POSITION_MIN,
+        ELEMENT_POSITION_MAX
       );
 
       setTransientElement(id, null);
@@ -552,7 +560,9 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       const normalized = getNormalizedPoint(
         { x, y },
         fitArtboard,
-        { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 }
+        { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 },
+        ELEMENT_POSITION_MIN,
+        ELEMENT_POSITION_MAX
       );
 
       setTransientElement(id, normalized);
@@ -626,13 +636,14 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                     <SvgElement
                       key={`overflow-${element.id}`}
                       element={element}
-                      isSelected={false}
+                      isSelected={selectedElementId === element.id}
                       artboardWidth={fitArtboard.width}
                       artboardHeight={fitArtboard.height}
                       onSelect={onSelectElement}
-                      onDragEnd={() => {}}
+                      onDragMove={handleDragMove}
+                      onDragEnd={handleDragEnd}
                       interactive
-                      allowDrag={false}
+                      allowDrag={selectedElementId === element.id}
                       opacity={0.62}
                     />
                   ))}

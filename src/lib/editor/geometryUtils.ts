@@ -8,6 +8,9 @@ import type {
 } from "./editorTypes";
 import { MAX_DIMENSION_CM, MIN_DIMENSION_CM } from "./editorDefaults";
 
+export const ELEMENT_POSITION_MIN = -1;
+export const ELEMENT_POSITION_MAX = 2;
+
 export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -29,27 +32,41 @@ export function getAspectRatio(widthCm: number, heightCm: number) {
   return sanitizeDimension(widthCm) / sanitizeDimension(heightCm);
 }
 
-export function getDefaultElementSize(asset: SvgAssetDefinition): Size {
+export function getDefaultElementSize(
+  asset: SvgAssetDefinition,
+  artboardAspectRatio = 1
+): Size {
   const aspect = asset.naturalWidth / asset.naturalHeight || 1;
   let width = asset.defaultWidthRatio ?? 0.18;
-  let height = width / aspect;
+  let height = (width * artboardAspectRatio) / aspect;
   const maxSide = 0.24;
   const minSide = 0.09;
+  const getVisibleRatios = () => ({
+    width,
+    height: height / Math.max(artboardAspectRatio, 0.001),
+  });
 
-  if (width > maxSide || height > maxSide) {
-    const scale = maxSide / Math.max(width, height);
+  const initialVisible = getVisibleRatios();
+
+  if (initialVisible.width > maxSide || initialVisible.height > maxSide) {
+    const scale =
+      maxSide / Math.max(initialVisible.width, initialVisible.height);
     width *= scale;
     height *= scale;
   }
 
-  if (width < minSide && aspect >= 1) {
-    const scale = minSide / width;
+  const adjustedVisible = getVisibleRatios();
+
+  if (adjustedVisible.width < minSide && aspect >= 1) {
+    const scale = minSide / adjustedVisible.width;
     width *= scale;
     height *= scale;
   }
 
-  if (height < minSide && aspect < 1) {
-    const scale = minSide / height;
+  const finalVisible = getVisibleRatios();
+
+  if (finalVisible.height < minSide && aspect < 1) {
+    const scale = minSide / finalVisible.height;
     width *= scale;
     height *= scale;
   }
@@ -195,8 +212,16 @@ export function duplicateElement(element: EditorElement): EditorElement {
   return {
     ...element,
     id: createEditorId("element"),
-    x: clamp(roundTo(element.x + 0.04), 0.1, 0.9),
-    y: clamp(roundTo(element.y + 0.04), 0.1, 0.9),
+    x: clamp(
+      roundTo(element.x + 0.04),
+      ELEMENT_POSITION_MIN,
+      ELEMENT_POSITION_MAX
+    ),
+    y: clamp(
+      roundTo(element.y + 0.04),
+      ELEMENT_POSITION_MIN,
+      ELEMENT_POSITION_MAX
+    ),
     zIndex: element.zIndex + 1,
   };
 }
@@ -326,10 +351,12 @@ export function drawArtboardPath(
 export function getNormalizedPoint(
   point: Point,
   artboard: Size,
-  offset: Point
+  offset: Point,
+  min = 0,
+  max = 1
 ): Point {
   return {
-    x: roundTo(clamp((point.x - offset.x) / artboard.width, 0, 1)),
-    y: roundTo(clamp((point.y - offset.y) / artboard.height, 0, 1)),
+    x: roundTo(clamp((point.x - offset.x) / artboard.width, min, max)),
+    y: roundTo(clamp((point.y - offset.y) / artboard.height, min, max)),
   };
 }

@@ -7,6 +7,8 @@ import {
   clamp,
   createEditorId,
   duplicateElement,
+  ELEMENT_POSITION_MAX,
+  ELEMENT_POSITION_MIN,
   getDefaultElementSize,
   orderElements,
   roundTo,
@@ -238,7 +240,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }
 
     const state = get();
-    const size = getDefaultElementSize(asset);
+    const size = getDefaultElementSize(
+      asset,
+      state.document.widthCm / state.document.heightCm
+    );
     const maxZIndex = state.document.elements.reduce(
       (highest, element) => Math.max(highest, element.zIndex),
       0
@@ -282,8 +287,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
           return {
             ...merged,
-            x: roundTo(clamp(merged.x, 0, 1)),
-            y: roundTo(clamp(merged.y, 0, 1)),
+            x: roundTo(
+              clamp(merged.x, ELEMENT_POSITION_MIN, ELEMENT_POSITION_MAX)
+            ),
+            y: roundTo(
+              clamp(merged.y, ELEMENT_POSITION_MIN, ELEMENT_POSITION_MAX)
+            ),
             width: roundTo(clamp(merged.width, 0.04, 1)),
             height: roundTo(clamp(merged.height, 0.04, 1)),
             rotation: roundTo(merged.rotation, 2),
