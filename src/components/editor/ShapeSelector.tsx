@@ -10,17 +10,17 @@ type ShapeSelectorProps = {
 
 function ShapePreview({ shape }: { shape: EditorShape }) {
   if (shape === "rectangle") {
-    return <div className="h-12 w-16 rounded-xl border border-black/18 bg-white/85" />;
+    return <div className="h-12 w-16 rounded-md border border-black/18 bg-white/85" />;
   }
 
   if (shape === "oval") {
-    return <div className="h-12 w-16 rounded-[999px] border border-black/18 bg-white/85" />;
+    return <div className="h-10 w-[4.4rem] rounded-[999px] border border-black/18 bg-white/85" />;
   }
 
   return (
     <div className="relative h-12 w-16 overflow-hidden">
-      <div className="absolute inset-x-0 bottom-0 h-9 rounded-b-xl border border-black/18 bg-white/85" />
-      <div className="absolute inset-x-0 top-0 mx-auto h-7 w-16 rounded-t-[999px] border border-b-0 border-black/18 bg-white/85" />
+      <div className="absolute inset-x-0 bottom-0 h-8 border border-black/18 border-t-0 bg-white/85" />
+      <div className="absolute inset-x-0 top-0 h-8 rounded-t-[999px] border border-black/18 border-b-0 bg-white/85" />
     </div>
   );
 }
@@ -41,7 +41,7 @@ export function ShapeSelector({
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              "rounded-[1.1rem] border p-2.5 text-left transition duration-150",
+              "rounded-[1rem] border p-2.5 text-left transition duration-150",
               isActive
                 ? "border-[var(--editor-accent)] bg-[var(--editor-accent-soft)] shadow-[0_12px_40px_-28px_rgba(13,107,114,0.8)]"
                 : "border-[var(--editor-line)] bg-white/66 hover:border-[var(--editor-line-strong)]"

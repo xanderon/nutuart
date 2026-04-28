@@ -13,6 +13,7 @@ import Konva from "konva";
 import { Group, Layer, Rect, Stage } from "react-konva";
 import {
   clamp,
+  drawArtboardPath,
   getAspectRatio,
   getNormalizedPoint,
   isElementOutOfBounds,
@@ -530,41 +531,14 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                       context.beginPath();
                       const left = -fitArtboard.width / 2;
                       const top = -fitArtboard.height / 2;
-                      if (designDocument.shape === "rectangle") {
-                        context.roundRect(left, top, fitArtboard.width, fitArtboard.height, 28);
-                        return;
-                      }
-
-                      if (designDocument.shape === "oval") {
-                        context.ellipse(
-                          0,
-                          0,
-                          fitArtboard.width / 2,
-                          fitArtboard.height / 2,
-                          0,
-                          0,
-                          Math.PI * 2
-                        );
-                        return;
-                      }
-
-                      const archHeight = Math.min(
-                        fitArtboard.height * 0.36,
-                        fitArtboard.width * 0.45
+                      drawArtboardPath(
+                        context,
+                        designDocument.shape,
+                        left,
+                        top,
+                        fitArtboard.width,
+                        fitArtboard.height
                       );
-                      context.moveTo(left, top + fitArtboard.height);
-                      context.lineTo(left, top + archHeight);
-                      context.quadraticCurveTo(
-                        0,
-                        top - archHeight * 0.22,
-                        left + fitArtboard.width,
-                        top + archHeight
-                      );
-                      context.lineTo(
-                        left + fitArtboard.width,
-                        top + fitArtboard.height
-                      );
-                      context.closePath();
                     }}
                   >
                     {designDocument.elements.map((element) => (

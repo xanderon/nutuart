@@ -22,7 +22,7 @@ export function ArtboardShape({ shape, width, height }: ArtboardShapeProps) {
         y={top}
         width={width}
         height={height}
-        cornerRadius={28}
+        cornerRadius={12}
         fill="#fdfcf8"
         stroke="rgba(24, 23, 18, 0.2)"
         strokeWidth={2}
@@ -63,7 +63,6 @@ export function ArtboardShape({ shape, width, height }: ArtboardShapeProps) {
       sceneFunc={(context, shapeNode) => {
         context.beginPath();
         drawArtboardPath(context, shape, left, top, width, height);
-        context.closePath();
         context.fillStrokeShape(shapeNode);
       }}
     />

@@ -117,6 +117,13 @@ export function createEditorId(prefix: string) {
 
 type PathContext = {
   rect: (x: number, y: number, width: number, height: number) => void;
+  roundRect: (
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radii: number | number[]
+  ) => void;
   ellipse: (
     x: number,
     y: number,
@@ -134,6 +141,14 @@ type PathContext = {
     x: number,
     y: number
   ) => void;
+  bezierCurveTo: (
+    cp1x: number,
+    cp1y: number,
+    cp2x: number,
+    cp2y: number,
+    x: number,
+    y: number
+  ) => void;
   closePath: () => void;
 };
 
@@ -146,7 +161,7 @@ export function drawArtboardPath(
   height: number
 ) {
   if (shape === "rectangle") {
-    context.rect(x, y, width, height);
+    context.roundRect(x, y, width, height, 12);
     return;
   }
 
@@ -163,10 +178,29 @@ export function drawArtboardPath(
     return;
   }
 
-  const archHeight = Math.min(height * 0.36, width * 0.45);
+  const archHeight = Math.min(height * 0.42, width * 0.5);
+  const shoulderY = y + archHeight;
+  const cpOffsetX = width * 0.18;
+  const cpTopY = y - archHeight * 0.08;
+
   context.moveTo(x, y + height);
-  context.lineTo(x, y + archHeight);
-  context.quadraticCurveTo(x + width / 2, y - archHeight * 0.22, x + width, y + archHeight);
+  context.lineTo(x, shoulderY);
+  context.bezierCurveTo(
+    x,
+    y + archHeight * 0.28,
+    x + cpOffsetX,
+    cpTopY,
+    x + width / 2,
+    y
+  );
+  context.bezierCurveTo(
+    x + width - cpOffsetX,
+    cpTopY,
+    x + width,
+    y + archHeight * 0.28,
+    x + width,
+    shoulderY
+  );
   context.lineTo(x + width, y + height);
   context.closePath();
 }

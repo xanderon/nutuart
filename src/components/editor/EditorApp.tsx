@@ -144,73 +144,62 @@ export function EditorApp() {
   };
 
   const renderSetupScreen = () => (
-    <div className="mx-auto flex min-h-dvh w-full max-w-6xl items-center px-4 py-8 sm:px-6">
-      <div className="grid w-full gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <section
-          className="editor-panel rounded-[1.6rem] border border-white/70 p-5 shadow-[0_36px_80px_-50px_rgba(0,0,0,0.4)]"
-          data-editor-fade-in="true"
-        >
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--editor-accent)]">
-            Editor
-          </p>
-          <h1 className="mt-3 max-w-xl text-4xl font-semibold tracking-[-0.05em] text-[var(--editor-ink)] sm:text-5xl">
-            Compui rapid modelul direct pe oglindă.
-          </h1>
-          <p className="mt-3 max-w-xl text-base leading-relaxed text-[var(--editor-muted)]">
-            Alegi forma, pui dimensiunile și apoi adaugi ornamentele.
-          </p>
-        </section>
-
-        <section
-          className="editor-panel rounded-[1.6rem] border border-white/70 p-5 shadow-[0_36px_80px_-50px_rgba(0,0,0,0.4)]"
-          data-editor-fade-in="true"
-        >
-          <div className="mb-5">
-            <h2 className="text-2xl font-semibold text-[var(--editor-ink)]">
-              Setări inițiale
-            </h2>
+    <div className="mx-auto flex min-h-dvh w-full max-w-3xl items-center px-4 py-6 sm:px-6">
+      <section
+        className="editor-panel w-full rounded-[1.45rem] border border-white/70 p-4 shadow-[0_36px_80px_-50px_rgba(0,0,0,0.4)] sm:p-5"
+        data-editor-fade-in="true"
+      >
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--editor-accent)]">
+              Editor
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-[var(--editor-ink)] sm:text-3xl">
+              Setează forma și mărimea
+            </h1>
           </div>
 
-          <div className="space-y-4">
-            <label className="space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--editor-muted)]">
-                Nume proiect
-              </span>
-              <input
-                value={document.projectName}
-                onChange={(event) => setProjectName(event.target.value)}
-                className="h-11 w-full rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 text-base text-[var(--editor-ink)] outline-none transition focus:border-[var(--editor-accent)]"
-              />
-            </label>
+          <button
+            type="button"
+            onClick={handleOpenJson}
+            className="rounded-full border border-[var(--editor-line)] bg-white/86 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--editor-ink)]"
+          >
+            JSON
+          </button>
+        </div>
 
-            <SizeSelector
-              shape={document.shape}
-              widthCm={document.widthCm}
-              heightCm={document.heightCm}
-              onShapeChange={handleShapeChange}
-              onWidthChange={handleWidthChange}
-              onHeightChange={handleHeightChange}
+        <div className="space-y-4">
+          <label className="space-y-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--editor-muted)]">
+              Nume
+            </span>
+            <input
+              value={document.projectName}
+              onChange={(event) => setProjectName(event.target.value)}
+              className="h-11 w-full rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 text-base text-[var(--editor-ink)] outline-none transition focus:border-[var(--editor-accent)]"
             />
-          </div>
+          </label>
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={startEditing}
-              className="flex-1 rounded-[1.2rem] bg-[var(--editor-ink)] px-5 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-white"
-            >
-              Continuă în editor
-            </button>
-            <button
-              type="button"
-              onClick={handleOpenJson}
-              className="rounded-[1.2rem] border border-[var(--editor-line)] bg-white/86 px-5 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--editor-ink)]"
-            >
-              Deschide JSON
-            </button>
-          </div>
-        </section>
-      </div>
+          <SizeSelector
+            shape={document.shape}
+            widthCm={document.widthCm}
+            heightCm={document.heightCm}
+            onShapeChange={handleShapeChange}
+            onWidthChange={handleWidthChange}
+            onHeightChange={handleHeightChange}
+          />
+        </div>
+
+        <div className="mt-5">
+          <button
+            type="button"
+            onClick={startEditing}
+            className="w-full rounded-[1.15rem] bg-[var(--editor-ink)] px-5 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-white"
+          >
+            Intră în editor
+          </button>
+        </div>
+      </section>
     </div>
   );
 
