@@ -17,6 +17,7 @@ export function ArtboardShape({ shape, width, height }: ArtboardShapeProps) {
   if (shape === "rectangle") {
     return (
       <Rect
+        name="artboard-surface"
         x={left}
         y={top}
         width={width}
@@ -35,6 +36,7 @@ export function ArtboardShape({ shape, width, height }: ArtboardShapeProps) {
   if (shape === "oval") {
     return (
       <Ellipse
+        name="artboard-surface"
         x={0}
         y={0}
         radiusX={width / 2}
@@ -51,6 +53,7 @@ export function ArtboardShape({ shape, width, height }: ArtboardShapeProps) {
 
   return (
     <Shape
+      name="artboard-surface"
       fill="#fdfcf8"
       stroke="rgba(24, 23, 18, 0.2)"
       strokeWidth={2}

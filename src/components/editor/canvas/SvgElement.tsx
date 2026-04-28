@@ -9,6 +9,7 @@ import type { EditorElement } from "@/lib/editor/editorTypes";
 
 type SvgElementProps = {
   element: EditorElement;
+  isSelected: boolean;
   artboardWidth: number;
   artboardHeight: number;
   onSelect: (id: string) => void;
@@ -18,6 +19,7 @@ type SvgElementProps = {
 
 function SvgElementComponent({
   element,
+  isSelected,
   artboardWidth,
   artboardHeight,
   onSelect,
@@ -49,11 +51,10 @@ function SvgElementComponent({
       rotation={element.rotation}
       scaleX={element.flipX ? -1 : 1}
       scaleY={element.flipY ? -1 : 1}
-      draggable
+      draggable={isSelected}
       perfectDrawEnabled={false}
       onClick={() => onSelect(element.id)}
       onTap={() => onSelect(element.id)}
-      onDragStart={() => onSelect(element.id)}
       onDragEnd={(event) => onDragEnd(element.id, event.target.x(), event.target.y())}
     />
   );

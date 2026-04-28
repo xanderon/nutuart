@@ -197,6 +197,11 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       }
     }, [designDocument.elements, onSelectElement, selectedElementId]);
 
+    const isViewportTarget = (target: Konva.Node) =>
+      target === target.getStage() ||
+      target.attrs.name === "artboard-hit-area" ||
+      target.attrs.name === "artboard-surface";
+
     const handleWheel = (event: Konva.KonvaEventObject<WheelEvent>) => {
       event.evt.preventDefault();
 
@@ -240,13 +245,16 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         return;
       }
 
-      const targetIsStage =
-        event.target === event.target.getStage() ||
-        event.target.attrs.name === "artboard-hit-area";
+      const targetIsStage = isViewportTarget(event.target);
 
       if (!targetIsStage || viewport.scale <= 1) {
+        if (targetIsStage) {
+          onSelectElement(null);
+        }
         return;
       }
+
+      onSelectElement(null);
 
       const touch = touches[0];
       panStateRef.current = {
@@ -316,9 +324,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     };
 
     const handlePointerDown = (event: Konva.KonvaEventObject<PointerEvent>) => {
-      const targetIsStage =
-        event.target === event.target.getStage() ||
-        event.target.attrs.name === "artboard-hit-area";
+      const targetIsStage = isViewportTarget(event.target);
 
       if (!targetIsStage) {
         return;
@@ -500,6 +506,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                       <SvgElement
                         key={element.id}
                         element={element}
+                        isSelected={selectedElementId === element.id}
                         artboardWidth={fitArtboard.width}
                         artboardHeight={fitArtboard.height}
                         registerNode={(id, node) => {
