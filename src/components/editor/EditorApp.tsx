@@ -110,6 +110,7 @@ export function EditorApp() {
   };
 
   const handlePanelChange = (panel: EditorPanel) => setActivePanel(panel);
+  const handleClosePanel = () => setActivePanel(null);
   const handleShapeChange = (shape: typeof document.shape) => {
     setShape(shape);
     resetViewport();
@@ -233,7 +234,7 @@ export function EditorApp() {
           <PanelCard
             title="Bibliotecă SVG"
           >
-            <SvgLibrary
+              <SvgLibrary
               activeCategory={activeAssetCategory}
               onCategoryChange={setActiveAssetCategory}
               onAddAsset={addElement}
@@ -320,8 +321,19 @@ export function EditorApp() {
       />
 
       {activePanel ? (
-        <div className="fixed inset-x-3 bottom-[4.5rem] z-30 md:hidden" data-editor-fade-in="true">
-          <div className="editor-panel max-h-[54dvh] overflow-y-auto rounded-[1.35rem] border border-white/70 p-3 shadow-[0_30px_70px_-36px_rgba(0,0,0,0.45)]">
+        <div className="fixed inset-0 z-30 md:hidden" data-editor-fade-in="true">
+          <button
+            type="button"
+            aria-label="Închide meniul"
+            onClick={handleClosePanel}
+            className="absolute inset-0 bg-transparent"
+          />
+
+          <div
+            className="absolute inset-x-3 bottom-[4.5rem]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="editor-panel max-h-[54dvh] overflow-y-auto rounded-[1.35rem] border border-white/70 p-3 shadow-[0_30px_70px_-36px_rgba(0,0,0,0.45)]">
             {activePanel === "library" ? (
               <PanelCard
                 title="Bibliotecă SVG"
@@ -329,7 +341,10 @@ export function EditorApp() {
                 <SvgLibrary
                   activeCategory={activeAssetCategory}
                   onCategoryChange={setActiveAssetCategory}
-                  onAddAsset={addElement}
+                  onAddAsset={(assetId) => {
+                    addElement(assetId);
+                    handleClosePanel();
+                  }}
                 />
               </PanelCard>
             ) : null}
@@ -374,28 +389,40 @@ export function EditorApp() {
                 <div className="space-y-3">
                   <button
                     type="button"
-                    onClick={goToSetup}
+                    onClick={() => {
+                      handleClosePanel();
+                      goToSetup();
+                    }}
                     className="w-full rounded-[1rem] border border-[var(--editor-line)] bg-white/88 px-4 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--editor-ink)]"
                   >
                     Ecran start
                   </button>
                   <button
                     type="button"
-                    onClick={handleExportPng}
+                    onClick={() => {
+                      handleExportPng();
+                      handleClosePanel();
+                    }}
                     className="w-full rounded-[1rem] bg-[var(--editor-ink)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-white"
                   >
                     Export PNG
                   </button>
                   <button
                     type="button"
-                    onClick={handleExportJson}
+                    onClick={() => {
+                      handleExportJson();
+                      handleClosePanel();
+                    }}
                     className="w-full rounded-[1rem] border border-[var(--editor-line)] bg-white/88 px-4 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--editor-ink)]"
                   >
                     Salvează JSON
                   </button>
                   <button
                     type="button"
-                    onClick={handleOpenJson}
+                    onClick={() => {
+                      handleClosePanel();
+                      handleOpenJson();
+                    }}
                     className="w-full rounded-[1rem] border border-[var(--editor-line)] bg-white/88 px-4 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--editor-ink)]"
                   >
                     Încarcă JSON
@@ -403,6 +430,7 @@ export function EditorApp() {
                 </div>
               </PanelCard>
             ) : null}
+            </div>
           </div>
         </div>
       ) : null}
