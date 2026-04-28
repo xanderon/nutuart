@@ -81,3 +81,12 @@ export function getTouchCenter(touches: TouchList): Point {
     y: (first.clientY + second.clientY) / 2,
   };
 }
+
+export function getTouchAngle(touches: TouchList) {
+  if (touches.length < 2) {
+    return 0;
+  }
+
+  const [first, second] = [touches[0], touches[1]];
+  return Math.atan2(second.clientY - first.clientY, second.clientX - first.clientX);
+}

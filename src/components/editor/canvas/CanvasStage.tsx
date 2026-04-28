@@ -26,6 +26,7 @@ import type {
 } from "@/lib/editor/editorTypes";
 import {
   clampZoom,
+  getTouchAngle,
   getFitArtboardSize,
   getStepZoom,
   getTouchCenter,
@@ -77,6 +78,21 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       distance: number;
       center: Point;
       viewport: EditorViewport;
+    } | null>(null);
+    const elementGestureRef = useRef<{
+      id: string;
+      node: Konva.Image;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      rotation: number;
+      flipX: boolean;
+      flipY: boolean;
+      distance: number;
+      center: Point;
+      angle: number;
+      viewportScale: number;
     } | null>(null);
 
     useEffect(() => {
@@ -202,6 +218,83 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       target.attrs.name === "artboard-hit-area" ||
       target.attrs.name === "artboard-surface";
 
+    const getElementBounds = useCallback(
+      (node: Konva.Image) => {
+        const scaleX = node.scaleX();
+        const scaleY = node.scaleY();
+
+        return {
+          flipX: scaleX < 0,
+          flipY: scaleY < 0,
+          widthPx: clamp(
+            node.width() * Math.abs(scaleX),
+            fitArtboard.width * 0.04,
+            fitArtboard.width
+          ),
+          heightPx: clamp(
+            node.height() * Math.abs(scaleY),
+            fitArtboard.height * 0.04,
+            fitArtboard.height
+          ),
+        };
+      },
+      [fitArtboard.height, fitArtboard.width]
+    );
+
+    const commitNodeTransform = useCallback(
+      (id: string, node: Konva.Image) => {
+        const { flipX, flipY, widthPx, heightPx } = getElementBounds(node);
+
+        node.scaleX(flipX ? -1 : 1);
+        node.scaleY(flipY ? -1 : 1);
+        node.width(widthPx);
+        node.height(heightPx);
+
+        const normalized = getNormalizedPoint(
+          { x: node.x(), y: node.y() },
+          fitArtboard,
+          { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 }
+        );
+
+        onUpdateElement(id, {
+          ...normalized,
+          width: widthPx / fitArtboard.width,
+          height: heightPx / fitArtboard.height,
+          rotation: node.rotation(),
+          flipX,
+          flipY,
+        });
+      },
+      [fitArtboard, getElementBounds, onUpdateElement]
+    );
+
+    const isTouchOnSelectedElement = useCallback(
+      (touches: TouchList) => {
+        const stage = stageRef.current;
+        const selectedNode = selectedElementId
+          ? nodeMapRef.current[selectedElementId]
+          : null;
+
+        if (!stage || !selectedNode) {
+          return false;
+        }
+
+        const bounds = stage.container().getBoundingClientRect();
+
+        return Array.from(touches)
+          .slice(0, 2)
+          .some((touch) => {
+            const hit = stage.getIntersection({
+              x: touch.clientX - bounds.left,
+              y: touch.clientY - bounds.top,
+            });
+
+            return hit === selectedNode;
+          });
+      },
+      [selectedElementId]
+    );
+
     const handleWheel = (event: Konva.KonvaEventObject<WheelEvent>) => {
       event.evt.preventDefault();
 
@@ -236,11 +329,43 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       const touches = event.evt.touches;
 
       if (touches.length === 2) {
+        const selectedNode = selectedElementId
+          ? nodeMapRef.current[selectedElementId]
+          : null;
+
+        if (selectedElementId && selectedNode && isTouchOnSelectedElement(touches)) {
+          event.evt.preventDefault();
+          if (selectedNode.isDragging()) {
+            selectedNode.stopDrag();
+          }
+
+          const { flipX, flipY, widthPx, heightPx } = getElementBounds(selectedNode);
+          elementGestureRef.current = {
+            id: selectedElementId,
+            node: selectedNode,
+            x: selectedNode.x(),
+            y: selectedNode.y(),
+            width: widthPx,
+            height: heightPx,
+            rotation: selectedNode.rotation(),
+            flipX,
+            flipY,
+            distance: Math.max(getTouchDistance(touches), 1),
+            center: getTouchCenter(touches),
+            angle: getTouchAngle(touches),
+            viewportScale: viewport.scale,
+          };
+          pinchStateRef.current = null;
+          panStateRef.current = null;
+          return;
+        }
+
         pinchStateRef.current = {
           distance: getTouchDistance(touches),
           center: getTouchCenter(touches),
           viewport,
         };
+        elementGestureRef.current = null;
         panStateRef.current = null;
         return;
       }
@@ -266,6 +391,40 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
 
     const handleTouchMove = (event: Konva.KonvaEventObject<TouchEvent>) => {
       const touches = event.evt.touches;
+
+      if (touches.length === 2 && elementGestureRef.current) {
+        event.evt.preventDefault();
+        const gesture = elementGestureRef.current;
+        const distance = Math.max(getTouchDistance(touches), 1);
+        const scale = distance / gesture.distance;
+        const center = getTouchCenter(touches);
+        const angleDelta =
+          ((((getTouchAngle(touches) - gesture.angle) * 180) / Math.PI) + 540) % 360 - 180;
+        const nextX =
+          gesture.x + (center.x - gesture.center.x) / Math.max(gesture.viewportScale, 1);
+        const nextY =
+          gesture.y + (center.y - gesture.center.y) / Math.max(gesture.viewportScale, 1);
+        const nextWidth = clamp(
+          gesture.width * scale,
+          fitArtboard.width * 0.04,
+          fitArtboard.width
+        );
+        const nextHeight = clamp(
+          gesture.height * scale,
+          fitArtboard.height * 0.04,
+          fitArtboard.height
+        );
+
+        gesture.node.x(nextX);
+        gesture.node.y(nextY);
+        gesture.node.width(nextWidth);
+        gesture.node.height(nextHeight);
+        gesture.node.rotation(gesture.rotation + angleDelta);
+        gesture.node.scaleX(gesture.flipX ? -1 : 1);
+        gesture.node.scaleY(gesture.flipY ? -1 : 1);
+        gesture.node.getLayer()?.batchDraw();
+        return;
+      }
 
       if (touches.length === 2 && pinchStateRef.current && containerSize.width && containerSize.height) {
         event.evt.preventDefault();
@@ -313,7 +472,13 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       });
     };
 
-    const handleTouchEnd = () => {
+    const handleTouchEnd = (event: Konva.KonvaEventObject<TouchEvent>) => {
+      if (elementGestureRef.current && event.evt.touches.length < 2) {
+        const { id, node } = elementGestureRef.current;
+        commitNodeTransform(id, node);
+        elementGestureRef.current = null;
+      }
+
       if (pinchStateRef.current) {
         pinchStateRef.current = null;
       }
@@ -377,44 +542,8 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       if (!selectedElementId || !selectedNode) {
         return;
       }
-
-      const scaleX = selectedNode.scaleX();
-      const scaleY = selectedNode.scaleY();
-      const flipX = scaleX < 0;
-      const flipY = scaleY < 0;
-      const widthPx = clamp(
-        selectedNode.width() * Math.abs(scaleX),
-        fitArtboard.width * 0.04,
-        fitArtboard.width
-      );
-      const heightPx = clamp(
-        selectedNode.height() * Math.abs(scaleY),
-        fitArtboard.height * 0.04,
-        fitArtboard.height
-      );
-
-      // Konva mutates node scale during transforms, so reset the transient scale
-      // before syncing size back into controlled React state.
-      selectedNode.scaleX(flipX ? -1 : 1);
-      selectedNode.scaleY(flipY ? -1 : 1);
-      selectedNode.width(widthPx);
-      selectedNode.height(heightPx);
-
-      const normalized = getNormalizedPoint(
-        { x: selectedNode.x(), y: selectedNode.y() },
-        fitArtboard,
-        { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 }
-      );
-
-      onUpdateElement(selectedElementId, {
-        ...normalized,
-        width: widthPx / fitArtboard.width,
-        height: heightPx / fitArtboard.height,
-        rotation: selectedNode.rotation(),
-        flipX,
-        flipY,
-      });
-    }, [fitArtboard, onUpdateElement, selectedElementId]);
+        commitNodeTransform(selectedElementId, selectedNode);
+    }, [commitNodeTransform, selectedElementId]);
 
     const viewportCenter: Point = {
       x: containerSize.width / 2 + viewport.offsetX,
