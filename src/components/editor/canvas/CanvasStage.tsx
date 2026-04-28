@@ -519,6 +519,22 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                 scaleX={viewport.scale}
                 scaleY={viewport.scale}
               >
+                {designDocument.elements
+                  .filter((element) => isElementOutOfBounds(element))
+                  .map((element) => (
+                    <SvgElement
+                      key={`overflow-${element.id}`}
+                      element={element}
+                      isSelected={false}
+                      artboardWidth={fitArtboard.width}
+                      artboardHeight={fitArtboard.height}
+                      onSelect={() => {}}
+                      onDragEnd={() => {}}
+                      interactive={false}
+                      opacity={0.62}
+                    />
+                  ))}
+
                 <Group ref={artboardGroupRef}>
                   <ArtboardShape
                     shape={designDocument.shape}
@@ -576,7 +592,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                     height={fitArtboard.height}
                     stroke="rgba(176, 70, 53, 0.75)"
                     strokeWidth={2}
-                    cornerRadius={designDocument.shape === "rectangle" ? 28 : 0}
+                    cornerRadius={designDocument.shape === "rectangle" ? 12 : 0}
                     dash={[8, 8]}
                     listening={false}
                   />

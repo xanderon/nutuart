@@ -14,7 +14,9 @@ type SvgElementProps = {
   artboardHeight: number;
   onSelect: (id: string) => void;
   onDragEnd: (id: string, x: number, y: number) => void;
-  registerNode: (id: string, node: Konva.Image | null) => void;
+  registerNode?: (id: string, node: Konva.Image | null) => void;
+  interactive?: boolean;
+  opacity?: number;
 };
 
 function SvgElementComponent({
@@ -25,6 +27,8 @@ function SvgElementComponent({
   onSelect,
   onDragEnd,
   registerNode,
+  interactive = true,
+  opacity = 1,
 }: SvgElementProps) {
   const asset = editorAssetMap[element.assetId];
   const [image] = useImage(asset?.src ?? "", "anonymous");
@@ -40,7 +44,7 @@ function SvgElementComponent({
 
   return (
     <KonvaImage
-      ref={(node) => registerNode(element.id, node)}
+      ref={(node) => registerNode?.(element.id, node)}
       image={image}
       x={x}
       y={y}
@@ -51,11 +55,17 @@ function SvgElementComponent({
       rotation={element.rotation}
       scaleX={element.flipX ? -1 : 1}
       scaleY={element.flipY ? -1 : 1}
-      draggable={isSelected}
+      opacity={opacity}
+      listening={interactive}
+      draggable={interactive && isSelected}
       perfectDrawEnabled={false}
-      onClick={() => onSelect(element.id)}
-      onTap={() => onSelect(element.id)}
-      onDragEnd={(event) => onDragEnd(element.id, event.target.x(), event.target.y())}
+      onClick={interactive ? () => onSelect(element.id) : undefined}
+      onTap={interactive ? () => onSelect(element.id) : undefined}
+      onDragEnd={
+        interactive
+          ? (event) => onDragEnd(element.id, event.target.x(), event.target.y())
+          : undefined
+      }
     />
   );
 }
