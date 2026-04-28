@@ -94,6 +94,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       angle: number;
       viewportScale: number;
     } | null>(null);
+    const selectedTouchSeedRef = useRef(false);
 
     useEffect(() => {
       if (!wrapperRef.current) {
@@ -268,8 +269,8 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       [fitArtboard, getElementBounds, onUpdateElement]
     );
 
-    const isTouchOnSelectedElement = useCallback(
-      (touches: TouchList) => {
+    const isTouchWithinSelectedElement = useCallback(
+      (touches: TouchList, padding = 24) => {
         const stage = stageRef.current;
         const selectedNode = selectedElementId
           ? nodeMapRef.current[selectedElementId]
@@ -279,17 +280,24 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
           return false;
         }
 
-        const bounds = stage.container().getBoundingClientRect();
+        const containerBounds = stage.container().getBoundingClientRect();
+        const bounds = selectedNode.getClientRect({
+          skipShadow: true,
+          skipStroke: true,
+        });
 
         return Array.from(touches)
           .slice(0, 2)
           .some((touch) => {
-            const hit = stage.getIntersection({
-              x: touch.clientX - bounds.left,
-              y: touch.clientY - bounds.top,
-            });
+            const x = touch.clientX - containerBounds.left;
+            const y = touch.clientY - containerBounds.top;
 
-            return hit === selectedNode;
+            return (
+              x >= bounds.x - padding &&
+              x <= bounds.x + bounds.width + padding &&
+              y >= bounds.y - padding &&
+              y <= bounds.y + bounds.height + padding
+            );
           });
       },
       [selectedElementId]
@@ -333,7 +341,11 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
           ? nodeMapRef.current[selectedElementId]
           : null;
 
-        if (selectedElementId && selectedNode && isTouchOnSelectedElement(touches)) {
+        if (
+          selectedElementId &&
+          selectedNode &&
+          (selectedTouchSeedRef.current || isTouchWithinSelectedElement(touches, 28))
+        ) {
           event.evt.preventDefault();
           if (selectedNode.isDragging()) {
             selectedNode.stopDrag();
@@ -369,6 +381,8 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         panStateRef.current = null;
         return;
       }
+
+      selectedTouchSeedRef.current = isTouchWithinSelectedElement(touches, 28);
 
       const targetIsStage = isViewportTarget(event.target);
 
@@ -477,6 +491,10 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         const { id, node } = elementGestureRef.current;
         commitNodeTransform(id, node);
         elementGestureRef.current = null;
+      }
+
+      if (event.evt.touches.length === 0) {
+        selectedTouchSeedRef.current = false;
       }
 
       if (pinchStateRef.current) {
