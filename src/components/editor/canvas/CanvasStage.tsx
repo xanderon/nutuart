@@ -622,6 +622,9 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       activeDragState?.source === "overflow" ? activeDragState.elementId : null;
     const draggingArtboardElementId =
       activeDragState?.source === "artboard" ? activeDragState.elementId : null;
+    const dragPreviewElement = activeDragState
+      ? renderedElements.find((element) => element.id === activeDragState.elementId) ?? null
+      : null;
 
     return (
       <div ref={wrapperRef} className="h-full min-h-[320px] w-full rounded-[2rem]">
@@ -675,7 +678,9 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                       onDragEnd={handleDragEnd}
                       interactive
                       allowDrag={selectedElementId === element.id}
-                      opacity={0.62}
+                      opacity={
+                        activeDragState?.elementId === element.id ? 0.001 : 0.62
+                      }
                     />
                   ))}
 
@@ -717,12 +722,36 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                         onDragStart={handleDragStart("artboard")}
                         onDragMove={handleDragMove}
                         onDragEnd={handleDragEnd}
+                        opacity={
+                          activeDragState?.elementId === element.id ? 0.001 : 1
+                        }
                       />
                     ))}
                   </Group>
                 </Group>
 
-                {selectedElementId ? (
+                {dragPreviewElement ? (
+                  <SvgElement
+                    key={`drag-preview-${dragPreviewElement.id}`}
+                    element={dragPreviewElement}
+                    isSelected={false}
+                    artboardWidth={fitArtboard.width}
+                    artboardHeight={fitArtboard.height}
+                    onSelect={onSelectElement}
+                    onDragEnd={() => {}}
+                    interactive={false}
+                    opacity={
+                      isElementOutOfBounds(
+                        dragPreviewElement,
+                        designDocument.shape
+                      )
+                        ? 0.62
+                        : 1
+                    }
+                  />
+                ) : null}
+
+                {selectedElementId && !activeDragState ? (
                   <TransformHandles
                     selectedElementId={selectedElementId}
                     nodeMapRef={nodeMapRef}
