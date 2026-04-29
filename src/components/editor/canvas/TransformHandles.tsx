@@ -6,19 +6,21 @@ import type Konva from "konva";
 import type { MutableRefObject } from "react";
 
 type TransformHandlesProps = {
-  selectedElementId: string | null;
+  selectedElementIds: string[];
   nodeMapRef: MutableRefObject<Record<string, Konva.Image | null>>;
   artboardWidth: number;
   artboardHeight: number;
+  showRotateHandle: boolean;
   onTransform: () => void;
   onTransformEnd: () => void;
 };
 
 export function TransformHandles({
-  selectedElementId,
+  selectedElementIds,
   nodeMapRef,
   artboardWidth,
   artboardHeight,
+  showRotateHandle,
   onTransform,
   onTransformEnd,
 }: TransformHandlesProps) {
@@ -29,10 +31,12 @@ export function TransformHandles({
       return;
     }
 
-    const node = selectedElementId ? nodeMapRef.current[selectedElementId] : null;
-    transformerRef.current.nodes(node ? [node] : []);
+    const nodes = selectedElementIds
+      .map((id) => nodeMapRef.current[id])
+      .filter((node): node is Konva.Image => Boolean(node));
+    transformerRef.current.nodes(nodes);
     transformerRef.current.getLayer()?.batchDraw();
-  }, [nodeMapRef, selectedElementId]);
+  }, [nodeMapRef, selectedElementIds]);
 
   return (
     <Transformer
@@ -46,7 +50,7 @@ export function TransformHandles({
         "bottom-left",
         "bottom-right",
       ]}
-      rotateEnabled
+      rotateEnabled={showRotateHandle}
       rotateAnchorOffset={34}
       borderStroke="#0d6b72"
       borderStrokeWidth={1.2}

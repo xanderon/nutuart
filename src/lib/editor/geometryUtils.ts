@@ -81,7 +81,7 @@ export function getDisplayDimensions(widthCm: number, heightCm: number) {
   return `${sanitizeDimension(widthCm)} × ${sanitizeDimension(heightCm)} cm`;
 }
 
-function getElementBoundaryPoints(element: EditorElement): Point[] {
+export function getElementBoundaryPoints(element: EditorElement): Point[] {
   const halfWidth = element.width / 2;
   const halfHeight = element.height / 2;
   const radians = (element.rotation * Math.PI) / 180;
@@ -102,6 +102,25 @@ function getElementBoundaryPoints(element: EditorElement): Point[] {
     x: element.x + offset.x * cos - offset.y * sin,
     y: element.y + offset.x * sin + offset.y * cos,
   }));
+}
+
+export function getElementsBoundingBox(elements: EditorElement[]) {
+  if (!elements.length) {
+    return null;
+  }
+
+  const points = elements.flatMap((element) => getElementBoundaryPoints(element));
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys),
+    centerX: (Math.min(...xs) + Math.max(...xs)) / 2,
+    centerY: (Math.min(...ys) + Math.max(...ys)) / 2,
+  };
 }
 
 function getArchHeightRatio(aspectRatio = 1) {

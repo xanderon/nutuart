@@ -49,10 +49,19 @@ const SELECTION_HANDLE_PADDING = 24;
 type CanvasStageProps = {
   document: EditorDocument;
   selectedElementId: string | null;
+  selectedElementIds: string[];
   viewport: EditorViewport;
   onViewportChange: (viewport: EditorViewport) => void;
   onSelectElement: (id: string | null) => void;
+  onAddElementToSelection: (id: string) => void;
+  onClearSelection: () => void;
   onUpdateElement: (id: string, patch: Partial<EditorElement>) => void;
+  onUpdateElements: (
+    updates: Array<{
+      id: string;
+      patch: Partial<EditorElement>;
+    }>
+  ) => void;
   onViewportGesture?: (label: string) => void;
 };
 
@@ -61,10 +70,14 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     {
       document: designDocument,
       selectedElementId,
+      selectedElementIds,
       viewport,
       onViewportChange,
       onSelectElement,
+      onAddElementToSelection,
+      onClearSelection,
       onUpdateElement,
+      onUpdateElements,
       onViewportGesture,
     },
     ref
@@ -77,9 +90,17 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     const [transientElements, setTransientElements] = useState<
       Record<string, Partial<EditorElement>>
     >({});
+    const [isSelectionHovered, setIsSelectionHovered] = useState(false);
+    const [hasFinePointer, setHasFinePointer] = useState(false);
     const panStateRef = useRef<{ pointerId: number; startX: number; startY: number } | null>(
       null
     );
+    const longPressTimerRef = useRef<number | null>(null);
+    const longPressConsumedRef = useRef<string | null>(null);
+    const groupDragStateRef = useRef<{
+      draggedId: string;
+      originNodes: Record<string, Point>;
+    } | null>(null);
     const pinchStateRef = useRef<{
       distance: number;
       center: Point;
@@ -109,6 +130,19 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       return () => resizeObserver.disconnect();
     }, []);
 
+    useEffect(() => {
+      if (typeof window === "undefined" || !window.matchMedia) {
+        return;
+      }
+
+      const mediaQuery = window.matchMedia("(pointer:fine)");
+      const syncPointer = () => setHasFinePointer(mediaQuery.matches);
+
+      syncPointer();
+      mediaQuery.addEventListener("change", syncPointer);
+      return () => mediaQuery.removeEventListener("change", syncPointer);
+    }, []);
+
     const aspectRatio = getAspectRatio(
       designDocument.widthCm,
       designDocument.heightCm
@@ -130,17 +164,23 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       [aspectRatio, containerSize.height, containerSize.width, fitInsets]
     );
 
-    const selectedElement = useMemo(
+    const renderedElements = useMemo(
       () =>
-        selectedElementId
-          ? (designDocument.elements
-              .map((element) => ({
-                ...element,
-                ...transientElements[element.id],
-              }))
-              .find((item) => item.id === selectedElementId) ?? null)
-          : null,
-      [designDocument.elements, selectedElementId, transientElements]
+        designDocument.elements.map((element) => ({
+          ...element,
+          ...transientElements[element.id],
+        })),
+      [designDocument.elements, transientElements]
+    );
+
+    const selectedElementSet = useMemo(
+      () => new Set(selectedElementIds),
+      [selectedElementIds]
+    );
+
+    const selectedElements = useMemo(
+      () => renderedElements.filter((element) => selectedElementSet.has(element.id)),
+      [renderedElements, selectedElementSet]
     );
 
     const setZoomStep = useCallback(
@@ -199,18 +239,32 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     );
 
     useEffect(() => {
-      if (!selectedElementId) {
+      if (!selectedElementIds.length && !selectedElementId) {
         return;
       }
 
-      const selectedExists = designDocument.elements.some(
-        (element) => element.id === selectedElementId
-      );
+      const selectedExists = designDocument.elements.map((element) => element.id);
+      const hasPrimary = selectedElementId
+        ? selectedExists.includes(selectedElementId)
+        : false;
+      const hasAny = selectedElementIds.some((id) => selectedExists.includes(id));
 
-      if (!selectedExists) {
-        onSelectElement(null);
+      if (!hasAny || (selectedElementId && !hasPrimary)) {
+        onClearSelection();
       }
-    }, [designDocument.elements, onSelectElement, selectedElementId]);
+    }, [
+      designDocument.elements,
+      onClearSelection,
+      selectedElementId,
+      selectedElementIds,
+    ]);
+
+    const clearLongPressTimer = useCallback(() => {
+      if (longPressTimerRef.current) {
+        window.clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+    }, []);
 
     const isViewportTarget = (target: Konva.Node) =>
       target === target.getStage() ||
@@ -299,61 +353,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       ]
     );
 
-    const getElementBounds = useCallback(
-      (node: Konva.Image) => {
-        const scaleX = node.scaleX();
-        const scaleY = node.scaleY();
-
-        return {
-          flipX: scaleX < 0,
-          flipY: scaleY < 0,
-          widthPx: clamp(
-            node.width() * Math.abs(scaleX),
-            fitArtboard.width * 0.04,
-            fitArtboard.width
-          ),
-          heightPx: clamp(
-            node.height() * Math.abs(scaleY),
-            fitArtboard.height * 0.04,
-            fitArtboard.height
-          ),
-        };
-      },
-      [fitArtboard.height, fitArtboard.width]
-    );
-
-    const commitNodeTransform = useCallback(
-      (id: string, node: Konva.Image) => {
-        const { flipX, flipY, widthPx, heightPx } = getElementBounds(node);
-
-        node.scaleX(flipX ? -1 : 1);
-        node.scaleY(flipY ? -1 : 1);
-        node.width(widthPx);
-        node.height(heightPx);
-
-        const normalized = getNormalizedPointInPlayground({
-          x: node.x(),
-          y: node.y(),
-        });
-
-        onUpdateElement(id, {
-          ...normalized,
-          width: widthPx / fitArtboard.width,
-          height: heightPx / fitArtboard.height,
-          rotation: node.rotation(),
-          flipX,
-          flipY,
-        });
-      },
-      [
-        fitArtboard.height,
-        fitArtboard.width,
-        getElementBounds,
-        getNormalizedPointInPlayground,
-        onUpdateElement,
-      ]
-    );
-
     const setTransientElement = useCallback(
       (id: string, patch: Partial<EditorElement> | null) => {
         setTransientElements((current) => {
@@ -414,27 +413,27 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
 
     const isPointNearSelectedElement = useCallback(
       (point: Point, padding = SELECTION_HANDLE_PADDING) => {
-        const selectedNode = selectedElementId
-          ? nodeMapRef.current[selectedElementId]
-          : null;
+        return selectedElementIds.some((id) => {
+          const selectedNode = nodeMapRef.current[id];
 
-        if (!selectedNode) {
-          return false;
-        }
+          if (!selectedNode) {
+            return false;
+          }
 
-        const bounds = selectedNode.getClientRect({
-          skipShadow: true,
-          skipStroke: true,
+          const bounds = selectedNode.getClientRect({
+            skipShadow: true,
+            skipStroke: true,
+          });
+
+          return (
+            point.x >= bounds.x - padding &&
+            point.x <= bounds.x + bounds.width + padding &&
+            point.y >= bounds.y - padding &&
+            point.y <= bounds.y + bounds.height + padding
+          );
         });
-
-        return (
-          point.x >= bounds.x - padding &&
-          point.x <= bounds.x + bounds.width + padding &&
-          point.y >= bounds.y - padding &&
-          point.y <= bounds.y + bounds.height + padding
-        );
       },
-      [selectedElementId]
+      [selectedElementIds]
     );
 
     const handleWheel = (event: Konva.KonvaEventObject<WheelEvent>) => {
@@ -498,12 +497,12 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
 
         if (!targetIsStage || viewport.scale <= 1) {
         if (targetIsStage) {
-          onSelectElement(null);
+          onClearSelection();
         }
         return;
       }
 
-      onSelectElement(null);
+      onClearSelection();
       panStateRef.current = {
         pointerId: touch.identifier,
         startX: touch.clientX - viewport.offsetX,
@@ -590,7 +589,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         return;
       }
 
-      onSelectElement(null);
+      onClearSelection();
 
       if (viewport.scale <= 1) {
         return;
@@ -619,39 +618,223 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       panStateRef.current = null;
     };
 
-    const handleDragEnd = (id: string, x: number, y: number) => {
-      const normalized = getNormalizedPointInPlayground({ x, y });
+    const handleElementPointerDown = useCallback(
+      (id: string, event: Konva.KonvaEventObject<PointerEvent>) => {
+        clearLongPressTimer();
+        longPressConsumedRef.current = null;
 
-      setTransientElement(id, null);
-      onUpdateElement(id, normalized);
-    };
+        if (event.evt.shiftKey && !selectedElementSet.has(id)) {
+          onAddElementToSelection(id);
+          longPressConsumedRef.current = id;
+          return;
+        }
 
-    const handleDragMove = () => {};
+        if (
+          event.evt.pointerType !== "mouse" &&
+          selectedElementIds.length > 0 &&
+          !selectedElementSet.has(id)
+        ) {
+          longPressTimerRef.current = window.setTimeout(() => {
+            onAddElementToSelection(id);
+            longPressConsumedRef.current = id;
+            longPressTimerRef.current = null;
+          }, 360);
+        }
+      },
+      [
+        clearLongPressTimer,
+        onAddElementToSelection,
+        selectedElementIds.length,
+        selectedElementSet,
+      ]
+    );
+
+    const handleElementPointerUp = useCallback(() => {
+      clearLongPressTimer();
+    }, [clearLongPressTimer]);
+
+    const handleElementSelect = useCallback(
+      (id: string) => {
+        if (longPressConsumedRef.current === id) {
+          longPressConsumedRef.current = null;
+          return;
+        }
+
+        if (selectedElementSet.has(id) && selectedElementIds.length > 1) {
+          return;
+        }
+
+        onSelectElement(id);
+      },
+      [onSelectElement, selectedElementIds.length, selectedElementSet]
+    );
+
+    const handleHoverChange = useCallback(
+      (id: string, isHovering: boolean) => {
+        if (!selectedElementSet.has(id)) {
+          return;
+        }
+
+        setIsSelectionHovered(isHovering);
+      },
+      [selectedElementSet]
+    );
+
+    const handleDragStart = useCallback(
+      (id: string) => {
+        clearLongPressTimer();
+
+        if (!selectedElementSet.has(id) || selectedElementIds.length < 2) {
+          groupDragStateRef.current = null;
+          return;
+        }
+
+        const originNodes: Record<string, Point> = {};
+
+        selectedElementIds.forEach((selectedId) => {
+          const node = nodeMapRef.current[selectedId];
+
+          if (!node) {
+            return;
+          }
+
+          originNodes[selectedId] = {
+            x: node.x(),
+            y: node.y(),
+          };
+        });
+
+        groupDragStateRef.current = {
+          draggedId: id,
+          originNodes,
+        };
+      },
+      [clearLongPressTimer, selectedElementIds, selectedElementSet]
+    );
+
+    const handleDragMove = useCallback(
+      (id: string, x: number, y: number) => {
+        const groupDragState = groupDragStateRef.current;
+
+        if (!groupDragState || groupDragState.draggedId !== id) {
+          return;
+        }
+
+        const draggedOrigin = groupDragState.originNodes[id];
+
+        if (!draggedOrigin) {
+          return;
+        }
+
+        const deltaX = x - draggedOrigin.x;
+        const deltaY = y - draggedOrigin.y;
+
+        Object.entries(groupDragState.originNodes).forEach(([selectedId, origin]) => {
+          if (selectedId === id) {
+            return;
+          }
+
+          const node = nodeMapRef.current[selectedId];
+
+          if (!node) {
+            return;
+          }
+
+          node.position({
+            x: origin.x + deltaX,
+            y: origin.y + deltaY,
+          });
+        });
+
+        stageRef.current?.batchDraw();
+      },
+      []
+    );
+
+    const handleDragEnd = useCallback(
+      (id: string, x: number, y: number) => {
+        const groupDragState = groupDragStateRef.current;
+
+        if (groupDragState && groupDragState.draggedId === id) {
+          const updates = selectedElementIds
+            .map((selectedId) => {
+              const node = nodeMapRef.current[selectedId];
+
+              if (!node) {
+                return null;
+              }
+
+              return {
+                id: selectedId,
+                patch: getNormalizedPointInPlayground({
+                  x: node.x(),
+                  y: node.y(),
+                }),
+              };
+            })
+            .filter(Boolean) as Array<{
+            id: string;
+            patch: Partial<EditorElement>;
+          }>;
+
+          groupDragStateRef.current = null;
+          onUpdateElements(updates);
+          return;
+        }
+
+        const normalized = getNormalizedPointInPlayground({ x, y });
+        setTransientElement(id, null);
+        onUpdateElement(id, normalized);
+      },
+      [
+        getNormalizedPointInPlayground,
+        onUpdateElement,
+        onUpdateElements,
+        selectedElementIds,
+        setTransientElement,
+      ]
+    );
 
     const handleTransformEnd = useCallback(() => {
-      const selectedNode = selectedElementId
-        ? nodeMapRef.current[selectedElementId]
-        : null;
+      const updates = selectedElementIds
+        .map((id) => {
+          const node = nodeMapRef.current[id];
 
-      if (!selectedElementId || !selectedNode) {
+          if (!node) {
+            return null;
+          }
+
+          return {
+            id,
+            patch: getNodePatch(node),
+          };
+        })
+        .filter(Boolean) as Array<{
+        id: string;
+        patch: Partial<EditorElement>;
+      }>;
+
+      if (!updates.length) {
         return;
       }
 
-      commitNodeTransform(selectedElementId, selectedNode);
-      setTransientElement(selectedElementId, null);
-    }, [commitNodeTransform, selectedElementId, setTransientElement]);
+      selectedElementIds.forEach((id) => setTransientElement(id, null));
+      onUpdateElements(updates);
+    }, [getNodePatch, onUpdateElements, selectedElementIds, setTransientElement]);
 
     const handleTransform = useCallback(() => {
-      const selectedNode = selectedElementId
-        ? nodeMapRef.current[selectedElementId]
-        : null;
+      if (selectedElementIds.length !== 1 || !selectedElementId) {
+        return;
+      }
 
-      if (!selectedElementId || !selectedNode) {
+      const selectedNode = nodeMapRef.current[selectedElementId];
+
+      if (!selectedNode) {
         return;
       }
 
       setTransientElement(selectedElementId, getNodePatch(selectedNode));
-    }, [getNodePatch, selectedElementId, setTransientElement]);
+    }, [getNodePatch, selectedElementId, selectedElementIds.length, setTransientElement]);
 
     return (
       <div ref={wrapperRef} className="h-full min-h-[320px] w-full rounded-[2rem]">
@@ -691,39 +874,46 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                     width={fitArtboard.width}
                     height={fitArtboard.height}
                   />
-                  {designDocument.elements.map((element) => (
+                  {renderedElements.map((element) => (
                     <SvgElement
                       key={element.id}
                       element={element}
-                      isSelected={selectedElementId === element.id}
+                      isSelected={selectedElementSet.has(element.id)}
                       artboardWidth={fitArtboard.width}
                       artboardHeight={fitArtboard.height}
                       registerNode={(id, node) => {
                         nodeMapRef.current[id] = node;
                       }}
-                      onSelect={onSelectElement}
+                      onSelect={handleElementSelect}
+                      onPointerDown={handleElementPointerDown}
+                      onPointerUp={handleElementPointerUp}
+                      onHoverChange={handleHoverChange}
+                      onDragStart={handleDragStart}
                       onDragMove={handleDragMove}
                       onDragEnd={handleDragEnd}
+                      allowDrag={selectedElementSet.has(element.id)}
                     />
                   ))}
                 </Group>
 
-                {selectedElementId ? (
+                {selectedElementIds.length ? (
                   <TransformHandles
-                    selectedElementId={selectedElementId}
+                    selectedElementIds={selectedElementIds}
                     nodeMapRef={nodeMapRef}
                     artboardWidth={fitArtboard.width}
                     artboardHeight={fitArtboard.height}
+                    showRotateHandle={!hasFinePointer || isSelectionHovered}
                     onTransform={handleTransform}
                     onTransformEnd={handleTransformEnd}
                   />
                 ) : null}
 
-                {selectedElement &&
-                isElementOutOfBounds(
-                  selectedElement,
-                  designDocument.shape,
-                  aspectRatio
+                {selectedElements.some((element) =>
+                  isElementOutOfBounds(
+                    element,
+                    designDocument.shape,
+                    aspectRatio
+                  )
                 ) ? (
                   <Rect
                     x={-fitArtboard.width / 2}

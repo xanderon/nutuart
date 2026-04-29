@@ -18,11 +18,20 @@ import {
 type EditorCanvasProps = {
   document: EditorDocument;
   selectedElementId: string | null;
+  selectedElementIds: string[];
   viewport: EditorViewport;
   onViewportChange: (viewport: EditorViewport) => void;
   onCanvasSizeChange?: (size: { width: number; height: number }) => void;
   onSelectElement: (id: string | null) => void;
+  onAddElementToSelection: (id: string) => void;
+  onClearSelection: () => void;
   onUpdateElement: (id: string, patch: Partial<EditorElement>) => void;
+  onUpdateElements: (
+    updates: Array<{
+      id: string;
+      patch: Partial<EditorElement>;
+    }>
+  ) => void;
 };
 
 type GestureFeedback = {
@@ -35,11 +44,15 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
     {
       document,
       selectedElementId,
+      selectedElementIds,
       viewport,
       onViewportChange,
       onCanvasSizeChange,
       onSelectElement,
+      onAddElementToSelection,
+      onClearSelection,
       onUpdateElement,
+      onUpdateElements,
     },
     ref
   ) {
@@ -187,10 +200,14 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
             ref={ref}
             document={document}
             selectedElementId={selectedElementId}
+            selectedElementIds={selectedElementIds}
             viewport={viewport}
             onViewportChange={onViewportChange}
             onSelectElement={onSelectElement}
+            onAddElementToSelection={onAddElementToSelection}
+            onClearSelection={onClearSelection}
             onUpdateElement={onUpdateElement}
+            onUpdateElements={onUpdateElements}
             onViewportGesture={(label) =>
               setFeedback({
                 id: Date.now(),

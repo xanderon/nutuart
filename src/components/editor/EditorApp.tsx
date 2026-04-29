@@ -64,6 +64,7 @@ export function EditorApp() {
   const activePanel = useEditorStore((state) => state.activePanel);
   const document = useEditorStore((state) => state.document);
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
+  const selectedElementIds = useEditorStore((state) => state.selectedElementIds);
   const viewport = useEditorStore((state) => state.viewport);
   const setActivePanel = useEditorStore((state) => state.setActivePanel);
   const setShape = useEditorStore((state) => state.setShape);
@@ -77,8 +78,11 @@ export function EditorApp() {
   const canRedo = useEditorStore((state) => state.future.length > 0);
   const loadDocument = useEditorStore((state) => state.loadDocument);
   const selectElement = useEditorStore((state) => state.selectElement);
+  const addElementToSelection = useEditorStore((state) => state.addElementToSelection);
+  const clearSelection = useEditorStore((state) => state.clearSelection);
   const addElement = useEditorStore((state) => state.addElement);
   const updateElement = useEditorStore((state) => state.updateElement);
+  const updateElements = useEditorStore((state) => state.updateElements);
   const deleteSelectedElement = useEditorStore((state) => state.deleteSelectedElement);
   const duplicateSelectedElement = useEditorStore(
     (state) => state.duplicateSelectedElement
@@ -91,6 +95,7 @@ export function EditorApp() {
   );
 
   const selectedElement = selectedStatus?.element ?? null;
+  const selectedCount = selectedElementIds.length;
   const artboardAspectRatio = useMemo(
     () => getAspectRatio(document.widthCm, document.heightCm),
     [document.heightCm, document.widthCm]
@@ -158,7 +163,7 @@ export function EditorApp() {
         scaleLabel={scaleLabel}
         canUndo={canUndo}
         canRedo={canRedo}
-        hasSelection={Boolean(selectedElementId)}
+        hasSelection={selectedCount > 0}
         onUndo={undo}
         onRedo={redo}
         onFit={resetViewport}
@@ -200,11 +205,15 @@ export function EditorApp() {
             ref={canvasRef}
             document={document}
             selectedElementId={selectedElementId}
+            selectedElementIds={selectedElementIds}
             viewport={viewport}
             onViewportChange={setViewport}
             onCanvasSizeChange={setCanvasSize}
             onSelectElement={selectElement}
+            onAddElementToSelection={addElementToSelection}
+            onClearSelection={clearSelection}
             onUpdateElement={updateElement}
+            onUpdateElements={updateElements}
           />
         </main>
 
@@ -213,7 +222,8 @@ export function EditorApp() {
             title="Element selectat"
           >
             <ElementControls
-              element={selectedElement}
+              element={selectedCount === 1 ? selectedElement : null}
+              selectedCount={selectedCount}
               shape={document.shape}
               aspectRatio={artboardAspectRatio}
               onRotate={(rotation) =>
@@ -258,7 +268,7 @@ export function EditorApp() {
 
       <BottomActionBar
         activePanel={activePanel}
-        hasSelection={Boolean(selectedElementId)}
+        hasSelection={selectedCount > 0}
         onChange={handlePanelChange}
       />
 
@@ -306,7 +316,8 @@ export function EditorApp() {
             {activePanel === "element" ? (
               <MobilePanel title="Edit">
                 <ElementControls
-                  element={selectedElement}
+                  element={selectedCount === 1 ? selectedElement : null}
+                  selectedCount={selectedCount}
                   shape={document.shape}
                   aspectRatio={artboardAspectRatio}
                   onRotate={(rotation) =>

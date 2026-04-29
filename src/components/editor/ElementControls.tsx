@@ -4,6 +4,7 @@ import type { EditorElement, EditorShape } from "@/lib/editor/editorTypes";
 
 type ElementControlsProps = {
   element: EditorElement | null;
+  selectedCount?: number;
   shape: EditorShape;
   aspectRatio: number;
   onRotate: (rotation: number) => void;
@@ -15,6 +16,7 @@ type ElementControlsProps = {
 
 export function ElementControls({
   element,
+  selectedCount = 0,
   shape,
   aspectRatio,
   onRotate,
@@ -23,6 +25,52 @@ export function ElementControls({
   onFlipX,
   onFlipY,
 }: ElementControlsProps) {
+  if (selectedCount > 1) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-[1.1rem] border border-[var(--editor-line)] bg-white/78 p-3">
+          <p className="text-sm font-semibold text-[var(--editor-ink)]">
+            {selectedCount} elemente selectate
+          </p>
+          <p className="mt-1 text-sm text-[var(--editor-muted)]">
+            Acțiunile de mai jos se aplică întregului grup.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={onDuplicate}
+            className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-4 py-2.5 text-sm font-medium text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
+          >
+            Duplică
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            className="rounded-[0.95rem] border border-[color:color-mix(in_srgb,var(--editor-danger)_35%,white)] bg-[color:color-mix(in_srgb,var(--editor-danger)_6%,white)] px-4 py-2.5 text-sm font-medium text-[var(--editor-danger)] transition"
+          >
+            Șterge
+          </button>
+          <button
+            type="button"
+            onClick={onFlipX}
+            className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-4 py-2.5 text-sm font-medium text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
+          >
+            Oglindire orizontală
+          </button>
+          <button
+            type="button"
+            onClick={onFlipY}
+            className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-4 py-2.5 text-sm font-medium text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
+          >
+            Oglindire verticală
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!element) {
     return (
       <div className="rounded-[1.1rem] border border-dashed border-[var(--editor-line)] bg-white/55 p-3 text-sm text-[var(--editor-muted)]">

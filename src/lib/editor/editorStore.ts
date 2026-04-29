@@ -11,6 +11,7 @@ import {
   ELEMENT_POSITION_MAX,
   ELEMENT_POSITION_MIN,
   getDefaultElementSize,
+  getElementsBoundingBox,
   orderElements,
   roundTo,
   sanitizeDimension,
@@ -32,6 +33,7 @@ type EditorStore = {
   past: EditorDocument[];
   future: EditorDocument[];
   selectedElementId: string | null;
+  selectedElementIds: string[];
   viewport: EditorViewport;
   canvasSize: Size;
   startEditing: () => void;
@@ -51,12 +53,22 @@ type EditorStore = {
   canUndo: () => boolean;
   canRedo: () => boolean;
   selectElement: (id: string | null) => void;
+  addElementToSelection: (id: string) => void;
+  clearSelection: () => void;
   addElement: (assetId: string) => void;
   updateElement: (
     id: string,
     next:
       | Partial<EditorElement>
       | ((current: EditorElement) => Partial<EditorElement> | EditorElement)
+  ) => void;
+  updateElements: (
+    updates: Array<{
+      id: string;
+      patch:
+        | Partial<EditorElement>
+        | ((current: EditorElement) => Partial<EditorElement> | EditorElement);
+    }>
   ) => void;
   deleteSelectedElement: () => void;
   duplicateSelectedElement: () => void;
@@ -86,6 +98,14 @@ function ensureSelection(
     : null;
 }
 
+function ensureSelectionIds(
+  document: EditorDocument,
+  selectedElementIds: string[]
+) {
+  const validIds = new Set(document.elements.map((element) => element.id));
+  return selectedElementIds.filter((id) => validIds.has(id));
+}
+
 const HISTORY_LIMIT = 80;
 
 export const useEditorStore = create<EditorStore>((set, get) => ({
@@ -95,6 +115,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   past: [],
   future: [],
   selectedElementId: null,
+  selectedElementIds: [],
   viewport: defaultViewport,
   canvasSize: { width: 0, height: 0 },
   startEditing: () =>
@@ -109,6 +130,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       past: [],
       future: [],
       selectedElementId: null,
+      selectedElementIds: [],
       viewport: defaultViewport,
     }),
   setActivePanel: (activePanel) => set({ activePanel }),
@@ -219,6 +241,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         past,
         future: [state.document, ...state.future].slice(0, HISTORY_LIMIT),
         selectedElementId: ensureSelection(previous, state.selectedElementId),
+        selectedElementIds: ensureSelectionIds(
+          previous,
+          state.selectedElementIds
+        ),
       };
     }),
   redo: () =>
@@ -234,6 +260,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         past: [...state.past, state.document].slice(-HISTORY_LIMIT),
         future,
         selectedElementId: ensureSelection(next, state.selectedElementId),
+        selectedElementIds: ensureSelectionIds(next, state.selectedElementIds),
       };
     }),
   loadDocument: (document) =>
@@ -250,11 +277,38 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         })),
       }),
       selectedElementId: null,
+      selectedElementIds: [],
       viewport: defaultViewport,
     }),
   canUndo: () => get().past.length > 0,
   canRedo: () => get().future.length > 0,
-  selectElement: (selectedElementId) => set({ selectedElementId }),
+  selectElement: (selectedElementId) =>
+    set({
+      selectedElementId,
+      selectedElementIds: selectedElementId ? [selectedElementId] : [],
+    }),
+  addElementToSelection: (id) =>
+    set((state) => {
+      if (!state.document.elements.some((element) => element.id === id)) {
+        return state;
+      }
+
+      if (state.selectedElementIds.includes(id)) {
+        return {
+          selectedElementId: id,
+        };
+      }
+
+      return {
+        selectedElementId: id,
+        selectedElementIds: [...state.selectedElementIds, id],
+      };
+    }),
+  clearSelection: () =>
+    set({
+      selectedElementId: null,
+      selectedElementIds: [],
+    }),
   addElement: (assetId) => {
     const asset = editorAssetMap[assetId];
 
@@ -291,6 +345,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       past: [...state.past, state.document].slice(-HISTORY_LIMIT),
       future: [],
       selectedElementId: nextElement.id,
+      selectedElementIds: [nextElement.id],
       activePanel: "element",
     });
   },
@@ -329,62 +384,147 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         future: [],
       };
     }),
-  deleteSelectedElement: () => {
-    const { document, selectedElementId } = get();
+  updateElements: (updates) =>
+    set((state) => {
+      if (!updates.length) {
+        return state;
+      }
 
-    if (!selectedElementId) {
+      const updatesById = new Map(updates.map((update) => [update.id, update.patch]));
+      const nextDocument = patchDocument(state.document, {
+        elements: state.document.elements.map((element) => {
+          const next = updatesById.get(element.id);
+
+          if (!next) {
+            return element;
+          }
+
+          const patch = typeof next === "function" ? next(element) : next;
+          const merged = {
+            ...element,
+            ...patch,
+          };
+
+          return {
+            ...merged,
+            x: roundTo(
+              clamp(merged.x, ELEMENT_POSITION_MIN, ELEMENT_POSITION_MAX)
+            ),
+            y: roundTo(
+              clamp(merged.y, ELEMENT_POSITION_MIN, ELEMENT_POSITION_MAX)
+            ),
+            width: roundTo(clamp(merged.width, 0.04, 1)),
+            height: roundTo(clamp(merged.height, 0.04, 1)),
+            rotation: roundTo(merged.rotation, 2),
+          };
+        }),
+      });
+
+      return {
+        document: nextDocument,
+        past: [...state.past, state.document].slice(-HISTORY_LIMIT),
+        future: [],
+      };
+    }),
+  deleteSelectedElement: () => {
+    const { document, selectedElementIds, selectedElementId } = get();
+    const idsToDelete = selectedElementIds.length
+      ? selectedElementIds
+      : selectedElementId
+        ? [selectedElementId]
+        : [];
+
+    if (!idsToDelete.length) {
       return;
     }
 
     set({
       document: patchDocument(document, {
-        elements: document.elements.filter((item) => item.id !== selectedElementId),
+        elements: document.elements.filter((item) => !idsToDelete.includes(item.id)),
       }),
       past: [...get().past, document].slice(-HISTORY_LIMIT),
       future: [],
       selectedElementId: null,
+      selectedElementIds: [],
     });
   },
   duplicateSelectedElement: () => {
-    const { document, selectedElementId } = get();
+    const { document, selectedElementIds, selectedElementId } = get();
+    const idsToDuplicate = selectedElementIds.length
+      ? selectedElementIds
+      : selectedElementId
+        ? [selectedElementId]
+        : [];
 
-    if (!selectedElementId) {
+    if (!idsToDuplicate.length) {
       return;
     }
 
-    const selected = document.elements.find((item) => item.id === selectedElementId);
+    const selected = document.elements.filter((item) =>
+      idsToDuplicate.includes(item.id)
+    );
 
-    if (!selected) {
+    if (!selected.length) {
       return;
     }
 
-    const clone = duplicateElement(selected);
+    const clones = selected
+      .sort((left, right) => left.zIndex - right.zIndex)
+      .map((element) => duplicateElement(element));
+    const nextElements = orderElements(
+      [...document.elements, ...clones].map((element, index) => ({
+        ...element,
+        zIndex: index + 1,
+      }))
+    );
 
     set({
       document: patchDocument(document, {
-        elements: orderElements(
-          [...document.elements, clone].map((element, index) => ({
-            ...element,
-            zIndex: index + 1,
-          }))
-        ),
+        elements: nextElements,
       }),
       past: [...get().past, document].slice(-HISTORY_LIMIT),
       future: [],
-      selectedElementId: clone.id,
+      selectedElementId: clones.at(-1)?.id ?? null,
+      selectedElementIds: clones.map((clone) => clone.id),
     });
   },
   flipSelectedElement: (axis) => {
-    const { selectedElementId } = get();
+    const { selectedElementIds, selectedElementId, document } = get();
+    const idsToFlip = selectedElementIds.length
+      ? selectedElementIds
+      : selectedElementId
+        ? [selectedElementId]
+        : [];
 
-    if (!selectedElementId) {
+    if (!idsToFlip.length) {
       return;
     }
 
-    get().updateElement(selectedElementId, (element) =>
-      axis === "x"
-        ? { flipX: !element.flipX }
-        : { flipY: !element.flipY }
+    const selected = document.elements.filter((element) =>
+      idsToFlip.includes(element.id)
+    );
+
+    const selectionBounds =
+      idsToFlip.length > 1 ? getElementsBoundingBox(selected) : null;
+
+    get().updateElements(
+      idsToFlip.map((id) => ({
+        id,
+        patch: (element) =>
+          axis === "x"
+            ? {
+                x: selectionBounds
+                  ? roundTo(selectionBounds.centerX - (element.x - selectionBounds.centerX))
+                  : element.x,
+                flipX: !element.flipX,
+              }
+            : {
+                y: selectionBounds
+                  ? roundTo(selectionBounds.centerY - (element.y - selectionBounds.centerY))
+                  : element.y,
+                flipY: !element.flipY,
+              },
+      }))
     );
   },
 }));

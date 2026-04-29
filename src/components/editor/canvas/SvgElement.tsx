@@ -13,6 +13,10 @@ type SvgElementProps = {
   artboardWidth: number;
   artboardHeight: number;
   onSelect: (id: string) => void;
+  onPointerDown?: (id: string, event: Konva.KonvaEventObject<PointerEvent>) => void;
+  onPointerUp?: (id: string) => void;
+  onHoverChange?: (id: string, isHovering: boolean) => void;
+  onDragStart?: (id: string, x: number, y: number) => void;
   onDragMove?: (id: string, x: number, y: number) => void;
   onDragEnd: (id: string, x: number, y: number) => void;
   registerNode?: (id: string, node: Konva.Image | null) => void;
@@ -27,6 +31,10 @@ function SvgElementComponent({
   artboardWidth,
   artboardHeight,
   onSelect,
+  onPointerDown,
+  onPointerUp,
+  onHoverChange,
+  onDragStart,
   onDragMove,
   onDragEnd,
   registerNode,
@@ -65,6 +73,23 @@ function SvgElementComponent({
       perfectDrawEnabled={false}
       onClick={interactive ? () => onSelect(element.id) : undefined}
       onTap={interactive ? () => onSelect(element.id) : undefined}
+      onPointerDown={
+        interactive && onPointerDown
+          ? (event) => onPointerDown(element.id, event)
+          : undefined
+      }
+      onPointerUp={interactive ? () => onPointerUp?.(element.id) : undefined}
+      onPointerLeave={interactive ? () => {
+        onPointerUp?.(element.id);
+        onHoverChange?.(element.id, false);
+      } : undefined}
+      onMouseEnter={interactive ? () => onHoverChange?.(element.id, true) : undefined}
+      onMouseLeave={interactive ? () => onHoverChange?.(element.id, false) : undefined}
+      onDragStart={
+        interactive && onDragStart
+          ? (event) => onDragStart(element.id, event.target.x(), event.target.y())
+          : undefined
+      }
       onDragMove={
         interactive && onDragMove
           ? (event) => onDragMove(element.id, event.target.x(), event.target.y())
