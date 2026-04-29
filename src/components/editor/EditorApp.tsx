@@ -167,7 +167,7 @@ export function EditorApp() {
         onFlipY={() => flipSelectedElement("y")}
       />
 
-      <div className="mx-auto flex w-full max-w-[1460px] flex-1 gap-3 px-0 py-0 sm:px-4 sm:py-4">
+      <div className="flex w-full flex-1 gap-3 px-0 py-0 sm:px-3 sm:py-3">
         <aside className="hidden w-[300px] flex-col gap-4 lg:flex">
           <PanelCard
             title="Bibliotecă SVG"
