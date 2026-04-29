@@ -656,8 +656,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                 scaleX={viewport.scale}
                 scaleY={viewport.scale}
               >
-                <Group ref={dragOverlayGroupRef} />
-
                 {renderedElements
                   .filter(
                     (element) =>
@@ -720,6 +718,8 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                     ))}
                   </Group>
                 </Group>
+
+                <Group ref={dragOverlayGroupRef} />
 
                 {selectedElementId ? (
                   <TransformHandles
