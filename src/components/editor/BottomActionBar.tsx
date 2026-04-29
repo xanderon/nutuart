@@ -1,5 +1,10 @@
 import type { ComponentType } from "react";
-import { Download, Shapes, SlidersHorizontal, Sticker } from "lucide-react";
+import {
+  Download,
+  File,
+  Flower2,
+  SlidersHorizontal,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { EditorPanel } from "@/lib/editor/editorTypes";
 
@@ -8,8 +13,8 @@ const actions: Array<{
   label: string;
   icon: ComponentType<{ className?: string; strokeWidth?: number }>;
 }> = [
-  { id: "library", label: "SVG", icon: Sticker },
-  { id: "shapeSize", label: "Pagină", icon: Shapes },
+  { id: "library", label: "Desene", icon: Flower2 },
+  { id: "shapeSize", label: "Pagină", icon: File },
   { id: "element", label: "Edit", icon: SlidersHorizontal },
   { id: "export", label: "Save", icon: Download },
 ];
@@ -38,17 +43,18 @@ export function BottomActionBar({
               key={action.id}
               type="button"
               disabled={disabled}
+              aria-label={action.label}
+              title={action.label}
               onClick={() => onChange(isActive ? null : action.id)}
               className={cn(
-                "flex h-10 items-center justify-center gap-1 rounded-[0.8rem] px-1 text-center text-[9px] font-semibold uppercase tracking-[0.08em] transition",
+                "flex h-10 items-center justify-center rounded-[0.8rem] px-1 transition",
                 isActive
                   ? "bg-[var(--editor-ink)] text-white"
                   : "bg-white/72 text-[var(--editor-muted)]",
                 disabled && "opacity-45"
               )}
             >
-              <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={2.2} />
-              {action.label}
+              <Icon className="h-4 w-4 shrink-0" strokeWidth={2.1} />
             </button>
           );
         })}

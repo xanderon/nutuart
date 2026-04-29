@@ -47,7 +47,7 @@ function ToolbarIconButton({
       aria-label={label}
       title={label}
       className={[
-        "flex h-9 w-9 items-center justify-center rounded-full border bg-white/78 transition disabled:opacity-35",
+        "flex h-8 w-8 items-center justify-center rounded-full border bg-white/78 transition disabled:opacity-35 sm:h-9 sm:w-9",
         tone === "danger"
           ? "border-[color:color-mix(in_srgb,var(--editor-danger)_28%,white)] text-[var(--editor-danger)]"
           : "border-[var(--editor-line)] text-[var(--editor-ink)]",
@@ -74,7 +74,7 @@ export function EditorToolbar({
   const router = useRouter();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-black/8 bg-[rgba(244,241,234,0.94)] px-2 py-1.5 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-black/8 bg-[rgba(244,241,234,0.94)] px-2 py-1 backdrop-blur-xl sm:py-1.5">
       <div className="mx-auto flex max-w-[1460px] items-center justify-between gap-2">
         <button
           type="button"
@@ -86,10 +86,12 @@ export function EditorToolbar({
 
             router.push("/");
           }}
-          className="flex h-9 items-center gap-2 rounded-full border border-[var(--editor-line)] bg-white/78 px-3 text-sm font-medium text-[var(--editor-ink)]"
+          aria-label="Înapoi"
+          title="Înapoi"
+          className="flex h-8 items-center gap-1.5 rounded-full border border-[var(--editor-line)] bg-white/78 px-2.5 text-sm font-medium text-[var(--editor-ink)] sm:h-9 sm:gap-2 sm:px-3"
         >
           <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
-          Înapoi
+          <span className="hidden sm:inline">Înapoi</span>
         </button>
 
         <div className="flex items-center gap-1">
@@ -133,10 +135,12 @@ export function EditorToolbar({
             onClick={onFit}
             aria-label="Vezi pagina complet"
             title="Vezi pagina complet"
-            className="flex h-9 items-center gap-1 rounded-full bg-[var(--editor-ink)] px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--editor-ink)] text-white sm:h-9 sm:w-auto sm:gap-1 sm:px-3"
           >
             <ScanSearch className="h-4 w-4" strokeWidth={2.2} />
-            Pagină
+            <span className="hidden text-[11px] font-semibold uppercase tracking-[0.12em] sm:inline">
+              Pagină
+            </span>
           </button>
           <div className="hidden rounded-full bg-black/5 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--editor-muted)] sm:block">
             {scaleLabel}

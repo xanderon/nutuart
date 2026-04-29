@@ -206,23 +206,29 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
               className="absolute"
               style={{
                 left: artboardFrame.left + artboardFrame.width / 2,
-                top: artboardFrame.top + 6,
+                top: artboardFrame.top + 5,
               }}
             >
-              <div className="absolute -translate-x-1/2 rounded-full border border-black/8 bg-[rgba(253,252,248,0.92)] px-1.5 py-0.5 text-[8px] font-semibold text-[var(--editor-ink)] shadow-sm">
-                {document.widthCm} cm
+              <div className="absolute -translate-x-1/2 rounded-full border border-black/6 bg-[rgba(253,252,248,0.76)] px-1.5 py-0.5 text-[7px] font-medium leading-none whitespace-nowrap text-[rgba(24,23,18,0.7)] shadow-[0_6px_14px_-12px_rgba(0,0,0,0.4)] sm:text-[8px]">
+                <span className="inline-flex items-center gap-0.5 whitespace-nowrap">
+                  <span>{document.widthCm}</span>
+                  <span>cm</span>
+                </span>
               </div>
             </div>
 
             <div
               className="absolute"
               style={{
-                left: artboardFrame.left + 7,
+                left: artboardFrame.left + 6,
                 top: artboardFrame.top + artboardFrame.height / 2,
               }}
             >
-              <div className="absolute -translate-x-1/2 -translate-y-1/2 -rotate-90 rounded-full border border-black/8 bg-[rgba(253,252,248,0.92)] px-1.5 py-0.5 text-[8px] font-semibold whitespace-nowrap text-[var(--editor-ink)] shadow-sm">
-                {document.heightCm} cm
+              <div className="absolute -translate-x-1/2 -translate-y-1/2 -rotate-90 rounded-full border border-black/6 bg-[rgba(253,252,248,0.76)] px-1.5 py-0.5 text-[7px] font-medium leading-none whitespace-nowrap text-[rgba(24,23,18,0.7)] shadow-[0_6px_14px_-12px_rgba(0,0,0,0.4)] sm:text-[8px]">
+                <span className="inline-flex items-center gap-0.5 whitespace-nowrap">
+                  <span>{document.heightCm}</span>
+                  <span>cm</span>
+                </span>
               </div>
             </div>
           </div>

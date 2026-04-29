@@ -171,7 +171,7 @@ export function EditorApp() {
       <div className="flex w-full min-h-0 flex-1 gap-2 overflow-hidden px-0 py-0 sm:px-3 sm:py-3">
         <aside className="hidden w-[300px] min-h-0 flex-col gap-4 overflow-y-auto pb-2 lg:flex">
           <PanelCard
-            title="Bibliotecă SVG"
+            title="Desene"
           >
               <SvgLibrary
               activeCategory={activeAssetCategory}
@@ -277,7 +277,7 @@ export function EditorApp() {
           >
             <div className="max-h-[46dvh] overflow-y-auto border-t border-black/8 bg-[rgba(244,241,234,0.98)] px-3 py-2 shadow-[0_-18px_40px_-30px_rgba(0,0,0,0.28)] backdrop-blur-xl">
             {activePanel === "library" ? (
-              <MobilePanel title="SVG">
+              <MobilePanel title="Desene">
                 <SvgLibrary
                   activeCategory={activeAssetCategory}
                   onCategoryChange={setActiveAssetCategory}
