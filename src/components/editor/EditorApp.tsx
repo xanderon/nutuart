@@ -68,6 +68,7 @@ export function EditorApp() {
   const setActivePanel = useEditorStore((state) => state.setActivePanel);
   const setShape = useEditorStore((state) => state.setShape);
   const setDimensions = useEditorStore((state) => state.setDimensions);
+  const setCanvasSize = useEditorStore((state) => state.setCanvasSize);
   const setViewport = useEditorStore((state) => state.setViewport);
   const resetViewport = useEditorStore((state) => state.resetViewport);
   const undo = useEditorStore((state) => state.undo);
@@ -201,6 +202,7 @@ export function EditorApp() {
             selectedElementId={selectedElementId}
             viewport={viewport}
             onViewportChange={setViewport}
+            onCanvasSizeChange={setCanvasSize}
             onSelectElement={selectElement}
             onUpdateElement={updateElement}
           />

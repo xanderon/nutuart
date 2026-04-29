@@ -16,6 +16,7 @@ type EditorCanvasProps = {
   selectedElementId: string | null;
   viewport: EditorViewport;
   onViewportChange: (viewport: EditorViewport) => void;
+  onCanvasSizeChange?: (size: { width: number; height: number }) => void;
   onSelectElement: (id: string | null) => void;
   onUpdateElement: (id: string, patch: Partial<EditorElement>) => void;
 };
@@ -32,6 +33,7 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
       selectedElementId,
       viewport,
       onViewportChange,
+      onCanvasSizeChange,
       onSelectElement,
       onUpdateElement,
     },
@@ -77,6 +79,10 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
       resizeObserver.observe(element);
       return () => resizeObserver.disconnect();
     }, []);
+
+    useEffect(() => {
+      onCanvasSizeChange?.(containerSize);
+    }, [containerSize, onCanvasSizeChange]);
 
     const aspectRatio = getAspectRatio(document.widthCm, document.heightCm);
     const padding =

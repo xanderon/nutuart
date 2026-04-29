@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { defaultEditorDocument, defaultViewport } from "./editorDefaults";
 import { editorAssetMap } from "./editorAssets";
+import { getFitArtboardSize } from "./viewportUtils";
 import {
   clamp,
   createEditorId,
@@ -20,6 +21,7 @@ import type {
   EditorPanel,
   EditorShape,
   EditorViewport,
+  Size,
   ProductType,
 } from "./editorTypes";
 
@@ -31,6 +33,7 @@ type EditorStore = {
   future: EditorDocument[];
   selectedElementId: string | null;
   viewport: EditorViewport;
+  canvasSize: Size;
   startEditing: () => void;
   goToSetup: () => void;
   setActivePanel: (panel: EditorPanel) => void;
@@ -38,6 +41,7 @@ type EditorStore = {
   setProductType: (productType: ProductType) => void;
   setShape: (shape: EditorShape) => void;
   setDimensions: (widthCm: number, heightCm: number) => void;
+  setCanvasSize: (size: Size) => void;
   setViewport: (viewport: EditorViewport) => void;
   resetViewport: () => void;
   centerViewport: () => void;
@@ -92,6 +96,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   future: [],
   selectedElementId: null,
   viewport: defaultViewport,
+  canvasSize: { width: 0, height: 0 },
   startEditing: () =>
     set({
       isStarted: true,
@@ -145,21 +150,39 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       const previousHeightCm = state.document.heightCm;
       const nextWidthCm = sanitizeDimension(widthCm);
       const nextHeightCm = sanitizeDimension(heightCm);
+      const safeCanvas = {
+        width: Math.max(state.canvasSize.width, 320),
+        height: Math.max(state.canvasSize.height, 320),
+      };
+      const padding =
+        safeCanvas.width >= 1024 ? 42 : safeCanvas.width >= 768 ? 32 : 20;
+      const previousFit = getFitArtboardSize(
+        safeCanvas,
+        previousWidthCm / previousHeightCm,
+        padding
+      );
+      const nextFit = getFitArtboardSize(
+        safeCanvas,
+        nextWidthCm / nextHeightCm,
+        padding
+      );
       const nextDocument = patchDocument(state.document, {
         widthCm: nextWidthCm,
         heightCm: nextHeightCm,
         elements: state.document.elements.map((element) => {
-          const physicalXcm = element.x * previousWidthCm;
-          const physicalYcm = element.y * previousHeightCm;
-          const physicalWidthCm = element.width * previousWidthCm;
-          const physicalHeightCm = element.height * previousHeightCm;
+          const previousPixelX = element.x * previousFit.width;
+          const previousPixelY = element.y * previousFit.height;
+          const previousPixelWidth = element.width * previousFit.width;
+          const previousPixelHeight = element.height * previousFit.height;
 
           return {
             ...element,
-            x: roundTo(physicalXcm / nextWidthCm),
-            y: roundTo(physicalYcm / nextHeightCm),
-            width: roundTo(Math.max(0.04, physicalWidthCm / nextWidthCm)),
-            height: roundTo(Math.max(0.04, physicalHeightCm / nextHeightCm)),
+            x: roundTo(previousPixelX / nextFit.width),
+            y: roundTo(previousPixelY / nextFit.height),
+            width: roundTo(Math.max(0.04, previousPixelWidth / nextFit.width)),
+            height: roundTo(
+              Math.max(0.04, previousPixelHeight / nextFit.height)
+            ),
           };
         }),
       });
@@ -170,6 +193,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         future: [],
       };
     }),
+  setCanvasSize: (canvasSize) => set({ canvasSize }),
   setViewport: (viewport) => set({ viewport }),
   resetViewport: () => set({ viewport: defaultViewport }),
   centerViewport: () =>
