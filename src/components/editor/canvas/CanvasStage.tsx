@@ -625,6 +625,10 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     const dragPreviewElement = activeDragState
       ? renderedElements.find((element) => element.id === activeDragState.elementId) ?? null
       : null;
+    const showArtboardDragPreview =
+      activeDragState?.source === "artboard" &&
+      dragPreviewElement &&
+      isElementOutOfBounds(dragPreviewElement, designDocument.shape);
 
     return (
       <div ref={wrapperRef} className="h-full min-h-[320px] w-full rounded-[2rem]">
@@ -678,9 +682,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                       onDragEnd={handleDragEnd}
                       interactive
                       allowDrag={selectedElementId === element.id}
-                      opacity={
-                        activeDragState?.elementId === element.id ? 0.001 : 0.62
-                      }
+                      opacity={0.62}
                     />
                   ))}
 
@@ -722,15 +724,12 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                         onDragStart={handleDragStart("artboard")}
                         onDragMove={handleDragMove}
                         onDragEnd={handleDragEnd}
-                        opacity={
-                          activeDragState?.elementId === element.id ? 0.001 : 1
-                        }
                       />
                     ))}
                   </Group>
                 </Group>
 
-                {dragPreviewElement ? (
+                {showArtboardDragPreview ? (
                   <SvgElement
                     key={`drag-preview-${dragPreviewElement.id}`}
                     element={dragPreviewElement}
@@ -740,14 +739,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                     onSelect={onSelectElement}
                     onDragEnd={() => {}}
                     interactive={false}
-                    opacity={
-                      isElementOutOfBounds(
-                        dragPreviewElement,
-                        designDocument.shape
-                      )
-                        ? 0.62
-                        : 1
-                    }
+                    opacity={0.62}
                   />
                 ) : null}
 
