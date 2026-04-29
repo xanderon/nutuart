@@ -120,7 +120,6 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
         ref={containerRef}
         className="relative flex min-h-[58dvh] flex-1 overflow-hidden bg-[linear-gradient(180deg,rgba(255,255,255,0.38),rgba(255,255,255,0.08))] sm:min-h-[50dvh] lg:min-h-0"
       >
-        <div className="editor-grid-bg absolute inset-0 opacity-70" />
         <div className="relative z-10 h-full w-full">
           <CanvasStage
             ref={ref}

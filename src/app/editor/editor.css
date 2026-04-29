@@ -12,9 +12,13 @@
   --editor-danger: #b04635;
   min-height: 100dvh;
   background:
+    linear-gradient(rgba(24, 23, 18, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 23, 18, 0.045) 1px, transparent 1px),
     radial-gradient(circle at top left, rgba(13, 107, 114, 0.14), transparent 34%),
     radial-gradient(circle at bottom right, rgba(148, 109, 48, 0.12), transparent 30%),
     linear-gradient(180deg, #f4f1ea 0%, var(--editor-bg) 100%);
+  background-size: 22px 22px, 22px 22px, auto, auto, auto;
+  background-position: center center, center center, center center, center center, center center;
   color: var(--editor-ink);
 }
 
