@@ -170,15 +170,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         widthCm: nextWidthCm,
         heightCm: nextHeightCm,
         elements: state.document.elements.map((element) => {
-          const previousPixelX = element.x * previousFit.width;
-          const previousPixelY = element.y * previousFit.height;
+          const previousCenterX =
+            -previousFit.width / 2 + element.x * previousFit.width;
+          const previousCenterY =
+            -previousFit.height / 2 + element.y * previousFit.height;
           const previousPixelWidth = element.width * previousFit.width;
           const previousPixelHeight = element.height * previousFit.height;
 
           return {
             ...element,
-            x: roundTo(previousPixelX / nextFit.width),
-            y: roundTo(previousPixelY / nextFit.height),
+            x: roundTo((previousCenterX + nextFit.width / 2) / nextFit.width),
+            y: roundTo((previousCenterY + nextFit.height / 2) / nextFit.height),
             width: roundTo(Math.max(0.04, previousPixelWidth / nextFit.width)),
             height: roundTo(
               Math.max(0.04, previousPixelHeight / nextFit.height)
