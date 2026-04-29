@@ -19,9 +19,9 @@ function ShapePreview({ shape }: { shape: EditorShape }) {
   }
 
   return (
-    <div className="relative h-8 w-11 overflow-hidden">
-      <div className="absolute inset-x-0 bottom-0 h-5 border border-black/18 border-t-0 bg-white/90" />
-      <div className="absolute inset-x-0 top-0 h-5 rounded-t-[999px] border border-black/18 border-b-0 bg-white/90" />
+    <div className="relative h-8 w-11 overflow-hidden rounded-b-[0.35rem]">
+      <div className="absolute inset-x-0 bottom-0 h-[58%] border border-black/18 border-t-0 bg-white/90" />
+      <div className="absolute inset-x-0 top-0 h-[58%] rounded-t-[999px] border border-black/18 border-b-0 bg-white/90" />
     </div>
   );
 }

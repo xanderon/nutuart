@@ -5,6 +5,7 @@ import type { EditorElement, EditorShape } from "@/lib/editor/editorTypes";
 type ElementControlsProps = {
   element: EditorElement | null;
   shape: EditorShape;
+  aspectRatio: number;
   onRotate: (rotation: number) => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -15,6 +16,7 @@ type ElementControlsProps = {
 export function ElementControls({
   element,
   shape,
+  aspectRatio,
   onRotate,
   onDuplicate,
   onDelete,
@@ -30,7 +32,7 @@ export function ElementControls({
   }
 
   const asset = editorAssetMap[element.assetId];
-  const outOfBounds = isElementOutOfBounds(element, shape);
+  const outOfBounds = isElementOutOfBounds(element, shape, aspectRatio);
 
   return (
     <div className="space-y-4">

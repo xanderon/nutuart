@@ -104,88 +104,27 @@ function getElementBoundaryPoints(element: EditorElement): Point[] {
   }));
 }
 
-function pointInPolygon(point: Point, polygon: Point[]) {
-  let inside = false;
+function getArchHeightRatio(aspectRatio = 1) {
+  return Math.min(0.42, Math.max(0.24, aspectRatio / 2));
+}
 
-  for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index++) {
-    const currentPoint = polygon[index];
-    const previousPoint = polygon[previous];
+function pointInArch(point: Point, aspectRatio = 1) {
+  const archHeight = getArchHeightRatio(aspectRatio);
 
-    if (!currentPoint || !previousPoint) {
-      continue;
-    }
-
-    const intersects =
-      currentPoint.y > point.y !== previousPoint.y > point.y &&
-      point.x <
-        ((previousPoint.x - currentPoint.x) * (point.y - currentPoint.y)) /
-          (previousPoint.y - currentPoint.y) +
-          currentPoint.x;
-
-    if (intersects) {
-      inside = !inside;
-    }
+  if (point.x < 0 || point.x > 1 || point.y < 0 || point.y > 1) {
+    return false;
   }
 
-  return inside;
+  if (point.y >= archHeight) {
+    return true;
+  }
+
+  const normalizedX = (point.x - 0.5) / 0.5;
+  const normalizedY = (point.y - archHeight) / archHeight;
+  return normalizedX ** 2 + normalizedY ** 2 <= 1;
 }
 
-function cubicBezierPoint(
-  start: Point,
-  cp1: Point,
-  cp2: Point,
-  end: Point,
-  t: number
-) {
-  const oneMinusT = 1 - t;
-
-  return {
-    x:
-      oneMinusT ** 3 * start.x +
-      3 * oneMinusT ** 2 * t * cp1.x +
-      3 * oneMinusT * t ** 2 * cp2.x +
-      t ** 3 * end.x,
-    y:
-      oneMinusT ** 3 * start.y +
-      3 * oneMinusT ** 2 * t * cp1.y +
-      3 * oneMinusT * t ** 2 * cp2.y +
-      t ** 3 * end.y,
-  };
-}
-
-function pointInArch(point: Point) {
-  const archHeight = 0.42;
-  const shoulderY = archHeight;
-  const cpOffsetX = 0.18;
-  const cpTopY = -archHeight * 0.08;
-  const leftCurveStart = { x: 0, y: shoulderY };
-  const leftCurveCp1 = { x: 0, y: archHeight * 0.28 };
-  const leftCurveCp2 = { x: cpOffsetX, y: cpTopY };
-  const topCenter = { x: 0.5, y: 0 };
-  const rightCurveCp1 = { x: 1 - cpOffsetX, y: cpTopY };
-  const rightCurveCp2 = { x: 1, y: archHeight * 0.28 };
-  const rightCurveEnd = { x: 1, y: shoulderY };
-  const curveSamples = Array.from({ length: 13 }, (_, index) => index / 12);
-  const polygon: Point[] = [{ x: 0, y: 1 }, leftCurveStart];
-
-  curveSamples.slice(1).forEach((t) => {
-    polygon.push(
-      cubicBezierPoint(leftCurveStart, leftCurveCp1, leftCurveCp2, topCenter, t)
-    );
-  });
-
-  curveSamples.slice(1).forEach((t) => {
-    polygon.push(
-      cubicBezierPoint(topCenter, rightCurveCp1, rightCurveCp2, rightCurveEnd, t)
-    );
-  });
-
-  polygon.push({ x: 1, y: 1 });
-
-  return pointInPolygon(point, polygon);
-}
-
-function pointInShape(point: Point, shape: EditorShape) {
+function pointInShape(point: Point, shape: EditorShape, aspectRatio = 1) {
   if (shape === "rectangle") {
     return point.x >= 0 && point.x <= 1 && point.y >= 0 && point.y <= 1;
   }
@@ -196,15 +135,16 @@ function pointInShape(point: Point, shape: EditorShape) {
     return normalizedX ** 2 + normalizedY ** 2 <= 1;
   }
 
-  return pointInArch(point);
+  return pointInArch(point, aspectRatio);
 }
 
 export function isElementOutOfBounds(
   element: EditorElement,
-  shape: EditorShape = "rectangle"
+  shape: EditorShape = "rectangle",
+  aspectRatio = 1
 ) {
   return getElementBoundaryPoints(element).some(
-    (point) => !pointInShape(point, shape)
+    (point) => !pointInShape(point, shape, aspectRatio)
   );
 }
 
@@ -246,7 +186,11 @@ export function getSelectionStatus(
 
   return {
     element,
-    isOutOfBounds: isElementOutOfBounds(element, document.shape),
+    isOutOfBounds: isElementOutOfBounds(
+      element,
+      document.shape,
+      getAspectRatio(document.widthCm, document.heightCm)
+    ),
   };
 }
 
@@ -321,28 +265,19 @@ export function drawArtboardPath(
     return;
   }
 
-  const archHeight = Math.min(height * 0.42, width * 0.5);
+  const archHeight = height * getArchHeightRatio(width / height);
   const shoulderY = y + archHeight;
-  const cpOffsetX = width * 0.18;
-  const cpTopY = y - archHeight * 0.08;
 
   context.moveTo(x, y + height);
   context.lineTo(x, shoulderY);
-  context.bezierCurveTo(
-    x,
-    y + archHeight * 0.28,
-    x + cpOffsetX,
-    cpTopY,
+  context.ellipse(
     x + width / 2,
-    y
-  );
-  context.bezierCurveTo(
-    x + width - cpOffsetX,
-    cpTopY,
-    x + width,
-    y + archHeight * 0.28,
-    x + width,
-    shoulderY
+    shoulderY,
+    width / 2,
+    archHeight,
+    0,
+    Math.PI,
+    0
   );
   context.lineTo(x + width, y + height);
   context.closePath();

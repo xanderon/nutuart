@@ -9,7 +9,7 @@ import { SizeSelector } from "./SizeSelector";
 import { SvgLibrary } from "./SvgLibrary";
 import type { CanvasStageHandle } from "./canvas/CanvasStage";
 import { buildExportFilename, downloadDataUrl, downloadTextFile } from "@/lib/editor/exportDesign";
-import { getSelectionStatus } from "@/lib/editor/geometryUtils";
+import { getAspectRatio, getSelectionStatus } from "@/lib/editor/geometryUtils";
 import { serializeDesign, parseSerializedDesign } from "@/lib/editor/serializeDesign";
 import type { EditorPanel, SvgAssetCategory } from "@/lib/editor/editorTypes";
 import { useEditorStore } from "@/lib/editor/editorStore";
@@ -61,15 +61,11 @@ export function EditorApp() {
   const [activeAssetCategory, setActiveAssetCategory] =
     useState<SvgAssetCategory>("corners");
 
-  const isStarted = useEditorStore((state) => state.isStarted);
   const activePanel = useEditorStore((state) => state.activePanel);
   const document = useEditorStore((state) => state.document);
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const viewport = useEditorStore((state) => state.viewport);
-  const startEditing = useEditorStore((state) => state.startEditing);
-  const goToSetup = useEditorStore((state) => state.goToSetup);
   const setActivePanel = useEditorStore((state) => state.setActivePanel);
-  const setProjectName = useEditorStore((state) => state.setProjectName);
   const setShape = useEditorStore((state) => state.setShape);
   const setDimensions = useEditorStore((state) => state.setDimensions);
   const setViewport = useEditorStore((state) => state.setViewport);
@@ -94,6 +90,10 @@ export function EditorApp() {
   );
 
   const selectedElement = selectedStatus?.element ?? null;
+  const artboardAspectRatio = useMemo(
+    () => getAspectRatio(document.widthCm, document.heightCm),
+    [document.heightCm, document.widthCm]
+  );
   const scaleLabel = `${Math.round(viewport.scale * 100)}%`;
 
   const handleExportPng = () => {
@@ -142,82 +142,6 @@ export function EditorApp() {
     setDimensions(document.widthCm, value);
     resetViewport();
   };
-
-  const renderSetupScreen = () => (
-    <div className="mx-auto flex min-h-dvh w-full max-w-3xl items-center px-4 py-6 sm:px-6">
-      <section
-        className="editor-panel w-full rounded-[1.45rem] border border-white/70 p-4 shadow-[0_36px_80px_-50px_rgba(0,0,0,0.4)] sm:p-5"
-        data-editor-fade-in="true"
-      >
-        <div className="mb-4 flex items-end justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--editor-accent)]">
-              Editor
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-[var(--editor-ink)] sm:text-3xl">
-              Setează forma și mărimea
-            </h1>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleOpenJson}
-            className="rounded-full border border-[var(--editor-line)] bg-white/86 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--editor-ink)]"
-          >
-            JSON
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          <label className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--editor-muted)]">
-              Nume
-            </span>
-            <input
-              value={document.projectName}
-              onChange={(event) => setProjectName(event.target.value)}
-              className="h-11 w-full rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 text-base text-[var(--editor-ink)] outline-none transition focus:border-[var(--editor-accent)]"
-            />
-          </label>
-
-          <SizeSelector
-            shape={document.shape}
-            widthCm={document.widthCm}
-            heightCm={document.heightCm}
-            onShapeChange={handleShapeChange}
-            onWidthChange={handleWidthChange}
-            onHeightChange={handleHeightChange}
-            compact
-          />
-        </div>
-
-        <div className="mt-5">
-          <button
-            type="button"
-            onClick={startEditing}
-            className="w-full rounded-[1.15rem] bg-[var(--editor-ink)] px-5 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-white"
-          >
-            Intră în editor
-          </button>
-        </div>
-      </section>
-    </div>
-  );
-
-  if (!isStarted) {
-    return (
-      <>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="application/json,.json"
-          className="hidden"
-          onChange={handleLoadJsonFile}
-        />
-        {renderSetupScreen()}
-      </>
-    );
-  }
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -289,6 +213,7 @@ export function EditorApp() {
             <ElementControls
               element={selectedElement}
               shape={document.shape}
+              aspectRatio={artboardAspectRatio}
               onRotate={(rotation) =>
                 selectedElement && updateElement(selectedElement.id, { rotation })
               }
@@ -381,6 +306,7 @@ export function EditorApp() {
                 <ElementControls
                   element={selectedElement}
                   shape={document.shape}
+                  aspectRatio={artboardAspectRatio}
                   onRotate={(rotation) =>
                     selectedElement && updateElement(selectedElement.id, { rotation })
                   }
@@ -395,16 +321,6 @@ export function EditorApp() {
             {activePanel === "export" ? (
               <MobilePanel title="Save">
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleClosePanel();
-                      goToSetup();
-                    }}
-                    className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--editor-ink)]"
-                  >
-                    Start
-                  </button>
                   <button
                     type="button"
                     onClick={() => {
