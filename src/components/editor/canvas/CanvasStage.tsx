@@ -45,7 +45,6 @@ export type CanvasStageHandle = {
   zoomOut: () => void;
 };
 const SELECTION_HANDLE_PADDING = 24;
-type DragSource = "artboard" | "overflow";
 
 type CanvasStageProps = {
   document: EditorDocument;
@@ -78,10 +77,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     const [transientElements, setTransientElements] = useState<
       Record<string, Partial<EditorElement>>
     >({});
-    const [dragState, setDragState] = useState<{
-      elementId: string;
-      source: DragSource;
-    } | null>(null);
     const panStateRef = useRef<{ pointerId: number; startX: number; startY: number } | null>(
       null
     );
@@ -222,16 +217,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         onSelectElement(null);
       }
     }, [designDocument.elements, onSelectElement, selectedElementId]);
-
-    const handleDragStart = useCallback(
-      (source: DragSource) => (id: string) => {
-        setDragState({
-          elementId: id,
-          source,
-        });
-      },
-      []
-    );
 
     const isViewportTarget = (target: Konva.Node) =>
       target === target.getStage() ||
@@ -437,13 +422,11 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
 
         if (!targetIsStage || viewport.scale <= 1) {
         if (targetIsStage) {
-          setDragState(null);
           onSelectElement(null);
         }
         return;
       }
 
-      setDragState(null);
       onSelectElement(null);
       panStateRef.current = {
         pointerId: touch.identifier,
@@ -531,7 +514,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         return;
       }
 
-      setDragState(null);
       onSelectElement(null);
 
       if (viewport.scale <= 1) {
@@ -571,7 +553,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       );
 
       setTransientElement(id, null);
-      setDragState(null);
       onUpdateElement(id, normalized);
     };
 
@@ -606,12 +587,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       x: containerSize.width / 2 + viewport.offsetX,
       y: containerSize.height / 2 + viewport.offsetY,
     };
-    const activeDragState =
-      dragState && dragState.elementId === selectedElementId ? dragState : null;
-    const draggingOverflowElementId =
-      activeDragState?.source === "overflow" ? activeDragState.elementId : null;
-    const draggingArtboardElementId =
-      activeDragState?.source === "artboard" ? activeDragState.elementId : null;
 
     return (
       <div ref={wrapperRef} className="h-full min-h-[320px] w-full rounded-[2rem]">
@@ -648,9 +623,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                 {renderedElements
                   .filter(
                     (element) =>
-                      (isElementOutOfBounds(element, designDocument.shape) ||
-                        draggingOverflowElementId === element.id) &&
-                      draggingArtboardElementId !== element.id
+                      isElementOutOfBounds(element, designDocument.shape)
                   )
                   .map((element) => (
                     <SvgElement
@@ -660,7 +633,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                       artboardWidth={fitArtboard.width}
                       artboardHeight={fitArtboard.height}
                       onSelect={onSelectElement}
-                      onDragStart={handleDragStart("overflow")}
                       onDragMove={handleDragMove}
                       onDragEnd={handleDragEnd}
                       interactive
@@ -691,9 +663,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                       );
                     }}
                   >
-                    {designDocument.elements
-                      .filter((element) => draggingOverflowElementId !== element.id)
-                      .map((element) => (
+                    {designDocument.elements.map((element) => (
                       <SvgElement
                         key={element.id}
                         element={element}
@@ -704,7 +674,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                           nodeMapRef.current[id] = node;
                         }}
                         onSelect={onSelectElement}
-                        onDragStart={handleDragStart("artboard")}
                         onDragMove={handleDragMove}
                         onDragEnd={handleDragEnd}
                       />
@@ -712,7 +681,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                   </Group>
                 </Group>
 
-                {selectedElementId && !activeDragState ? (
+                {selectedElementId ? (
                   <TransformHandles
                     selectedElementId={selectedElementId}
                     nodeMapRef={nodeMapRef}
