@@ -195,7 +195,7 @@ export function EditorApp() {
           </PanelCard>
         </aside>
 
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[4.4rem] md:pb-2">
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[3.7rem] md:pb-2">
           <EditorCanvas
             ref={canvasRef}
             document={document}
@@ -272,7 +272,7 @@ export function EditorApp() {
           />
 
           <div
-            className="absolute inset-x-0 bottom-[3.7rem]"
+            className="absolute inset-x-0 bottom-[3.15rem]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="max-h-[46dvh] overflow-y-auto border-t border-black/8 bg-[rgba(244,241,234,0.98)] px-3 py-2 shadow-[0_-18px_40px_-30px_rgba(0,0,0,0.28)] backdrop-blur-xl">
@@ -290,7 +290,7 @@ export function EditorApp() {
             ) : null}
 
             {activePanel === "shapeSize" ? (
-              <MobilePanel title="Formă">
+              <MobilePanel title="Pagină">
                 <SizeSelector
                   shape={document.shape}
                   widthCm={document.widthCm}

@@ -3,6 +3,7 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import type { CanvasStageHandle } from "./canvas/CanvasStage";
 import { CanvasStage } from "./canvas/CanvasStage";
+import { defaultViewport } from "@/lib/editor/editorDefaults";
 import { getAspectRatio } from "@/lib/editor/geometryUtils";
 import type {
   EditorDocument,
@@ -46,6 +47,7 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
     const [feedback, setFeedback] = useState<GestureFeedback | null>(null);
     const [showHint, setShowHint] = useState(true);
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+    const previousContainerSizeRef = useRef({ width: 0, height: 0 });
 
     useEffect(() => {
       const timeoutId = window.setTimeout(() => setShowHint(false), 2200);
@@ -126,6 +128,54 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
       viewport.scale,
     ]);
 
+    useEffect(() => {
+      const previousContainer = previousContainerSizeRef.current;
+
+      if (!containerSize.width || !containerSize.height) {
+        return;
+      }
+
+      previousContainerSizeRef.current = containerSize;
+
+      if (!previousContainer.width || !previousContainer.height) {
+        return;
+      }
+
+      const resized =
+        Math.abs(previousContainer.width - containerSize.width) > 2 ||
+        Math.abs(previousContainer.height - containerSize.height) > 2;
+
+      if (!resized || viewport.scale > 1.08) {
+        return;
+      }
+
+      const horizontalOverflow =
+        artboardFrame.left < 6 ||
+        artboardFrame.left + artboardFrame.width > containerSize.width - 6;
+      const verticalOverflow =
+        artboardFrame.top < 6 ||
+        artboardFrame.top + artboardFrame.height > containerSize.height - 6;
+      const isNearDefaultOffset =
+        Math.abs(viewport.offsetX) < 20 && Math.abs(viewport.offsetY) < 20;
+
+      if ((horizontalOverflow || verticalOverflow || isNearDefaultOffset) &&
+          (viewport.scale !== defaultViewport.scale ||
+            viewport.offsetX !== defaultViewport.offsetX ||
+            viewport.offsetY !== defaultViewport.offsetY)) {
+        onViewportChange(defaultViewport);
+      }
+    }, [
+      artboardFrame.height,
+      artboardFrame.left,
+      artboardFrame.top,
+      artboardFrame.width,
+      containerSize,
+      onViewportChange,
+      viewport.offsetX,
+      viewport.offsetY,
+      viewport.scale,
+    ]);
+
     return (
       <div
         ref={containerRef}
@@ -155,36 +205,24 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
             <div
               className="absolute"
               style={{
-                left: artboardFrame.left,
-                top: Math.max(4, artboardFrame.top - 18),
-                width: artboardFrame.width,
+                left: artboardFrame.left + artboardFrame.width / 2,
+                top: artboardFrame.top + 6,
               }}
             >
-              <div className="relative h-3.5">
-                <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[rgba(28,39,47,0.34)]" />
-                <div className="absolute left-0 top-1/2 h-1.5 w-px -translate-y-1/2 bg-[rgba(28,39,47,0.34)]" />
-                <div className="absolute right-0 top-1/2 h-1.5 w-px -translate-y-1/2 bg-[rgba(28,39,47,0.34)]" />
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-black/8 bg-[rgba(253,252,248,0.94)] px-1.5 py-0 text-[8px] font-semibold text-[var(--editor-ink)] shadow-sm">
-                  {document.widthCm} cm
-                </div>
+              <div className="absolute -translate-x-1/2 rounded-full border border-black/8 bg-[rgba(253,252,248,0.92)] px-1.5 py-0.5 text-[8px] font-semibold text-[var(--editor-ink)] shadow-sm">
+                {document.widthCm} cm
               </div>
             </div>
 
             <div
               className="absolute"
               style={{
-                left: Math.max(2, artboardFrame.left - 18),
-                top: artboardFrame.top,
-                height: artboardFrame.height,
+                left: artboardFrame.left + 7,
+                top: artboardFrame.top + artboardFrame.height / 2,
               }}
             >
-              <div className="relative h-full w-3">
-                <div className="absolute left-1/2 top-0 h-px w-1.5 -translate-x-1/2 bg-[rgba(28,39,47,0.34)]" />
-                <div className="absolute left-1/2 bottom-0 h-px w-1.5 -translate-x-1/2 bg-[rgba(28,39,47,0.34)]" />
-                <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-[rgba(28,39,47,0.34)]" />
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 rounded-full border border-black/8 bg-[rgba(253,252,248,0.94)] px-1.5 py-0 text-[8px] font-semibold whitespace-nowrap text-[var(--editor-ink)] shadow-sm">
-                  {document.heightCm} cm
-                </div>
+              <div className="absolute -translate-x-1/2 -translate-y-1/2 -rotate-90 rounded-full border border-black/8 bg-[rgba(253,252,248,0.92)] px-1.5 py-0.5 text-[8px] font-semibold whitespace-nowrap text-[var(--editor-ink)] shadow-sm">
+                {document.heightCm} cm
               </div>
             </div>
           </div>
