@@ -72,7 +72,10 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     const wrapperRef = useRef<HTMLDivElement>(null);
     const stageRef = useRef<Konva.Stage>(null);
     const artboardGroupRef = useRef<Konva.Group>(null);
+    const clippedElementsGroupRef = useRef<Konva.Group>(null);
+    const dragOverlayGroupRef = useRef<Konva.Group>(null);
     const nodeMapRef = useRef<Record<string, Konva.Image | null>>({});
+    const activeDragElementIdRef = useRef<string | null>(null);
     const [containerSize, setContainerSize] = useState<Size>({ width: 0, height: 0 });
     const [transientElements, setTransientElements] = useState<
       Record<string, Partial<EditorElement>>
@@ -222,6 +225,37 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       target === target.getStage() ||
       target.attrs.name === "artboard-hit-area" ||
       target.attrs.name === "artboard-surface";
+
+    const restoreDraggedNode = useCallback((id: string) => {
+      const node = nodeMapRef.current[id];
+      const clippedGroup = clippedElementsGroupRef.current;
+
+      if (!node || !clippedGroup || node.getParent() === clippedGroup) {
+        return;
+      }
+
+      node.moveTo(clippedGroup);
+      node.moveToTop();
+      clippedGroup.getLayer()?.batchDraw();
+    }, []);
+
+    const handleDragStart = useCallback((id: string) => {
+      activeDragElementIdRef.current = id;
+
+      const node = nodeMapRef.current[id];
+      const dragOverlayGroup = dragOverlayGroupRef.current;
+      const clippedGroup = clippedElementsGroupRef.current;
+
+      if (!node || !dragOverlayGroup || !clippedGroup) {
+        return;
+      }
+
+      if (node.getParent() === clippedGroup) {
+        node.moveTo(dragOverlayGroup);
+        node.moveToTop();
+        dragOverlayGroup.getLayer()?.batchDraw();
+      }
+    }, []);
 
     const getElementBounds = useCallback(
       (node: Konva.Image) => {
@@ -552,6 +586,8 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         ELEMENT_POSITION_MAX
       );
 
+      activeDragElementIdRef.current = null;
+      restoreDraggedNode(id);
       setTransientElement(id, null);
       onUpdateElement(id, normalized);
     };
@@ -620,6 +656,8 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                 scaleX={viewport.scale}
                 scaleY={viewport.scale}
               >
+                <Group ref={dragOverlayGroupRef} />
+
                 {renderedElements
                   .filter(
                     (element) =>
@@ -649,6 +687,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                   />
 
                   <Group
+                    ref={clippedElementsGroupRef}
                     clipFunc={(context) => {
                       context.beginPath();
                       const left = -fitArtboard.width / 2;
@@ -674,6 +713,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                           nodeMapRef.current[id] = node;
                         }}
                         onSelect={onSelectElement}
+                        onDragStart={handleDragStart}
                         onDragMove={handleDragMove}
                         onDragEnd={handleDragEnd}
                       />
