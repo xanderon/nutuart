@@ -575,17 +575,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       onUpdateElement(id, normalized);
     };
 
-    const handleDragMove = (id: string, x: number, y: number) => {
-      const normalized = getNormalizedPoint(
-        { x, y },
-        fitArtboard,
-        { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 },
-        ELEMENT_POSITION_MIN,
-        ELEMENT_POSITION_MAX
-      );
-
-      setTransientElement(id, normalized);
-    };
+    const handleDragMove = () => {};
 
     const handleTransformEnd = useCallback(() => {
       const selectedNode = selectedElementId
@@ -622,13 +612,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       activeDragState?.source === "overflow" ? activeDragState.elementId : null;
     const draggingArtboardElementId =
       activeDragState?.source === "artboard" ? activeDragState.elementId : null;
-    const dragPreviewElement = activeDragState
-      ? renderedElements.find((element) => element.id === activeDragState.elementId) ?? null
-      : null;
-    const showArtboardDragPreview =
-      activeDragState?.source === "artboard" &&
-      dragPreviewElement &&
-      isElementOutOfBounds(dragPreviewElement, designDocument.shape);
 
     return (
       <div ref={wrapperRef} className="h-full min-h-[320px] w-full rounded-[2rem]">
@@ -728,20 +711,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                     ))}
                   </Group>
                 </Group>
-
-                {showArtboardDragPreview ? (
-                  <SvgElement
-                    key={`drag-preview-${dragPreviewElement.id}`}
-                    element={dragPreviewElement}
-                    isSelected={false}
-                    artboardWidth={fitArtboard.width}
-                    artboardHeight={fitArtboard.height}
-                    onSelect={onSelectElement}
-                    onDragEnd={() => {}}
-                    interactive={false}
-                    opacity={0.62}
-                  />
-                ) : null}
 
                 {selectedElementId && !activeDragState ? (
                   <TransformHandles
