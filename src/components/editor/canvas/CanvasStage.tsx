@@ -28,6 +28,7 @@ import type {
 } from "@/lib/editor/editorTypes";
 import {
   clampZoom,
+  getEditorArtboardInsets,
   getFitArtboardSize,
   getStepZoom,
   getTouchCenter,
@@ -112,18 +113,21 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       designDocument.widthCm,
       designDocument.heightCm
     );
-    const padding = containerSize.width >= 1024 ? 42 : containerSize.width >= 768 ? 32 : 20;
+    const fitInsets = useMemo(
+      () => getEditorArtboardInsets(containerSize),
+      [containerSize]
+    );
     const fitArtboard = useMemo(
       () =>
         getFitArtboardSize(
           {
-            width: Math.max(containerSize.width, 320),
-            height: Math.max(containerSize.height, 320),
+            width: containerSize.width,
+            height: containerSize.height,
           },
           aspectRatio,
-          padding
+          fitInsets
         ),
-      [aspectRatio, containerSize.height, containerSize.width, padding]
+      [aspectRatio, containerSize.height, containerSize.width, fitInsets]
     );
 
     const selectedElement = useMemo(

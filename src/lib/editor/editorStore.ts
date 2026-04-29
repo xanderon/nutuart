@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { defaultEditorDocument, defaultViewport } from "./editorDefaults";
 import { editorAssetMap } from "./editorAssets";
-import { getFitArtboardSize } from "./viewportUtils";
+import { getEditorArtboardInsets, getFitArtboardSize } from "./viewportUtils";
 import {
   clamp,
   createEditorId,
@@ -151,20 +151,18 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       const nextWidthCm = sanitizeDimension(widthCm);
       const nextHeightCm = sanitizeDimension(heightCm);
       const safeCanvas = {
-        width: Math.max(state.canvasSize.width, 320),
-        height: Math.max(state.canvasSize.height, 320),
+        width: state.canvasSize.width > 0 ? state.canvasSize.width : 360,
+        height: state.canvasSize.height > 0 ? state.canvasSize.height : 560,
       };
-      const padding =
-        safeCanvas.width >= 1024 ? 42 : safeCanvas.width >= 768 ? 32 : 20;
       const previousFit = getFitArtboardSize(
         safeCanvas,
         previousWidthCm / previousHeightCm,
-        padding
+        getEditorArtboardInsets(safeCanvas)
       );
       const nextFit = getFitArtboardSize(
         safeCanvas,
         nextWidthCm / nextHeightCm,
-        padding
+        getEditorArtboardInsets(safeCanvas)
       );
       const nextDocument = patchDocument(state.document, {
         widthCm: nextWidthCm,

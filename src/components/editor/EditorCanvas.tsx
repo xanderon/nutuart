@@ -9,7 +9,10 @@ import type {
   EditorElement,
   EditorViewport,
 } from "@/lib/editor/editorTypes";
-import { getFitArtboardSize } from "@/lib/editor/viewportUtils";
+import {
+  getEditorArtboardInsets,
+  getFitArtboardSize,
+} from "@/lib/editor/viewportUtils";
 
 type EditorCanvasProps = {
   document: EditorDocument;
@@ -85,19 +88,21 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
     }, [containerSize, onCanvasSizeChange]);
 
     const aspectRatio = getAspectRatio(document.widthCm, document.heightCm);
-    const padding =
-      containerSize.width >= 1024 ? 42 : containerSize.width >= 768 ? 32 : 20;
+    const fitInsets = useMemo(
+      () => getEditorArtboardInsets(containerSize),
+      [containerSize]
+    );
     const fitArtboard = useMemo(
       () =>
         getFitArtboardSize(
           {
-            width: Math.max(containerSize.width, 320),
-            height: Math.max(containerSize.height, 320),
+            width: containerSize.width,
+            height: containerSize.height,
           },
           aspectRatio,
-          padding
+          fitInsets
         ),
-      [aspectRatio, containerSize.height, containerSize.width, padding]
+      [aspectRatio, containerSize.height, containerSize.width, fitInsets]
     );
     const artboardFrame = useMemo(() => {
       const width = fitArtboard.width * viewport.scale;
@@ -124,7 +129,8 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
     return (
       <div
         ref={containerRef}
-        className="relative flex min-h-[58dvh] flex-1 overflow-hidden bg-transparent sm:min-h-[50dvh] lg:min-h-0"
+        data-editor-canvas="true"
+        className="relative flex h-full min-h-0 flex-1 overflow-hidden bg-transparent"
       >
         <div className="relative z-10 h-full w-full">
           <CanvasStage
@@ -150,15 +156,15 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
               className="absolute"
               style={{
                 left: artboardFrame.left,
-                top: artboardFrame.top - 30,
+                top: Math.max(4, artboardFrame.top - 18),
                 width: artboardFrame.width,
               }}
             >
-              <div className="relative h-5">
+              <div className="relative h-3.5">
                 <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[rgba(28,39,47,0.34)]" />
-                <div className="absolute left-0 top-1/2 h-2.5 w-px -translate-y-1/2 bg-[rgba(28,39,47,0.34)]" />
-                <div className="absolute right-0 top-1/2 h-2.5 w-px -translate-y-1/2 bg-[rgba(28,39,47,0.34)]" />
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-black/8 bg-[rgba(253,252,248,0.96)] px-2 py-0.5 text-[10px] font-semibold text-[var(--editor-ink)] shadow-sm">
+                <div className="absolute left-0 top-1/2 h-1.5 w-px -translate-y-1/2 bg-[rgba(28,39,47,0.34)]" />
+                <div className="absolute right-0 top-1/2 h-1.5 w-px -translate-y-1/2 bg-[rgba(28,39,47,0.34)]" />
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-black/8 bg-[rgba(253,252,248,0.94)] px-1.5 py-0 text-[8px] font-semibold text-[var(--editor-ink)] shadow-sm">
                   {document.widthCm} cm
                 </div>
               </div>
@@ -167,16 +173,16 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
             <div
               className="absolute"
               style={{
-                left: artboardFrame.left - 34,
+                left: Math.max(2, artboardFrame.left - 18),
                 top: artboardFrame.top,
                 height: artboardFrame.height,
               }}
             >
-              <div className="relative h-full w-5">
-                <div className="absolute left-1/2 top-0 h-px w-2.5 -translate-x-1/2 bg-[rgba(28,39,47,0.34)]" />
-                <div className="absolute left-1/2 bottom-0 h-px w-2.5 -translate-x-1/2 bg-[rgba(28,39,47,0.34)]" />
+              <div className="relative h-full w-3">
+                <div className="absolute left-1/2 top-0 h-px w-1.5 -translate-x-1/2 bg-[rgba(28,39,47,0.34)]" />
+                <div className="absolute left-1/2 bottom-0 h-px w-1.5 -translate-x-1/2 bg-[rgba(28,39,47,0.34)]" />
                 <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-[rgba(28,39,47,0.34)]" />
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 rounded-full border border-black/8 bg-[rgba(253,252,248,0.96)] px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap text-[var(--editor-ink)] shadow-sm">
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 rounded-full border border-black/8 bg-[rgba(253,252,248,0.94)] px-1.5 py-0 text-[8px] font-semibold whitespace-nowrap text-[var(--editor-ink)] shadow-sm">
                   {document.heightCm} cm
                 </div>
               </div>

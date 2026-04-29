@@ -145,7 +145,7 @@ export function EditorApp() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex h-dvh flex-col overflow-hidden">
       <input
         ref={fileInputRef}
         type="file"
@@ -168,8 +168,8 @@ export function EditorApp() {
         onFlipY={() => flipSelectedElement("y")}
       />
 
-      <div className="flex w-full flex-1 gap-3 px-0 py-0 sm:px-3 sm:py-3">
-        <aside className="hidden w-[300px] flex-col gap-4 lg:flex">
+      <div className="flex w-full min-h-0 flex-1 gap-2 overflow-hidden px-0 py-0 sm:px-3 sm:py-3">
+        <aside className="hidden w-[300px] min-h-0 flex-col gap-4 overflow-y-auto pb-2 lg:flex">
           <PanelCard
             title="Bibliotecă SVG"
           >
@@ -195,7 +195,7 @@ export function EditorApp() {
           </PanelCard>
         </aside>
 
-        <main className="flex min-h-0 flex-1 flex-col pb-16 md:pb-4">
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[4.4rem] md:pb-2">
           <EditorCanvas
             ref={canvasRef}
             document={document}
@@ -208,7 +208,7 @@ export function EditorApp() {
           />
         </main>
 
-        <aside className="hidden w-[320px] flex-col gap-4 xl:flex">
+        <aside className="hidden w-[320px] min-h-0 flex-col gap-4 overflow-y-auto pb-2 xl:flex">
           <PanelCard
             title="Element selectat"
           >

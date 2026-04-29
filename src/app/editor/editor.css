@@ -11,6 +11,8 @@
   --editor-accent-soft: #d7eef0;
   --editor-danger: #b04635;
   min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
   background:
     linear-gradient(rgba(24, 23, 18, 0.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(24, 23, 18, 0.045) 1px, transparent 1px),

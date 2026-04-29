@@ -90,20 +90,20 @@ function DimensionField({
     <div
       className={[
         "rounded-[1rem] border border-[var(--editor-line)] bg-white/82",
-        concise ? "space-y-1.5 p-2.5" : "space-y-2 p-3",
+        concise ? "space-y-1 p-2" : "space-y-2 p-3",
       ].join(" ")}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/5 text-[var(--editor-muted)]">
-            <Icon className="h-3.5 w-3.5" strokeWidth={2.2} />
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-[var(--editor-muted)]">
+            <Icon className="h-3 w-3" strokeWidth={2.2} />
           </div>
           <div>
             <p className={concise ? "text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--editor-muted)]" : "text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--editor-muted)]"}>
               {label}
             </p>
-            <div className={concise ? "mt-0.5 text-lg font-semibold text-[var(--editor-ink)]" : "mt-1 text-xl font-semibold text-[var(--editor-ink)]"}>
-              {value} <span className={concise ? "text-xs font-medium text-[var(--editor-muted)]" : "text-sm font-medium text-[var(--editor-muted)]"}>cm</span>
+            <div className={concise ? "mt-0.5 text-base font-semibold text-[var(--editor-ink)]" : "mt-1 text-xl font-semibold text-[var(--editor-ink)]"}>
+              {value} <span className={concise ? "text-[10px] font-medium text-[var(--editor-muted)]" : "text-sm font-medium text-[var(--editor-muted)]"}>cm</span>
             </div>
           </div>
         </div>
@@ -113,7 +113,7 @@ function DimensionField({
             type="button"
             onClick={() => stepBy(-5)}
             className={concise
-              ? "flex h-8 w-8 items-center justify-center rounded-full border border-[var(--editor-line)] bg-white text-base font-medium text-[var(--editor-ink)]"
+              ? "flex h-7 w-7 items-center justify-center rounded-full border border-[var(--editor-line)] bg-white text-sm font-medium text-[var(--editor-ink)]"
               : "flex h-10 w-10 items-center justify-center rounded-full border border-[var(--editor-line)] bg-white text-lg font-medium text-[var(--editor-ink)]"}
             aria-label={`Micșorează ${label.toLowerCase()}`}
           >
@@ -123,7 +123,7 @@ function DimensionField({
             type="button"
             onClick={() => stepBy(5)}
             className={concise
-              ? "flex h-8 w-8 items-center justify-center rounded-full border border-[var(--editor-line)] bg-white text-base font-medium text-[var(--editor-ink)]"
+              ? "flex h-7 w-7 items-center justify-center rounded-full border border-[var(--editor-line)] bg-white text-sm font-medium text-[var(--editor-ink)]"
               : "flex h-10 w-10 items-center justify-center rounded-full border border-[var(--editor-line)] bg-white text-lg font-medium text-[var(--editor-ink)]"}
             aria-label={`Mărește ${label.toLowerCase()}`}
           >
@@ -144,7 +144,7 @@ function DimensionField({
           setWarning(null);
           onChange(nextValue);
         }}
-        className={concise ? "w-full accent-[var(--editor-accent)] [&::-webkit-slider-thumb]:h-4" : "w-full accent-[var(--editor-accent)]"}
+        className={concise ? "w-full accent-[var(--editor-accent)] [&::-webkit-slider-thumb]:h-3" : "w-full accent-[var(--editor-accent)]"}
       />
 
       <div className={`grid gap-2 ${concise ? "grid-cols-[1fr]" : "grid-cols-[1fr_auto]"}`}>
@@ -172,7 +172,7 @@ function DimensionField({
             commitDraft();
           }}
           className={concise
-            ? "h-9 rounded-[0.8rem] border border-[var(--editor-line)] bg-white px-3 text-sm text-[var(--editor-ink)] outline-none transition focus:border-[var(--editor-accent)]"
+            ? "h-8 rounded-[0.8rem] border border-[var(--editor-line)] bg-white px-2.5 text-sm text-[var(--editor-ink)] outline-none transition focus:border-[var(--editor-accent)]"
             : "h-11 rounded-[0.9rem] border border-[var(--editor-line)] bg-white px-3 text-base text-[var(--editor-ink)] outline-none transition focus:border-[var(--editor-accent)]"}
           aria-label={`${label} în centimetri`}
         />
@@ -190,7 +190,7 @@ function DimensionField({
       {warning ? (
         <p className="text-xs font-medium text-[var(--editor-danger)]">{warning}</p>
       ) : (
-        <p className={concise ? "text-[10px] text-[var(--editor-muted)]" : "text-[11px] text-[var(--editor-muted)]"}>
+        <p className={concise ? "text-[9px] text-[var(--editor-muted)]" : "text-[11px] text-[var(--editor-muted)]"}>
           {concise
             ? `${MIN_DIMENSION_CM}-${MAX_DIMENSION_CM} cm`
             : `Min ${MIN_DIMENSION_CM} cm, max ${MAX_DIMENSION_CM} cm.`}
