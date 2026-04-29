@@ -13,6 +13,7 @@ type SvgElementProps = {
   artboardWidth: number;
   artboardHeight: number;
   onSelect: (id: string) => void;
+  onDragStart?: (id: string) => void;
   onDragMove?: (id: string, x: number, y: number) => void;
   onDragEnd: (id: string, x: number, y: number) => void;
   registerNode?: (id: string, node: Konva.Image | null) => void;
@@ -27,6 +28,7 @@ function SvgElementComponent({
   artboardWidth,
   artboardHeight,
   onSelect,
+  onDragStart,
   onDragMove,
   onDragEnd,
   registerNode,
@@ -65,6 +67,11 @@ function SvgElementComponent({
       perfectDrawEnabled={false}
       onClick={interactive ? () => onSelect(element.id) : undefined}
       onTap={interactive ? () => onSelect(element.id) : undefined}
+      onDragStart={
+        interactive && onDragStart
+          ? () => onDragStart(element.id)
+          : undefined
+      }
       onDragMove={
         interactive && onDragMove
           ? (event) => onDragMove(element.id, event.target.x(), event.target.y())
