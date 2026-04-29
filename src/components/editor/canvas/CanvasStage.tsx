@@ -35,7 +35,6 @@ import {
   zoomAroundPoint,
 } from "@/lib/editor/viewportUtils";
 import { ArtboardShape } from "./ArtboardShape";
-import { DimensionGuides } from "./DimensionGuides";
 import { SvgElement } from "./SvgElement";
 import { TransformHandles } from "./TransformHandles";
 
@@ -611,13 +610,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                 scaleX={viewport.scale}
                 scaleY={viewport.scale}
               >
-                <DimensionGuides
-                  width={fitArtboard.width}
-                  height={fitArtboard.height}
-                  widthCm={designDocument.widthCm}
-                  heightCm={designDocument.heightCm}
-                />
-
                 <Group ref={artboardGroupRef}>
                   <ArtboardShape
                     shape={designDocument.shape}
