@@ -141,11 +141,27 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }),
   setDimensions: (widthCm, heightCm) =>
     set((state) => {
+      const previousWidthCm = state.document.widthCm;
+      const previousHeightCm = state.document.heightCm;
       const nextWidthCm = sanitizeDimension(widthCm);
       const nextHeightCm = sanitizeDimension(heightCm);
       const nextDocument = patchDocument(state.document, {
         widthCm: nextWidthCm,
         heightCm: nextHeightCm,
+        elements: state.document.elements.map((element) => {
+          const physicalXcm = element.x * previousWidthCm;
+          const physicalYcm = element.y * previousHeightCm;
+          const physicalWidthCm = element.width * previousWidthCm;
+          const physicalHeightCm = element.height * previousHeightCm;
+
+          return {
+            ...element,
+            x: roundTo(physicalXcm / nextWidthCm),
+            y: roundTo(physicalYcm / nextHeightCm),
+            width: roundTo(Math.max(0.04, physicalWidthCm / nextWidthCm)),
+            height: roundTo(Math.max(0.04, physicalHeightCm / nextHeightCm)),
+          };
+        }),
       });
 
       return {
