@@ -8,8 +8,8 @@ import type {
 } from "./editorTypes";
 import { MAX_DIMENSION_CM, MIN_DIMENSION_CM } from "./editorDefaults";
 
-export const ELEMENT_POSITION_MIN = -1;
-export const ELEMENT_POSITION_MAX = 2;
+export const ELEMENT_POSITION_MIN = -8;
+export const ELEMENT_POSITION_MAX = 9;
 
 export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));

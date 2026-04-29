@@ -13,10 +13,10 @@ import Konva from "konva";
 import { Group, Layer, Rect, Stage } from "react-konva";
 import {
   clamp,
+  roundTo,
   ELEMENT_POSITION_MAX,
   ELEMENT_POSITION_MIN,
   getAspectRatio,
-  getNormalizedPoint,
   isElementOutOfBounds,
 } from "@/lib/editor/geometryUtils";
 import type {
@@ -213,6 +213,88 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       target.attrs.name === "artboard-hit-area" ||
       target.attrs.name === "artboard-surface";
 
+    const viewportCenter: Point = {
+      x: containerSize.width / 2 + viewport.offsetX,
+      y: containerSize.height / 2 + viewport.offsetY,
+    };
+    const artboardOffset = {
+      x: -fitArtboard.width / 2,
+      y: -fitArtboard.height / 2,
+    };
+    const playgroundBounds = useMemo(() => {
+      if (!containerSize.width || !containerSize.height || viewport.scale <= 0) {
+        return {
+          minX: ELEMENT_POSITION_MIN,
+          maxX: ELEMENT_POSITION_MAX,
+          minY: ELEMENT_POSITION_MIN,
+          maxY: ELEMENT_POSITION_MAX,
+        };
+      }
+
+      const localMinX = -viewportCenter.x / viewport.scale;
+      const localMaxX = (containerSize.width - viewportCenter.x) / viewport.scale;
+      const localMinY = -viewportCenter.y / viewport.scale;
+      const localMaxY = (containerSize.height - viewportCenter.y) / viewport.scale;
+
+      return {
+        minX: Math.max(
+          ELEMENT_POSITION_MIN,
+          roundTo((localMinX - artboardOffset.x) / fitArtboard.width)
+        ),
+        maxX: Math.min(
+          ELEMENT_POSITION_MAX,
+          roundTo((localMaxX - artboardOffset.x) / fitArtboard.width)
+        ),
+        minY: Math.max(
+          ELEMENT_POSITION_MIN,
+          roundTo((localMinY - artboardOffset.y) / fitArtboard.height)
+        ),
+        maxY: Math.min(
+          ELEMENT_POSITION_MAX,
+          roundTo((localMaxY - artboardOffset.y) / fitArtboard.height)
+        ),
+      };
+    }, [
+      artboardOffset.x,
+      artboardOffset.y,
+      containerSize.height,
+      containerSize.width,
+      fitArtboard.height,
+      fitArtboard.width,
+      viewport.scale,
+      viewportCenter.x,
+      viewportCenter.y,
+    ]);
+
+    const getNormalizedPointInPlayground = useCallback(
+      (point: Point) => ({
+        x: roundTo(
+          clamp(
+            (point.x - artboardOffset.x) / fitArtboard.width,
+            playgroundBounds.minX,
+            playgroundBounds.maxX
+          )
+        ),
+        y: roundTo(
+          clamp(
+            (point.y - artboardOffset.y) / fitArtboard.height,
+            playgroundBounds.minY,
+            playgroundBounds.maxY
+          )
+        ),
+      }),
+      [
+        artboardOffset.x,
+        artboardOffset.y,
+        fitArtboard.height,
+        fitArtboard.width,
+        playgroundBounds.maxX,
+        playgroundBounds.maxY,
+        playgroundBounds.minX,
+        playgroundBounds.minY,
+      ]
+    );
+
     const getElementBounds = useCallback(
       (node: Konva.Image) => {
         const scaleX = node.scaleX();
@@ -245,13 +327,10 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         node.width(widthPx);
         node.height(heightPx);
 
-        const normalized = getNormalizedPoint(
-          { x: node.x(), y: node.y() },
-          fitArtboard,
-          { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 },
-          ELEMENT_POSITION_MIN,
-          ELEMENT_POSITION_MAX
-        );
+        const normalized = getNormalizedPointInPlayground({
+          x: node.x(),
+          y: node.y(),
+        });
 
         onUpdateElement(id, {
           ...normalized,
@@ -262,7 +341,13 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
           flipY,
         });
       },
-      [fitArtboard, getElementBounds, onUpdateElement]
+      [
+        fitArtboard.height,
+        fitArtboard.width,
+        getElementBounds,
+        getNormalizedPointInPlayground,
+        onUpdateElement,
+      ]
     );
 
     const setTransientElement = useCallback(
@@ -306,13 +391,10 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
           fitArtboard.height * 0.04,
           fitArtboard.height
         );
-        const normalized = getNormalizedPoint(
-          { x: node.x(), y: node.y() },
-          fitArtboard,
-          { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 },
-          ELEMENT_POSITION_MIN,
-          ELEMENT_POSITION_MAX
-        );
+        const normalized = getNormalizedPointInPlayground({
+          x: node.x(),
+          y: node.y(),
+        });
 
         return {
           ...normalized,
@@ -323,7 +405,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
           flipY,
         };
       },
-      [fitArtboard]
+      [fitArtboard.height, fitArtboard.width, getNormalizedPointInPlayground]
     );
 
     const isPointNearSelectedElement = useCallback(
@@ -534,13 +616,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     };
 
     const handleDragEnd = (id: string, x: number, y: number) => {
-      const normalized = getNormalizedPoint(
-        { x, y },
-        fitArtboard,
-        { x: -fitArtboard.width / 2, y: -fitArtboard.height / 2 },
-        ELEMENT_POSITION_MIN,
-        ELEMENT_POSITION_MAX
-      );
+      const normalized = getNormalizedPointInPlayground({ x, y });
 
       setTransientElement(id, null);
       onUpdateElement(id, normalized);
@@ -572,11 +648,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
 
       setTransientElement(selectedElementId, getNodePatch(selectedNode));
     }, [getNodePatch, selectedElementId, setTransientElement]);
-
-    const viewportCenter: Point = {
-      x: containerSize.width / 2 + viewport.offsetX,
-      y: containerSize.height / 2 + viewport.offsetY,
-    };
 
     return (
       <div ref={wrapperRef} className="h-full min-h-[320px] w-full rounded-[2rem]">
