@@ -10,7 +10,6 @@ type TransformHandlesProps = {
   nodeMapRef: MutableRefObject<Record<string, Konva.Image | null>>;
   artboardWidth: number;
   artboardHeight: number;
-  showRotateHandle: boolean;
   onTransform: () => void;
   onTransformEnd: () => void;
 };
@@ -20,7 +19,6 @@ export function TransformHandles({
   nodeMapRef,
   artboardWidth,
   artboardHeight,
-  showRotateHandle,
   onTransform,
   onTransformEnd,
 }: TransformHandlesProps) {
@@ -50,7 +48,8 @@ export function TransformHandles({
         "bottom-left",
         "bottom-right",
       ]}
-      rotateEnabled={showRotateHandle}
+      rotateEnabled
+      rotateAnchorCursor="grab"
       rotateAnchorOffset={34}
       borderStroke="#0d6b72"
       borderStrokeWidth={1.2}
@@ -59,6 +58,19 @@ export function TransformHandles({
       anchorStroke="#0d6b72"
       anchorFill="#ffffff"
       anchorCornerRadius={14}
+      anchorStyleFunc={(anchor) => {
+        if (anchor.hasName("rotater")) {
+          anchor.fill("#0d6b72");
+          anchor.stroke("#ffffff");
+          anchor.strokeWidth(2);
+          anchor.cornerRadius(anchor.width() / 2);
+          return;
+        }
+
+        anchor.fill("#ffffff");
+        anchor.stroke("#0d6b72");
+        anchor.strokeWidth(1.4);
+      }}
       keepRatio={false}
       flipEnabled={false}
       ignoreStroke

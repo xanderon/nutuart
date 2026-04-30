@@ -90,8 +90,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     const [transientElements, setTransientElements] = useState<
       Record<string, Partial<EditorElement>>
     >({});
-    const [isSelectionHovered, setIsSelectionHovered] = useState(false);
-    const [hasFinePointer, setHasFinePointer] = useState(false);
     const panStateRef = useRef<{ pointerId: number; startX: number; startY: number } | null>(
       null
     );
@@ -128,19 +126,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       resizeObserver.observe(element);
 
       return () => resizeObserver.disconnect();
-    }, []);
-
-    useEffect(() => {
-      if (typeof window === "undefined" || !window.matchMedia) {
-        return;
-      }
-
-      const mediaQuery = window.matchMedia("(pointer:fine)");
-      const syncPointer = () => setHasFinePointer(mediaQuery.matches);
-
-      syncPointer();
-      mediaQuery.addEventListener("change", syncPointer);
-      return () => mediaQuery.removeEventListener("change", syncPointer);
     }, []);
 
     const aspectRatio = getAspectRatio(
@@ -669,17 +654,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       [onSelectElement, selectedElementIds.length, selectedElementSet]
     );
 
-    const handleHoverChange = useCallback(
-      (id: string, isHovering: boolean) => {
-        if (!selectedElementSet.has(id)) {
-          return;
-        }
-
-        setIsSelectionHovered(isHovering);
-      },
-      [selectedElementSet]
-    );
-
     const handleDragStart = useCallback(
       (id: string) => {
         clearLongPressTimer();
@@ -887,7 +861,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                       onSelect={handleElementSelect}
                       onPointerDown={handleElementPointerDown}
                       onPointerUp={handleElementPointerUp}
-                      onHoverChange={handleHoverChange}
                       onDragStart={handleDragStart}
                       onDragMove={handleDragMove}
                       onDragEnd={handleDragEnd}
@@ -902,7 +875,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                     nodeMapRef={nodeMapRef}
                     artboardWidth={fitArtboard.width}
                     artboardHeight={fitArtboard.height}
-                    showRotateHandle={!hasFinePointer || isSelectionHovered}
                     onTransform={handleTransform}
                     onTransformEnd={handleTransformEnd}
                   />

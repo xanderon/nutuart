@@ -15,7 +15,6 @@ type SvgElementProps = {
   onSelect: (id: string) => void;
   onPointerDown?: (id: string, event: Konva.KonvaEventObject<PointerEvent>) => void;
   onPointerUp?: (id: string) => void;
-  onHoverChange?: (id: string, isHovering: boolean) => void;
   onDragStart?: (id: string, x: number, y: number) => void;
   onDragMove?: (id: string, x: number, y: number) => void;
   onDragEnd: (id: string, x: number, y: number) => void;
@@ -33,7 +32,6 @@ function SvgElementComponent({
   onSelect,
   onPointerDown,
   onPointerUp,
-  onHoverChange,
   onDragStart,
   onDragMove,
   onDragEnd,
@@ -79,12 +77,7 @@ function SvgElementComponent({
           : undefined
       }
       onPointerUp={interactive ? () => onPointerUp?.(element.id) : undefined}
-      onPointerLeave={interactive ? () => {
-        onPointerUp?.(element.id);
-        onHoverChange?.(element.id, false);
-      } : undefined}
-      onMouseEnter={interactive ? () => onHoverChange?.(element.id, true) : undefined}
-      onMouseLeave={interactive ? () => onHoverChange?.(element.id, false) : undefined}
+      onPointerLeave={interactive ? () => onPointerUp?.(element.id) : undefined}
       onDragStart={
         interactive && onDragStart
           ? (event) => onDragStart(element.id, event.target.x(), event.target.y())
