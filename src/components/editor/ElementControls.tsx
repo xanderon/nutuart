@@ -12,6 +12,7 @@ type ElementControlsProps = {
   onDelete: () => void;
   onFlipX: () => void;
   onFlipY: () => void;
+  onAlign: (alignment: "top" | "left" | "center" | "right" | "bottom") => void;
 };
 
 export function ElementControls({
@@ -24,6 +25,7 @@ export function ElementControls({
   onDelete,
   onFlipX,
   onFlipY,
+  onAlign,
 }: ElementControlsProps) {
   if (selectedCount > 1) {
     return (
@@ -35,6 +37,49 @@ export function ElementControls({
           <p className="mt-1 text-sm text-[var(--editor-muted)]">
             Acțiunile de mai jos se aplică întregului grup.
           </p>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--editor-muted)]">
+            Align
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => onAlign("top")}
+              className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-sm font-medium text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
+            >
+              Sus
+            </button>
+            <button
+              type="button"
+              onClick={() => onAlign("left")}
+              className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-sm font-medium text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
+            >
+              Stg
+            </button>
+            <button
+              type="button"
+              onClick={() => onAlign("center")}
+              className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-sm font-medium text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
+            >
+              Centru
+            </button>
+            <button
+              type="button"
+              onClick={() => onAlign("right")}
+              className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-sm font-medium text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
+            >
+              Dr
+            </button>
+            <button
+              type="button"
+              onClick={() => onAlign("bottom")}
+              className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-sm font-medium text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
+            >
+              Jos
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">

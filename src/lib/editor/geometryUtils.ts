@@ -123,6 +123,10 @@ export function getElementsBoundingBox(elements: EditorElement[]) {
   };
 }
 
+export function getElementBoundingBox(element: EditorElement) {
+  return getElementsBoundingBox([element]);
+}
+
 function getArchHeightRatio(aspectRatio = 1) {
   return Math.min(0.42, Math.max(0.24, aspectRatio / 2));
 }

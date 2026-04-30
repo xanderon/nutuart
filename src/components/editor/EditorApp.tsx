@@ -88,6 +88,7 @@ export function EditorApp() {
     (state) => state.duplicateSelectedElement
   );
   const flipSelectedElement = useEditorStore((state) => state.flipSelectedElement);
+  const alignSelectedElements = useEditorStore((state) => state.alignSelectedElements);
 
   const selectedStatus = useMemo(
     () => getSelectionStatus(document, selectedElementId),
@@ -233,6 +234,7 @@ export function EditorApp() {
               onDelete={deleteSelectedElement}
               onFlipX={() => flipSelectedElement("x")}
               onFlipY={() => flipSelectedElement("y")}
+              onAlign={alignSelectedElements}
             />
           </PanelCard>
 
@@ -327,6 +329,7 @@ export function EditorApp() {
                   onDelete={deleteSelectedElement}
                   onFlipX={() => flipSelectedElement("x")}
                   onFlipY={() => flipSelectedElement("y")}
+                  onAlign={alignSelectedElements}
                 />
               </MobilePanel>
             ) : null}

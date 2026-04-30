@@ -8,6 +8,7 @@ import {
   clamp,
   createEditorId,
   duplicateElement,
+  getElementBoundingBox,
   ELEMENT_POSITION_MAX,
   ELEMENT_POSITION_MIN,
   getDefaultElementSize,
@@ -73,6 +74,9 @@ type EditorStore = {
   deleteSelectedElement: () => void;
   duplicateSelectedElement: () => void;
   flipSelectedElement: (axis: "x" | "y") => void;
+  alignSelectedElements: (
+    alignment: "top" | "left" | "center" | "right" | "bottom"
+  ) => void;
 };
 
 function patchDocument(
@@ -524,6 +528,64 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
                   : element.y,
                 flipY: !element.flipY,
               },
+      }))
+    );
+  },
+  alignSelectedElements: (alignment) => {
+    const { selectedElementIds, document } = get();
+
+    if (selectedElementIds.length < 2) {
+      return;
+    }
+
+    const selected = document.elements.filter((element) =>
+      selectedElementIds.includes(element.id)
+    );
+    const selectionBounds = getElementsBoundingBox(selected);
+
+    if (!selectionBounds) {
+      return;
+    }
+
+    get().updateElements(
+      selected.map((element) => ({
+        id: element.id,
+        patch: () => {
+          const elementBounds = getElementBoundingBox(element);
+
+          if (!elementBounds) {
+            return {};
+          }
+
+          if (alignment === "left") {
+            return {
+              x: roundTo(element.x + (selectionBounds.minX - elementBounds.minX)),
+            };
+          }
+
+          if (alignment === "right") {
+            return {
+              x: roundTo(element.x + (selectionBounds.maxX - elementBounds.maxX)),
+            };
+          }
+
+          if (alignment === "top") {
+            return {
+              y: roundTo(element.y + (selectionBounds.minY - elementBounds.minY)),
+            };
+          }
+
+          if (alignment === "bottom") {
+            return {
+              y: roundTo(element.y + (selectionBounds.maxY - elementBounds.maxY)),
+            };
+          }
+
+          return {
+            x: roundTo(element.x + (selectionBounds.centerX - elementBounds.centerX)),
+            y: roundTo(element.y + (selectionBounds.centerY - elementBounds.centerY)),
+          };
+        },
       }))
     );
   },
