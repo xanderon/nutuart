@@ -75,7 +75,7 @@ type EditorStore = {
   duplicateSelectedElement: () => void;
   flipSelectedElement: (axis: "x" | "y") => void;
   alignSelectedElements: (
-    alignment: "top" | "left" | "center" | "right" | "bottom"
+    alignment: "top" | "left" | "centerX" | "right" | "middle" | "bottom"
   ) => void;
 };
 
@@ -581,8 +581,13 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
             };
           }
 
+          if (alignment === "centerX") {
+            return {
+              x: roundTo(element.x + (selectionBounds.centerX - elementBounds.centerX)),
+            };
+          }
+
           return {
-            x: roundTo(element.x + (selectionBounds.centerX - elementBounds.centerX)),
             y: roundTo(element.y + (selectionBounds.centerY - elementBounds.centerY)),
           };
         },

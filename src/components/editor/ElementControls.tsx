@@ -1,6 +1,22 @@
+import {
+  AlignCenterHorizontal,
+  AlignCenterVertical,
+  AlignEndHorizontal,
+  AlignEndVertical,
+  AlignStartHorizontal,
+  AlignStartVertical,
+} from "lucide-react";
 import { editorAssetMap } from "@/lib/editor/editorAssets";
 import { isElementOutOfBounds } from "@/lib/editor/geometryUtils";
 import type { EditorElement, EditorShape } from "@/lib/editor/editorTypes";
+
+type AlignmentAction =
+  | "top"
+  | "left"
+  | "centerX"
+  | "right"
+  | "middle"
+  | "bottom";
 
 type ElementControlsProps = {
   element: EditorElement | null;
@@ -12,8 +28,21 @@ type ElementControlsProps = {
   onDelete: () => void;
   onFlipX: () => void;
   onFlipY: () => void;
-  onAlign: (alignment: "top" | "left" | "center" | "right" | "bottom") => void;
+  onAlign: (alignment: AlignmentAction) => void;
 };
+
+const alignmentActions: Array<{
+  id: AlignmentAction;
+  label: string;
+  Icon: typeof AlignStartVertical;
+}> = [
+  { id: "left", label: "Align left", Icon: AlignStartVertical },
+  { id: "centerX", label: "Align center", Icon: AlignCenterVertical },
+  { id: "right", label: "Align right", Icon: AlignEndVertical },
+  { id: "top", label: "Align top", Icon: AlignStartHorizontal },
+  { id: "middle", label: "Align middle", Icon: AlignCenterHorizontal },
+  { id: "bottom", label: "Align bottom", Icon: AlignEndHorizontal },
+];
 
 export function ElementControls({
   element,
@@ -43,42 +72,19 @@ export function ElementControls({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--editor-muted)]">
             Align
           </p>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => onAlign("top")}
-              className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-sm font-medium text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
-            >
-              Sus
-            </button>
-            <button
-              type="button"
-              onClick={() => onAlign("left")}
-              className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-sm font-medium text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
-            >
-              Stg
-            </button>
-            <button
-              type="button"
-              onClick={() => onAlign("center")}
-              className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-sm font-medium text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
-            >
-              Centru
-            </button>
-            <button
-              type="button"
-              onClick={() => onAlign("right")}
-              className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-sm font-medium text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
-            >
-              Dr
-            </button>
-            <button
-              type="button"
-              onClick={() => onAlign("bottom")}
-              className="rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 px-3 py-2.5 text-sm font-medium text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
-            >
-              Jos
-            </button>
+          <div className="grid grid-cols-6 gap-2">
+            {alignmentActions.map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                type="button"
+                aria-label={label}
+                title={label}
+                onClick={() => onAlign(id)}
+                className="flex h-11 items-center justify-center rounded-[0.95rem] border border-[var(--editor-line)] bg-white/88 text-[var(--editor-ink)] transition hover:border-[var(--editor-line-strong)]"
+              >
+                <Icon size={18} strokeWidth={1.8} />
+              </button>
+            ))}
           </div>
         </div>
 
