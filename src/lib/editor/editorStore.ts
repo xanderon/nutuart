@@ -9,10 +9,10 @@ import {
   createEditorId,
   duplicateElement,
   getElementBoundingBox,
+  getElementsBoundingBox,
   ELEMENT_POSITION_MAX,
   ELEMENT_POSITION_MIN,
   getDefaultElementSize,
-  getElementsBoundingBox,
   orderElements,
   roundTo,
   sanitizeDimension,
@@ -545,7 +545,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     );
   },
   alignSelectedElements: (alignment) => {
-    const { selectedElementIds, document } = get();
+    const { selectedElementIds, selectedElementId, document } = get();
 
     if (selectedElementIds.length < 2) {
       return;
@@ -554,14 +554,21 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const selected = document.elements.filter((element) =>
       selectedElementIds.includes(element.id)
     );
-    const selectionBounds = getElementsBoundingBox(selected);
+    const referenceElement =
+      selected.find((element) => element.id === selectedElementId) ??
+      selected.at(-1);
+    const referenceBounds = referenceElement
+      ? getElementBoundingBox(referenceElement)
+      : null;
 
-    if (!selectionBounds) {
+    if (!referenceElement || !referenceBounds) {
       return;
     }
 
     get().updateElements(
-      selected.map((element) => ({
+      selected
+        .filter((element) => element.id !== referenceElement.id)
+        .map((element) => ({
         id: element.id,
         patch: () => {
           const elementBounds = getElementBoundingBox(element);
@@ -572,36 +579,36 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
           if (alignment === "left") {
             return {
-              x: roundTo(element.x + (selectionBounds.minX - elementBounds.minX)),
+              x: roundTo(element.x + (referenceBounds.minX - elementBounds.minX)),
             };
           }
 
           if (alignment === "right") {
             return {
-              x: roundTo(element.x + (selectionBounds.maxX - elementBounds.maxX)),
+              x: roundTo(element.x + (referenceBounds.maxX - elementBounds.maxX)),
             };
           }
 
           if (alignment === "top") {
             return {
-              y: roundTo(element.y + (selectionBounds.minY - elementBounds.minY)),
+              y: roundTo(element.y + (referenceBounds.minY - elementBounds.minY)),
             };
           }
 
           if (alignment === "bottom") {
             return {
-              y: roundTo(element.y + (selectionBounds.maxY - elementBounds.maxY)),
+              y: roundTo(element.y + (referenceBounds.maxY - elementBounds.maxY)),
             };
           }
 
           if (alignment === "centerX") {
             return {
-              x: roundTo(element.x + (selectionBounds.centerX - elementBounds.centerX)),
+              x: roundTo(element.x + (referenceBounds.centerX - elementBounds.centerX)),
             };
           }
 
           return {
-            y: roundTo(element.y + (selectionBounds.centerY - elementBounds.centerY)),
+            y: roundTo(element.y + (referenceBounds.centerY - elementBounds.centerY)),
           };
         },
       }))
