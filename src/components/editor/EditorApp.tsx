@@ -192,6 +192,29 @@ export function EditorApp() {
       const hasCommandKey = event.metaKey || event.ctrlKey;
 
       if (hasCommandKey) {
+        if (key === "z" && !event.shiftKey) {
+          if (!canUndo) {
+            return;
+          }
+
+          event.preventDefault();
+          undo();
+          return;
+        }
+
+        if (
+          (key === "z" && event.shiftKey) ||
+          (key === "y" && event.ctrlKey && !event.metaKey)
+        ) {
+          if (!canRedo) {
+            return;
+          }
+
+          event.preventDefault();
+          redo();
+          return;
+        }
+
         if (key === "c") {
           if (!selectedElements.length) {
             return;
@@ -277,11 +300,15 @@ export function EditorApp() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
     alignSelectedElements,
+    canRedo,
+    canUndo,
     clearSelection,
     deleteSelectedElement,
     pasteClipboardElements,
+    redo,
     selectedCount,
     selectedElements,
+    undo,
   ]);
 
   return (
