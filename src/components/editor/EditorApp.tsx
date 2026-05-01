@@ -1,7 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BottomActionBar } from "./BottomActionBar";
+import {
+  AlignCenterHorizontal,
+  AlignCenterVertical,
+  AlignEndHorizontal,
+  AlignEndVertical,
+  AlignStartHorizontal,
+  AlignStartVertical,
+  Copy,
+  FlipHorizontal2,
+  FlipVertical2,
+  Redo2,
+  Trash2,
+  Undo2,
+} from "lucide-react";
+import { BottomActionBar, type MobileQuickAction } from "./BottomActionBar";
 import { EditorCanvas } from "./EditorCanvas";
 import { EditorToolbar } from "./EditorToolbar";
 import { ElementControls } from "./ElementControls";
@@ -307,6 +321,106 @@ export function EditorApp() {
         .sort((left, right) => left.zIndex - right.zIndex),
     [document.elements, selectedElementIds]
   );
+  const mobileQuickActions = useMemo<MobileQuickAction[]>(() => {
+    const actions: MobileQuickAction[] = [
+      {
+        id: "undo",
+        label: "Undo",
+        icon: Undo2,
+        onClick: undo,
+        disabled: !canUndo,
+      },
+      {
+        id: "redo",
+        label: "Redo",
+        icon: Redo2,
+        onClick: redo,
+        disabled: !canRedo,
+      },
+      {
+        id: "duplicate",
+        label: "Duplică",
+        icon: Copy,
+        onClick: duplicateSelectedElement,
+        disabled: selectedCount === 0,
+      },
+      {
+        id: "flip-x",
+        label: "Oglindire orizontală",
+        icon: FlipHorizontal2,
+        onClick: () => flipSelectedElement("x"),
+        disabled: selectedCount === 0,
+      },
+      {
+        id: "flip-y",
+        label: "Oglindire verticală",
+        icon: FlipVertical2,
+        onClick: () => flipSelectedElement("y"),
+        disabled: selectedCount === 0,
+      },
+      {
+        id: "delete",
+        label: "Șterge",
+        icon: Trash2,
+        onClick: deleteSelectedElement,
+        disabled: selectedCount === 0,
+        tone: "danger",
+      },
+    ];
+
+    if (selectedCount < 2) {
+      return actions;
+    }
+
+    return actions.concat([
+      {
+        id: "align-left",
+        label: "Align left",
+        icon: AlignStartVertical,
+        onClick: () => alignSelectedElements("left"),
+      },
+      {
+        id: "align-center",
+        label: "Align center",
+        icon: AlignCenterVertical,
+        onClick: () => alignSelectedElements("centerX"),
+      },
+      {
+        id: "align-right",
+        label: "Align right",
+        icon: AlignEndVertical,
+        onClick: () => alignSelectedElements("right"),
+      },
+      {
+        id: "align-top",
+        label: "Align top",
+        icon: AlignStartHorizontal,
+        onClick: () => alignSelectedElements("top"),
+      },
+      {
+        id: "align-middle",
+        label: "Align middle",
+        icon: AlignCenterHorizontal,
+        onClick: () => alignSelectedElements("middle"),
+      },
+      {
+        id: "align-bottom",
+        label: "Align bottom",
+        icon: AlignEndHorizontal,
+        onClick: () => alignSelectedElements("bottom"),
+      },
+    ]);
+  }, [
+    alignSelectedElements,
+    canRedo,
+    canUndo,
+    deleteSelectedElement,
+    duplicateSelectedElement,
+    flipSelectedElement,
+    redo,
+    selectedCount,
+    undo,
+  ]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -499,7 +613,7 @@ export function EditorApp() {
           </PanelCard>
         </aside>
 
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[3.7rem] md:pb-2">
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[7rem] md:pb-2">
           <EditorCanvas
             ref={canvasRef}
             document={document}
@@ -570,6 +684,7 @@ export function EditorApp() {
       <BottomActionBar
         activePanel={activePanel}
         hasSelection={selectedCount > 0}
+        quickActions={mobileQuickActions}
         onChange={handlePanelChange}
       />
 
@@ -583,7 +698,7 @@ export function EditorApp() {
           />
 
           <div
-            className="absolute inset-x-0 bottom-[3.15rem]"
+            className="absolute inset-x-0 bottom-[6.2rem]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="max-h-[46dvh] overflow-y-auto border-t border-black/8 bg-[rgba(244,241,234,0.98)] px-3 py-2 shadow-[0_-18px_40px_-30px_rgba(0,0,0,0.28)] backdrop-blur-xl">

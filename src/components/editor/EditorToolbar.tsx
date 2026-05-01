@@ -98,41 +98,43 @@ export function EditorToolbar({
         </button>
 
         <div className="flex items-center gap-1">
-          <ToolbarIconButton label="Undo" onClick={onUndo} disabled={!canUndo}>
-            <Undo2 className="h-4 w-4" strokeWidth={2.2} />
-          </ToolbarIconButton>
-          <ToolbarIconButton label="Redo" onClick={onRedo} disabled={!canRedo}>
-            <Redo2 className="h-4 w-4" strokeWidth={2.2} />
-          </ToolbarIconButton>
-          <ToolbarIconButton
-            label="Duplică elementul selectat"
-            onClick={onDuplicate}
-            disabled={!hasSelection}
-          >
-            <Copy className="h-4 w-4" strokeWidth={2.2} />
-          </ToolbarIconButton>
-          <ToolbarIconButton
-            label="Oglindire orizontală"
-            onClick={onFlipX}
-            disabled={!hasSelection}
-          >
-            <FlipHorizontal2 className="h-4 w-4" strokeWidth={2.2} />
-          </ToolbarIconButton>
-          <ToolbarIconButton
-            label="Oglindire verticală"
-            onClick={onFlipY}
-            disabled={!hasSelection}
-          >
-            <FlipVertical2 className="h-4 w-4" strokeWidth={2.2} />
-          </ToolbarIconButton>
-          <ToolbarIconButton
-            label="Șterge elementul selectat"
-            onClick={onDelete}
-            disabled={!hasSelection}
-            tone="danger"
-          >
-            <Trash2 className="h-4 w-4" strokeWidth={2.2} />
-          </ToolbarIconButton>
+          <div className="hidden items-center gap-1 md:flex">
+            <ToolbarIconButton label="Undo" onClick={onUndo} disabled={!canUndo}>
+              <Undo2 className="h-4 w-4" strokeWidth={2.2} />
+            </ToolbarIconButton>
+            <ToolbarIconButton label="Redo" onClick={onRedo} disabled={!canRedo}>
+              <Redo2 className="h-4 w-4" strokeWidth={2.2} />
+            </ToolbarIconButton>
+            <ToolbarIconButton
+              label="Duplică elementul selectat"
+              onClick={onDuplicate}
+              disabled={!hasSelection}
+            >
+              <Copy className="h-4 w-4" strokeWidth={2.2} />
+            </ToolbarIconButton>
+            <ToolbarIconButton
+              label="Oglindire orizontală"
+              onClick={onFlipX}
+              disabled={!hasSelection}
+            >
+              <FlipHorizontal2 className="h-4 w-4" strokeWidth={2.2} />
+            </ToolbarIconButton>
+            <ToolbarIconButton
+              label="Oglindire verticală"
+              onClick={onFlipY}
+              disabled={!hasSelection}
+            >
+              <FlipVertical2 className="h-4 w-4" strokeWidth={2.2} />
+            </ToolbarIconButton>
+            <ToolbarIconButton
+              label="Șterge elementul selectat"
+              onClick={onDelete}
+              disabled={!hasSelection}
+              tone="danger"
+            >
+              <Trash2 className="h-4 w-4" strokeWidth={2.2} />
+            </ToolbarIconButton>
+          </div>
           <ToolbarIconButton label="Shortcut-uri" onClick={onOpenHelp}>
             <CircleHelp className="h-4 w-4" strokeWidth={2.2} />
           </ToolbarIconButton>
