@@ -109,6 +109,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       draggedId: string;
       originNodes: Record<string, Point>;
       originPoint: Point;
+      lockedAxis: "x" | "y" | null;
     } | null>(null);
     const pinchStateRef = useRef<{
       distance: number;
@@ -754,23 +755,29 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       (id: string, originPoint?: Point) => {
         clearLongPressTimer();
 
-        if (id !== GROUP_DRAG_HANDLE_ID && !selectedElementIds.includes(id)) {
+        const isElementDrag = id !== GROUP_DRAG_HANDLE_ID;
+        const isSelected = selectedElementIds.includes(id);
+
+        if (isElementDrag && !isSelected) {
           onSelectElement(id);
-          groupDragStateRef.current = null;
-          return;
         }
 
-        if (
-          (id !== GROUP_DRAG_HANDLE_ID && !selectedElementIds.includes(id)) ||
-          selectedElementIds.length < 2
-        ) {
+        const draggedIds = isElementDrag
+          ? isSelected
+            ? selectedElementIds.length > 1
+              ? selectedElementIds
+              : [id]
+            : [id]
+          : selectedElementIds;
+
+        if (!draggedIds.length) {
           groupDragStateRef.current = null;
           return;
         }
 
         const originNodes: Record<string, Point> = {};
 
-        selectedElementIds.forEach((selectedId) => {
+        draggedIds.forEach((selectedId) => {
           const node = nodeMapRef.current[selectedId];
 
           if (!node) {
@@ -792,9 +799,10 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
               x: 0,
               y: 0,
             },
+          lockedAxis: null,
         };
 
-        if (selectedElementIds.length > 1 && selectionBounds) {
+        if (draggedIds.length > 1 && selectionBounds) {
           setGroupHandlePosition({
             x: -fitArtboard.width / 2 + selectionBounds.centerX * fitArtboard.width,
             y: -fitArtboard.height / 2 + selectionBounds.centerY * fitArtboard.height,
@@ -812,21 +820,31 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     );
 
     const handleDragMove = useCallback(
-      (id: string, x: number, y: number) => {
+      (id: string, x: number, y: number, shiftKey: boolean) => {
         const groupDragState = groupDragStateRef.current;
 
         if (!groupDragState || groupDragState.draggedId !== id) {
           return;
         }
 
-        const deltaX = x - groupDragState.originPoint.x;
-        const deltaY = y - groupDragState.originPoint.y;
+        const rawDeltaX = x - groupDragState.originPoint.x;
+        const rawDeltaY = y - groupDragState.originPoint.y;
+
+        if (!shiftKey) {
+          groupDragState.lockedAxis = null;
+        } else if (!groupDragState.lockedAxis) {
+          if (Math.abs(rawDeltaX) > 2 || Math.abs(rawDeltaY) > 2) {
+            groupDragState.lockedAxis =
+              Math.abs(rawDeltaX) >= Math.abs(rawDeltaY) ? "x" : "y";
+          }
+        }
+
+        const deltaX =
+          groupDragState.lockedAxis === "y" ? 0 : rawDeltaX;
+        const deltaY =
+          groupDragState.lockedAxis === "x" ? 0 : rawDeltaY;
 
         Object.entries(groupDragState.originNodes).forEach(([selectedId, origin]) => {
-          if (selectedId === id && id !== GROUP_DRAG_HANDLE_ID) {
-            return;
-          }
-
           const node = nodeMapRef.current[selectedId];
 
           if (!node) {
@@ -1054,7 +1072,8 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                       handleDragMove(
                         GROUP_DRAG_HANDLE_ID,
                         event.target.x(),
-                        event.target.y()
+                        event.target.y(),
+                        Boolean(event.evt.shiftKey)
                       )
                     }
                     onDragEnd={(event) => {

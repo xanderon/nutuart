@@ -16,7 +16,12 @@ type SvgElementProps = {
   onPointerDown?: (id: string, event: Konva.KonvaEventObject<PointerEvent>) => void;
   onPointerUp?: (id: string) => void;
   onDragStart?: (id: string, x: number, y: number) => void;
-  onDragMove?: (id: string, x: number, y: number) => void;
+  onDragMove?: (
+    id: string,
+    x: number,
+    y: number,
+    shiftKey: boolean
+  ) => void;
   onDragEnd: (id: string, x: number, y: number) => void;
   registerNode?: (id: string, node: Konva.Image | null) => void;
   interactive?: boolean;
@@ -107,7 +112,13 @@ function SvgElementComponent({
       }
       onDragMove={
         interactive && onDragMove
-          ? (event) => onDragMove(element.id, event.target.x(), event.target.y())
+          ? (event) =>
+              onDragMove(
+                element.id,
+                event.target.x(),
+                event.target.y(),
+                Boolean(event.evt.shiftKey)
+              )
           : undefined
       }
       onDragEnd={
