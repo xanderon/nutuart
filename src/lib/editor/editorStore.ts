@@ -77,6 +77,7 @@ type EditorStore = {
   alignSelectedElements: (
     alignment: "top" | "left" | "centerX" | "right" | "middle" | "bottom"
   ) => void;
+  pasteClipboardElements: (elements: EditorElement[]) => EditorElement[];
 };
 
 function patchDocument(
@@ -593,5 +594,34 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         },
       }))
     );
+  },
+  pasteClipboardElements: (elements) => {
+    if (!elements.length) {
+      return [];
+    }
+
+    const { document, past } = get();
+    const clones = elements
+      .slice()
+      .sort((left, right) => left.zIndex - right.zIndex)
+      .map((element) => duplicateElement(element));
+    const nextElements = orderElements(
+      [...document.elements, ...clones].map((element, index) => ({
+        ...element,
+        zIndex: index + 1,
+      }))
+    );
+
+    set({
+      document: patchDocument(document, {
+        elements: nextElements,
+      }),
+      past: [...past, document].slice(-HISTORY_LIMIT),
+      future: [],
+      selectedElementId: clones.at(-1)?.id ?? null,
+      selectedElementIds: clones.map((clone) => clone.id),
+    });
+
+    return clones;
   },
 }));

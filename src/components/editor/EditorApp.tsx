@@ -11,7 +11,11 @@ import type { CanvasStageHandle } from "./canvas/CanvasStage";
 import { buildExportFilename, downloadDataUrl, downloadTextFile } from "@/lib/editor/exportDesign";
 import { getAspectRatio, getSelectionStatus } from "@/lib/editor/geometryUtils";
 import { serializeDesign, parseSerializedDesign } from "@/lib/editor/serializeDesign";
-import type { EditorPanel, SvgAssetCategory } from "@/lib/editor/editorTypes";
+import type {
+  EditorElement,
+  EditorPanel,
+  SvgAssetCategory,
+} from "@/lib/editor/editorTypes";
 import { useEditorStore } from "@/lib/editor/editorStore";
 
 function isTypingTarget(target: EventTarget | null) {
@@ -73,6 +77,7 @@ function MobilePanel({
 export function EditorApp() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<CanvasStageHandle>(null);
+  const clipboardRef = useRef<EditorElement[]>([]);
   const [activeAssetCategory, setActiveAssetCategory] =
     useState<SvgAssetCategory>("corners");
 
@@ -104,6 +109,7 @@ export function EditorApp() {
   );
   const flipSelectedElement = useEditorStore((state) => state.flipSelectedElement);
   const alignSelectedElements = useEditorStore((state) => state.alignSelectedElements);
+  const pasteClipboardElements = useEditorStore((state) => state.pasteClipboardElements);
 
   const selectedStatus = useMemo(
     () => getSelectionStatus(document, selectedElementId),
@@ -164,10 +170,17 @@ export function EditorApp() {
     setDimensions(document.widthCm, value);
     resetViewport();
   };
+  const selectedElements = useMemo(
+    () =>
+      document.elements
+        .filter((element) => selectedElementIds.includes(element.id))
+        .sort((left, right) => left.zIndex - right.zIndex),
+    [document.elements, selectedElementIds]
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.metaKey || event.ctrlKey || event.altKey) {
+      if (event.altKey) {
         return;
       }
 
@@ -176,6 +189,46 @@ export function EditorApp() {
       }
 
       const key = event.key.toLowerCase();
+      const hasCommandKey = event.metaKey || event.ctrlKey;
+
+      if (hasCommandKey) {
+        if (key === "c") {
+          if (!selectedElements.length) {
+            return;
+          }
+
+          event.preventDefault();
+          clipboardRef.current = selectedElements.map((element) => ({ ...element }));
+          return;
+        }
+
+        if (key === "x") {
+          if (!selectedElements.length) {
+            return;
+          }
+
+          event.preventDefault();
+          clipboardRef.current = selectedElements.map((element) => ({ ...element }));
+          deleteSelectedElement();
+          return;
+        }
+
+        if (key === "v") {
+          if (!clipboardRef.current.length) {
+            return;
+          }
+
+          event.preventDefault();
+          const clones = pasteClipboardElements(clipboardRef.current);
+
+          if (clones.length) {
+            clipboardRef.current = clones.map((element) => ({ ...element }));
+          }
+          return;
+        }
+
+        return;
+      }
 
       if (event.key === "Escape") {
         if (!selectedCount) {
@@ -226,7 +279,9 @@ export function EditorApp() {
     alignSelectedElements,
     clearSelection,
     deleteSelectedElement,
+    pasteClipboardElements,
     selectedCount,
+    selectedElements,
   ]);
 
   return (
