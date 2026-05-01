@@ -71,6 +71,28 @@ function SvgElementComponent({
       perfectDrawEnabled={false}
       onClick={interactive ? () => onSelect(element.id) : undefined}
       onTap={interactive ? () => onSelect(element.id) : undefined}
+      onMouseEnter={
+        interactive
+          ? (event) => {
+              const container = event.target.getStage()?.container();
+
+              if (container) {
+                container.style.cursor = allowDrag ?? isSelected ? "move" : "pointer";
+              }
+            }
+          : undefined
+      }
+      onMouseLeave={
+        interactive
+          ? (event) => {
+              const container = event.target.getStage()?.container();
+
+              if (container) {
+                container.style.cursor = "";
+              }
+            }
+          : undefined
+      }
       onPointerDown={
         interactive && onPointerDown
           ? (event) => onPointerDown(element.id, event)

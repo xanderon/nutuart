@@ -10,13 +10,14 @@ import {
   useState,
 } from "react";
 import Konva from "konva";
-import { Group, Layer, Rect, Stage } from "react-konva";
+import { Circle, Group, Layer, Line, Rect, Stage } from "react-konva";
 import {
   clamp,
   roundTo,
   ELEMENT_POSITION_MAX,
   ELEMENT_POSITION_MIN,
   getAspectRatio,
+  getElementsBoundingBox,
   isElementOutOfBounds,
 } from "@/lib/editor/geometryUtils";
 import type {
@@ -45,6 +46,7 @@ export type CanvasStageHandle = {
   zoomOut: () => void;
 };
 const SELECTION_HANDLE_PADDING = 24;
+const GROUP_DRAG_HANDLE_ID = "__selection-group-handle__";
 
 type CanvasStageProps = {
   document: EditorDocument;
@@ -98,6 +100,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     const groupDragStateRef = useRef<{
       draggedId: string;
       originNodes: Record<string, Point>;
+      originPoint: Point;
     } | null>(null);
     const pinchStateRef = useRef<{
       distance: number;
@@ -166,6 +169,11 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     const selectedElements = useMemo(
       () => renderedElements.filter((element) => selectedElementSet.has(element.id)),
       [renderedElements, selectedElementSet]
+    );
+    const selectionBounds = useMemo(
+      () =>
+        selectedElements.length > 1 ? getElementsBoundingBox(selectedElements) : null,
+      [selectedElements]
     );
 
     const setZoomStep = useCallback(
@@ -655,10 +663,13 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     );
 
     const handleDragStart = useCallback(
-      (id: string) => {
+      (id: string, originPoint?: Point) => {
         clearLongPressTimer();
 
-        if (!selectedElementSet.has(id) || selectedElementIds.length < 2) {
+        if (
+          (id !== GROUP_DRAG_HANDLE_ID && !selectedElementSet.has(id)) ||
+          selectedElementIds.length < 2
+        ) {
           groupDragStateRef.current = null;
           return;
         }
@@ -681,6 +692,12 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         groupDragStateRef.current = {
           draggedId: id,
           originNodes,
+          originPoint:
+            originPoint ??
+            originNodes[id] ?? {
+              x: 0,
+              y: 0,
+            },
         };
       },
       [clearLongPressTimer, selectedElementIds, selectedElementSet]
@@ -694,17 +711,11 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
           return;
         }
 
-        const draggedOrigin = groupDragState.originNodes[id];
-
-        if (!draggedOrigin) {
-          return;
-        }
-
-        const deltaX = x - draggedOrigin.x;
-        const deltaY = y - draggedOrigin.y;
+        const deltaX = x - groupDragState.originPoint.x;
+        const deltaY = y - groupDragState.originPoint.y;
 
         Object.entries(groupDragState.originNodes).forEach(([selectedId, origin]) => {
-          if (selectedId === id) {
+          if (selectedId === id && id !== GROUP_DRAG_HANDLE_ID) {
             return;
           }
 
@@ -810,6 +821,22 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       setTransientElement(selectedElementId, getNodePatch(selectedNode));
     }, [getNodePatch, selectedElementId, selectedElementIds.length, setTransientElement]);
 
+    const setCursor = useCallback((cursor: string) => {
+      const container = stageRef.current?.container();
+
+      if (container) {
+        container.style.cursor = cursor;
+      }
+    }, []);
+
+    const resetCursor = useCallback(() => {
+      const container = stageRef.current?.container();
+
+      if (container) {
+        container.style.cursor = "";
+      }
+    }, []);
+
     return (
       <div ref={wrapperRef} className="h-full min-h-[320px] w-full rounded-[2rem]">
         {containerSize.width > 0 && containerSize.height > 0 ? (
@@ -861,7 +888,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                       onSelect={handleElementSelect}
                       onPointerDown={handleElementPointerDown}
                       onPointerUp={handleElementPointerUp}
-                      onDragStart={handleDragStart}
+                      onDragStart={(id, x, y) => handleDragStart(id, { x, y })}
                       onDragMove={handleDragMove}
                       onDragEnd={handleDragEnd}
                       allowDrag={selectedElementSet.has(element.id)}
@@ -878,6 +905,62 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                     onTransform={handleTransform}
                     onTransformEnd={handleTransformEnd}
                   />
+                ) : null}
+
+                {selectionBounds ? (
+                  <Group
+                    x={-fitArtboard.width / 2 + selectionBounds.centerX * fitArtboard.width}
+                    y={-fitArtboard.height / 2 + selectionBounds.centerY * fitArtboard.height}
+                    draggable
+                    onDragStart={(event) =>
+                      handleDragStart(GROUP_DRAG_HANDLE_ID, {
+                        x: event.target.x(),
+                        y: event.target.y(),
+                      })
+                    }
+                    onDragMove={(event) =>
+                      handleDragMove(
+                        GROUP_DRAG_HANDLE_ID,
+                        event.target.x(),
+                        event.target.y()
+                      )
+                    }
+                    onDragEnd={(event) => {
+                      resetCursor();
+                      handleDragEnd(
+                        GROUP_DRAG_HANDLE_ID,
+                        event.target.x(),
+                        event.target.y()
+                      );
+                    }}
+                    onMouseEnter={() => setCursor("move")}
+                    onMouseLeave={resetCursor}
+                  >
+                    <Circle
+                      radius={14}
+                      fill="rgba(255,255,255,0.96)"
+                      stroke="#0d6b72"
+                      strokeWidth={1.4}
+                      shadowColor="rgba(15,23,42,0.2)"
+                      shadowBlur={12}
+                      shadowOffsetY={4}
+                      shadowOpacity={0.28}
+                    />
+                    <Line
+                      points={[-5, -5, 5, 5]}
+                      stroke="#0d6b72"
+                      strokeWidth={1.8}
+                      lineCap="round"
+                      listening={false}
+                    />
+                    <Line
+                      points={[5, -5, -5, 5]}
+                      stroke="#0d6b72"
+                      strokeWidth={1.8}
+                      lineCap="round"
+                      listening={false}
+                    />
+                  </Group>
                 ) : null}
 
                 {selectedElements.some((element) =>
