@@ -93,9 +93,6 @@ function ShortcutsHelp({
             <h2 className="text-base font-semibold text-[var(--editor-ink)]">
               Shortcut-uri
             </h2>
-            <p className="text-sm text-[var(--editor-muted)]">
-              La un click distanță.
-            </p>
           </div>
           <button
             type="button"
@@ -119,6 +116,10 @@ function ShortcutsHelp({
               <div className="flex items-center justify-between gap-4 rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
                 <span>Șterge selecția</span>
                 <code className="rounded bg-black/5 px-2 py-1 text-xs">Delete</code>
+              </div>
+              <div className="flex items-center justify-between gap-4 rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                <span>Mutare în linie dreaptă</span>
+                <code className="rounded bg-black/5 px-2 py-1 text-xs">Shift + drag</code>
               </div>
             </div>
           </div>
@@ -155,10 +156,6 @@ function ShortcutsHelp({
               <div className="flex items-center justify-between gap-4 rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
                 <span>Redo</span>
                 <code className="rounded bg-black/5 px-2 py-1 text-xs">Ctrl/Cmd + Shift + Z</code>
-              </div>
-              <div className="flex items-center justify-between gap-4 rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
-                <span>Redo Windows</span>
-                <code className="rounded bg-black/5 px-2 py-1 text-xs">Ctrl + Y</code>
               </div>
             </div>
           </div>
@@ -342,8 +339,7 @@ export function EditorApp() {
         }
 
         if (
-          (key === "z" && event.shiftKey) ||
-          (key === "y" && event.ctrlKey && !event.metaKey)
+          key === "z" && event.shiftKey
         ) {
           if (!canRedo) {
             return;
