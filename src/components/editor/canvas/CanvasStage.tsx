@@ -907,9 +907,20 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
             return null;
           }
 
+          const patch = getNodePatch(node);
+
+          node.width(patch.width * fitArtboard.width);
+          node.height(patch.height * fitArtboard.height);
+          node.scaleX(patch.flipX ? -1 : 1);
+          node.scaleY(patch.flipY ? -1 : 1);
+          node.position({
+            x: -fitArtboard.width / 2 + patch.x * fitArtboard.width,
+            y: -fitArtboard.height / 2 + patch.y * fitArtboard.height,
+          });
+
           return {
             id,
-            patch: getNodePatch(node),
+            patch,
           };
         })
         .filter(Boolean) as Array<{
@@ -923,7 +934,14 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
 
       selectedElementIds.forEach((id) => setTransientElement(id, null));
       onUpdateElements(updates);
-    }, [getNodePatch, onUpdateElements, selectedElementIds, setTransientElement]);
+    }, [
+      fitArtboard.height,
+      fitArtboard.width,
+      getNodePatch,
+      onUpdateElements,
+      selectedElementIds,
+      setTransientElement,
+    ]);
 
     const handleTransform = useCallback(() => {
       // Let Konva own the live resize interaction so the opposite anchor stays fixed.
