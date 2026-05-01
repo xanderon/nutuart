@@ -55,6 +55,7 @@ type CanvasStageProps = {
   viewport: EditorViewport;
   onViewportChange: (viewport: EditorViewport) => void;
   onSelectElement: (id: string | null) => void;
+  onSetSelectedElements: (ids: string[]) => void;
   onAddElementToSelection: (id: string) => void;
   onClearSelection: () => void;
   onUpdateElement: (id: string, patch: Partial<EditorElement>) => void;
@@ -76,6 +77,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       viewport,
       onViewportChange,
       onSelectElement,
+      onSetSelectedElements,
       onAddElementToSelection,
       onClearSelection,
       onUpdateElement,
@@ -93,6 +95,11 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       Record<string, Partial<EditorElement>>
     >({});
     const [groupHandlePosition, setGroupHandlePosition] = useState<Point | null>(null);
+    const [selectionRect, setSelectionRect] = useState<{
+      pointerId: number;
+      start: Point;
+      current: Point;
+    } | null>(null);
     const panStateRef = useRef<{ pointerId: number; startX: number; startY: number } | null>(
       null
     );
@@ -583,6 +590,17 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         return;
       }
 
+      if (event.evt.pointerType === "mouse") {
+        if (point) {
+          setSelectionRect({
+            pointerId: event.evt.pointerId,
+            start: point,
+            current: point,
+          });
+        }
+        return;
+      }
+
       onClearSelection();
 
       if (viewport.scale <= 1) {
@@ -597,6 +615,31 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     };
 
     const handlePointerMove = (event: Konva.KonvaEventObject<PointerEvent>) => {
+      if (
+        selectionRect &&
+        selectionRect.pointerId === event.evt.pointerId
+      ) {
+        const stage = stageRef.current;
+        const containerBounds = stage?.container().getBoundingClientRect();
+
+        if (!containerBounds) {
+          return;
+        }
+
+        setSelectionRect((current) =>
+          current
+            ? {
+                ...current,
+                current: {
+                  x: event.evt.clientX - containerBounds.left,
+                  y: event.evt.clientY - containerBounds.top,
+                },
+              }
+            : current
+        );
+        return;
+      }
+
       if (!panStateRef.current || panStateRef.current.pointerId !== event.evt.pointerId) {
         return;
       }
@@ -608,7 +651,51 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       });
     };
 
-    const handlePointerUp = () => {
+    const handlePointerUp = (event: Konva.KonvaEventObject<PointerEvent>) => {
+      if (
+        selectionRect &&
+        selectionRect.pointerId === event.evt.pointerId
+      ) {
+        const minX = Math.min(selectionRect.start.x, selectionRect.current.x);
+        const maxX = Math.max(selectionRect.start.x, selectionRect.current.x);
+        const minY = Math.min(selectionRect.start.y, selectionRect.current.y);
+        const maxY = Math.max(selectionRect.start.y, selectionRect.current.y);
+        const width = maxX - minX;
+        const height = maxY - minY;
+
+        setSelectionRect(null);
+
+        if (width < 6 && height < 6) {
+          onClearSelection();
+          return;
+        }
+
+        const nextSelectedIds = renderedElements
+          .filter((element) => {
+            const node = nodeMapRef.current[element.id];
+
+            if (!node) {
+              return false;
+            }
+
+            const bounds = node.getClientRect({
+              skipShadow: true,
+              skipStroke: true,
+            });
+
+            return (
+              bounds.x >= minX &&
+              bounds.y >= minY &&
+              bounds.x + bounds.width <= maxX &&
+              bounds.y + bounds.height <= maxY
+            );
+          })
+          .map((element) => element.id);
+
+        onSetSelectedElements(nextSelectedIds);
+        return;
+      }
+
       panStateRef.current = null;
     };
 
@@ -1020,6 +1107,20 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                   />
                 ) : null}
               </Group>
+
+              {selectionRect ? (
+                <Rect
+                  x={Math.min(selectionRect.start.x, selectionRect.current.x)}
+                  y={Math.min(selectionRect.start.y, selectionRect.current.y)}
+                  width={Math.abs(selectionRect.current.x - selectionRect.start.x)}
+                  height={Math.abs(selectionRect.current.y - selectionRect.start.y)}
+                  fill="rgba(13,107,114,0.08)"
+                  stroke="rgba(13,107,114,0.72)"
+                  strokeWidth={1}
+                  dash={[6, 4]}
+                  listening={false}
+                />
+              ) : null}
             </Layer>
           </Stage>
         ) : null}

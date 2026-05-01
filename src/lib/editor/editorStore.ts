@@ -54,6 +54,7 @@ type EditorStore = {
   canUndo: () => boolean;
   canRedo: () => boolean;
   selectElement: (id: string | null) => void;
+  setSelectedElements: (ids: string[]) => void;
   addElementToSelection: (id: string) => void;
   clearSelection: () => void;
   addElement: (assetId: string) => void;
@@ -291,6 +292,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set({
       selectedElementId,
       selectedElementIds: selectedElementId ? [selectedElementId] : [],
+    }),
+  setSelectedElements: (ids) =>
+    set((state) => {
+      const validIds = state.document.elements
+        .map((element) => element.id)
+        .filter((id) => ids.includes(id));
+
+      return {
+        selectedElementId: validIds.at(-1) ?? null,
+        selectedElementIds: validIds,
+      };
     }),
   addElementToSelection: (id) =>
     set((state) => {

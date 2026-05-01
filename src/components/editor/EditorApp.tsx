@@ -230,6 +230,7 @@ export function EditorApp() {
   const canRedo = useEditorStore((state) => state.future.length > 0);
   const loadDocument = useEditorStore((state) => state.loadDocument);
   const selectElement = useEditorStore((state) => state.selectElement);
+  const setSelectedElements = useEditorStore((state) => state.setSelectedElements);
   const addElementToSelection = useEditorStore((state) => state.addElementToSelection);
   const clearSelection = useEditorStore((state) => state.clearSelection);
   const addElement = useEditorStore((state) => state.addElement);
@@ -512,6 +513,7 @@ export function EditorApp() {
             onViewportChange={setViewport}
             onCanvasSizeChange={setCanvasSize}
             onSelectElement={selectElement}
+            onSetSelectedElements={setSelectedElements}
             onAddElementToSelection={addElementToSelection}
             onClearSelection={clearSelection}
             onUpdateElement={updateElement}

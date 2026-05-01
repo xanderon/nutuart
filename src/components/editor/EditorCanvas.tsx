@@ -23,6 +23,7 @@ type EditorCanvasProps = {
   onViewportChange: (viewport: EditorViewport) => void;
   onCanvasSizeChange?: (size: { width: number; height: number }) => void;
   onSelectElement: (id: string | null) => void;
+  onSetSelectedElements: (ids: string[]) => void;
   onAddElementToSelection: (id: string) => void;
   onClearSelection: () => void;
   onUpdateElement: (id: string, patch: Partial<EditorElement>) => void;
@@ -49,6 +50,7 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
       onViewportChange,
       onCanvasSizeChange,
       onSelectElement,
+      onSetSelectedElements,
       onAddElementToSelection,
       onClearSelection,
       onUpdateElement,
@@ -204,6 +206,7 @@ export const EditorCanvas = forwardRef<CanvasStageHandle, EditorCanvasProps>(
             viewport={viewport}
             onViewportChange={onViewportChange}
             onSelectElement={onSelectElement}
+            onSetSelectedElements={onSetSelectedElements}
             onAddElementToSelection={onAddElementToSelection}
             onClearSelection={onClearSelection}
             onUpdateElement={onUpdateElement}
