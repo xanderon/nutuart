@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BottomActionBar } from "./BottomActionBar";
 import { EditorCanvas } from "./EditorCanvas";
 import { EditorToolbar } from "./EditorToolbar";
@@ -13,6 +13,21 @@ import { getAspectRatio, getSelectionStatus } from "@/lib/editor/geometryUtils";
 import { serializeDesign, parseSerializedDesign } from "@/lib/editor/serializeDesign";
 import type { EditorPanel, SvgAssetCategory } from "@/lib/editor/editorTypes";
 import { useEditorStore } from "@/lib/editor/editorStore";
+
+function isTypingTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  const tagName = target.tagName;
+
+  return (
+    target.isContentEditable ||
+    tagName === "INPUT" ||
+    tagName === "TEXTAREA" ||
+    tagName === "SELECT"
+  );
+}
 
 function PanelCard({
   title,
@@ -149,6 +164,70 @@ export function EditorApp() {
     setDimensions(document.widthCm, value);
     resetViewport();
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+
+      if (isTypingTarget(event.target)) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+
+      if (event.key === "Escape") {
+        if (!selectedCount) {
+          return;
+        }
+
+        event.preventDefault();
+        clearSelection();
+        return;
+      }
+
+      if (event.key === "Delete" || event.key === "Backspace") {
+        if (!selectedCount) {
+          return;
+        }
+
+        event.preventDefault();
+        deleteSelectedElement();
+        return;
+      }
+
+      if (selectedCount < 2) {
+        return;
+      }
+
+      const alignMap = {
+        l: "left",
+        r: "right",
+        b: "bottom",
+        t: "top",
+        c: "centerX",
+        m: "middle",
+      } as const;
+
+      const alignment = alignMap[key as keyof typeof alignMap];
+
+      if (!alignment) {
+        return;
+      }
+
+      event.preventDefault();
+      alignSelectedElements(alignment);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    alignSelectedElements,
+    clearSelection,
+    deleteSelectedElement,
+    selectedCount,
+  ]);
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
