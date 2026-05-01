@@ -44,8 +44,12 @@ export function TransformHandles({
       padding={10}
       enabledAnchors={[
         "top-left",
+        "top-center",
         "top-right",
+        "middle-left",
+        "middle-right",
         "bottom-left",
+        "bottom-center",
         "bottom-right",
       ]}
       rotateEnabled
@@ -67,23 +71,47 @@ export function TransformHandles({
           return;
         }
 
+        if (anchor.hasName("top-center") || anchor.hasName("bottom-center")) {
+          anchor.width(24);
+          anchor.height(12);
+          anchor.offsetX(12);
+          anchor.offsetY(6);
+          anchor.cornerRadius(999);
+        } else if (
+          anchor.hasName("middle-left") ||
+          anchor.hasName("middle-right")
+        ) {
+          anchor.width(12);
+          anchor.height(24);
+          anchor.offsetX(6);
+          anchor.offsetY(12);
+          anchor.cornerRadius(999);
+        } else {
+          anchor.width(20);
+          anchor.height(20);
+          anchor.offsetX(10);
+          anchor.offsetY(10);
+          anchor.cornerRadius(999);
+        }
+
         anchor.fill("#ffffff");
         anchor.stroke("#0d6b72");
         anchor.strokeWidth(1.4);
       }}
-      keepRatio={false}
+      keepRatio
       flipEnabled={false}
       ignoreStroke
       boundBoxFunc={(oldBox, nextBox) => {
+        if (nextBox.width <= 0 || nextBox.height <= 0) {
+          return oldBox;
+        }
+
         const minWidth = Math.max(28, artboardWidth * 0.04);
         const minHeight = Math.max(28, artboardHeight * 0.04);
-        const width = Math.min(
-          artboardWidth,
-          Math.max(minWidth, Math.abs(nextBox.width))
-        );
+        const width = Math.min(artboardWidth, Math.max(minWidth, nextBox.width));
         const height = Math.min(
           artboardHeight,
-          Math.max(minHeight, Math.abs(nextBox.height))
+          Math.max(minHeight, nextBox.height)
         );
 
         if (!Number.isFinite(width) || !Number.isFinite(height)) {
@@ -92,8 +120,8 @@ export function TransformHandles({
 
         return {
           ...nextBox,
-          width: nextBox.width < 0 ? -width : width,
-          height: nextBox.height < 0 ? -height : height,
+          width,
+          height,
         };
       }}
     />
