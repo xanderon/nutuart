@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  CircleHelp,
   Copy,
   FlipHorizontal2,
   FlipVertical2,
@@ -24,6 +25,7 @@ type EditorToolbarProps = {
   onDelete: () => void;
   onFlipX: () => void;
   onFlipY: () => void;
+  onOpenHelp: () => void;
 };
 
 function ToolbarIconButton({
@@ -70,6 +72,7 @@ export function EditorToolbar({
   onDelete,
   onFlipX,
   onFlipY,
+  onOpenHelp,
 }: EditorToolbarProps) {
   const router = useRouter();
 
@@ -129,6 +132,9 @@ export function EditorToolbar({
             tone="danger"
           >
             <Trash2 className="h-4 w-4" strokeWidth={2.2} />
+          </ToolbarIconButton>
+          <ToolbarIconButton label="Shortcut-uri" onClick={onOpenHelp}>
+            <CircleHelp className="h-4 w-4" strokeWidth={2.2} />
           </ToolbarIconButton>
           <button
             type="button"

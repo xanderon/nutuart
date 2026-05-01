@@ -74,12 +74,144 @@ function MobilePanel({
   );
 }
 
+function ShortcutsHelp({
+  onClose,
+}: {
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(15,23,42,0.34)] p-3 md:items-center">
+      <button
+        type="button"
+        aria-label="Închide help"
+        onClick={onClose}
+        className="absolute inset-0"
+      />
+      <section className="relative z-10 flex max-h-[82dvh] w-full max-w-[32rem] flex-col overflow-hidden rounded-[1.6rem] border border-white/70 bg-[rgba(244,241,234,0.98)] shadow-[0_36px_80px_-40px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+        <div className="flex items-center justify-between border-b border-black/8 px-4 py-3">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--editor-ink)]">
+              Shortcut-uri
+            </h2>
+            <p className="text-sm text-[var(--editor-muted)]">
+              La un click distanță.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border border-[var(--editor-line)] bg-white/78 px-3 py-1.5 text-sm font-medium text-[var(--editor-ink)]"
+          >
+            Închide
+          </button>
+        </div>
+
+        <div className="space-y-5 overflow-y-auto px-4 py-4">
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--editor-muted)]">
+              Selecție
+            </h3>
+            <div className="space-y-2 text-sm text-[var(--editor-ink)]">
+              <div className="flex items-center justify-between gap-4 rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                <span>Deselect</span>
+                <code className="rounded bg-black/5 px-2 py-1 text-xs">Esc</code>
+              </div>
+              <div className="flex items-center justify-between gap-4 rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                <span>Șterge selecția</span>
+                <code className="rounded bg-black/5 px-2 py-1 text-xs">Delete</code>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--editor-muted)]">
+              Clipboard
+            </h3>
+            <div className="space-y-2 text-sm text-[var(--editor-ink)]">
+              <div className="flex items-center justify-between gap-4 rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                <span>Copy</span>
+                <code className="rounded bg-black/5 px-2 py-1 text-xs">Ctrl/Cmd + C</code>
+              </div>
+              <div className="flex items-center justify-between gap-4 rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                <span>Paste</span>
+                <code className="rounded bg-black/5 px-2 py-1 text-xs">Ctrl/Cmd + V</code>
+              </div>
+              <div className="flex items-center justify-between gap-4 rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                <span>Cut</span>
+                <code className="rounded bg-black/5 px-2 py-1 text-xs">Ctrl/Cmd + X</code>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--editor-muted)]">
+              Istoric
+            </h3>
+            <div className="space-y-2 text-sm text-[var(--editor-ink)]">
+              <div className="flex items-center justify-between gap-4 rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                <span>Undo</span>
+                <code className="rounded bg-black/5 px-2 py-1 text-xs">Ctrl/Cmd + Z</code>
+              </div>
+              <div className="flex items-center justify-between gap-4 rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                <span>Redo</span>
+                <code className="rounded bg-black/5 px-2 py-1 text-xs">Ctrl/Cmd + Shift + Z</code>
+              </div>
+              <div className="flex items-center justify-between gap-4 rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                <span>Redo Windows</span>
+                <code className="rounded bg-black/5 px-2 py-1 text-xs">Ctrl + Y</code>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--editor-muted)]">
+              Align
+            </h3>
+            <div className="space-y-2 text-sm text-[var(--editor-ink)]">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center justify-between rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                  <span>Left</span>
+                  <code className="rounded bg-black/5 px-2 py-1 text-xs">L</code>
+                </div>
+                <div className="flex items-center justify-between rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                  <span>Right</span>
+                  <code className="rounded bg-black/5 px-2 py-1 text-xs">R</code>
+                </div>
+                <div className="flex items-center justify-between rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                  <span>Top</span>
+                  <code className="rounded bg-black/5 px-2 py-1 text-xs">T</code>
+                </div>
+                <div className="flex items-center justify-between rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                  <span>Bottom</span>
+                  <code className="rounded bg-black/5 px-2 py-1 text-xs">B</code>
+                </div>
+                <div className="flex items-center justify-between rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                  <span>Center</span>
+                  <code className="rounded bg-black/5 px-2 py-1 text-xs">C</code>
+                </div>
+                <div className="flex items-center justify-between rounded-[0.95rem] border border-[var(--editor-line)] bg-white/72 px-3 py-2">
+                  <span>Middle</span>
+                  <code className="rounded bg-black/5 px-2 py-1 text-xs">M</code>
+                </div>
+              </div>
+              <p className="px-1 text-xs text-[var(--editor-muted)]">
+                Align merge când ai minim 2 obiecte selectate.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function EditorApp() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<CanvasStageHandle>(null);
   const clipboardRef = useRef<EditorElement[]>([]);
   const [activeAssetCategory, setActiveAssetCategory] =
     useState<SvgAssetCategory>("corners");
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const activePanel = useEditorStore((state) => state.activePanel);
   const document = useEditorStore((state) => state.document);
@@ -190,6 +322,12 @@ export function EditorApp() {
 
       const key = event.key.toLowerCase();
       const hasCommandKey = event.metaKey || event.ctrlKey;
+
+      if (event.key === "Escape" && isHelpOpen) {
+        event.preventDefault();
+        setIsHelpOpen(false);
+        return;
+      }
 
       if (hasCommandKey) {
         if (key === "z" && !event.shiftKey) {
@@ -304,6 +442,7 @@ export function EditorApp() {
     canUndo,
     clearSelection,
     deleteSelectedElement,
+    isHelpOpen,
     pasteClipboardElements,
     redo,
     selectedCount,
@@ -333,6 +472,7 @@ export function EditorApp() {
         onDelete={deleteSelectedElement}
         onFlipX={() => flipSelectedElement("x")}
         onFlipY={() => flipSelectedElement("y")}
+        onOpenHelp={() => setIsHelpOpen(true)}
       />
 
       <div className="flex w-full min-h-0 flex-1 gap-2 overflow-hidden px-0 py-0 sm:px-3 sm:py-3">
@@ -535,6 +675,8 @@ export function EditorApp() {
           </div>
         </div>
       ) : null}
+
+      {isHelpOpen ? <ShortcutsHelp onClose={() => setIsHelpOpen(false)} /> : null}
     </div>
   );
 }
