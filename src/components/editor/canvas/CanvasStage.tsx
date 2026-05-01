@@ -92,6 +92,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     const [transientElements, setTransientElements] = useState<
       Record<string, Partial<EditorElement>>
     >({});
+    const [groupHandlePosition, setGroupHandlePosition] = useState<Point | null>(null);
     const panStateRef = useRef<{ pointerId: number; startX: number; startY: number } | null>(
       null
     );
@@ -667,7 +668,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         clearLongPressTimer();
 
         if (
-          (id !== GROUP_DRAG_HANDLE_ID && !selectedElementSet.has(id)) ||
+          (id !== GROUP_DRAG_HANDLE_ID && !selectedElementIds.includes(id)) ||
           selectedElementIds.length < 2
         ) {
           groupDragStateRef.current = null;
@@ -699,8 +700,21 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
               y: 0,
             },
         };
+
+        if (selectedElementIds.length > 1 && selectionBounds) {
+          setGroupHandlePosition({
+            x: -fitArtboard.width / 2 + selectionBounds.centerX * fitArtboard.width,
+            y: -fitArtboard.height / 2 + selectionBounds.centerY * fitArtboard.height,
+          });
+        }
       },
-      [clearLongPressTimer, selectedElementIds, selectedElementSet]
+      [
+        clearLongPressTimer,
+        fitArtboard.height,
+        fitArtboard.width,
+        selectedElementIds,
+        selectionBounds,
+      ]
     );
 
     const handleDragMove = useCallback(
@@ -731,9 +745,16 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
           });
         });
 
+        if (selectedElementIds.length > 1 && selectionBounds) {
+          setGroupHandlePosition({
+            x: -fitArtboard.width / 2 + selectionBounds.centerX * fitArtboard.width + deltaX,
+            y: -fitArtboard.height / 2 + selectionBounds.centerY * fitArtboard.height + deltaY,
+          });
+        }
+
         stageRef.current?.batchDraw();
       },
-      []
+      [fitArtboard.height, fitArtboard.width, selectedElementIds.length, selectionBounds]
     );
 
     const handleDragEnd = useCallback(
@@ -763,11 +784,13 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
           }>;
 
           groupDragStateRef.current = null;
+          setGroupHandlePosition(null);
           onUpdateElements(updates);
           return;
         }
 
         const normalized = getNormalizedPointInPlayground({ x, y });
+        setGroupHandlePosition(null);
         setTransientElement(id, null);
         onUpdateElement(id, normalized);
       },
@@ -776,6 +799,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         onUpdateElement,
         onUpdateElements,
         selectedElementIds,
+        setGroupHandlePosition,
         setTransientElement,
       ]
     );
@@ -909,8 +933,14 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
 
                 {selectionBounds ? (
                   <Group
-                    x={-fitArtboard.width / 2 + selectionBounds.centerX * fitArtboard.width}
-                    y={-fitArtboard.height / 2 + selectionBounds.centerY * fitArtboard.height}
+                    x={
+                      groupHandlePosition?.x ??
+                      (-fitArtboard.width / 2 + selectionBounds.centerX * fitArtboard.width)
+                    }
+                    y={
+                      groupHandlePosition?.y ??
+                      (-fitArtboard.height / 2 + selectionBounds.centerY * fitArtboard.height)
+                    }
                     draggable
                     onDragStart={(event) =>
                       handleDragStart(GROUP_DRAG_HANDLE_ID, {
