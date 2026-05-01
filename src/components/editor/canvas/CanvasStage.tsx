@@ -89,12 +89,14 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     const wrapperRef = useRef<HTMLDivElement>(null);
     const stageRef = useRef<Konva.Stage>(null);
     const artboardGroupRef = useRef<Konva.Group>(null);
+    const groupHandleRef = useRef<Konva.Group>(null);
     const nodeMapRef = useRef<Record<string, Konva.Image | null>>({});
     const [containerSize, setContainerSize] = useState<Size>({ width: 0, height: 0 });
     const [transientElements, setTransientElements] = useState<
       Record<string, Partial<EditorElement>>
     >({});
     const [groupHandlePosition, setGroupHandlePosition] = useState<Point | null>(null);
+    const [touchInteractionLocked, setTouchInteractionLocked] = useState(false);
     const [selectionRect, setSelectionRect] = useState<{
       pointerId: number;
       start: Point;
@@ -116,6 +118,9 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       center: Point;
       viewport: EditorViewport;
     } | null>(null);
+    const touchInteractionLockedRef = useRef(false);
+    const touchInteractionCooldownUntilRef = useRef(0);
+    const touchUnlockTimerRef = useRef<number | null>(null);
 
     useEffect(() => {
       if (!wrapperRef.current) {
@@ -267,6 +272,55 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         longPressTimerRef.current = null;
       }
     }, []);
+
+    const clearTouchUnlockTimer = useCallback(() => {
+      if (touchUnlockTimerRef.current) {
+        window.clearTimeout(touchUnlockTimerRef.current);
+        touchUnlockTimerRef.current = null;
+      }
+    }, []);
+
+    useEffect(() => clearTouchUnlockTimer, [clearTouchUnlockTimer]);
+
+    const setTouchInteractionLock = useCallback((locked: boolean) => {
+      touchInteractionLockedRef.current = locked;
+      setTouchInteractionLocked(locked);
+    }, []);
+
+    const isTouchInteractionSuppressed = useCallback(
+      () =>
+        touchInteractionLockedRef.current ||
+        Date.now() < touchInteractionCooldownUntilRef.current,
+      []
+    );
+
+    const beginTouchViewportGesture = useCallback(() => {
+      clearLongPressTimer();
+      clearTouchUnlockTimer();
+      touchInteractionCooldownUntilRef.current = Date.now() + 180;
+      longPressConsumedRef.current = null;
+      pinchStateRef.current = null;
+      panStateRef.current = null;
+      groupDragStateRef.current = null;
+      setSelectionRect(null);
+      setGroupHandlePosition(null);
+      setTouchInteractionLock(true);
+
+      Object.values(nodeMapRef.current).forEach((node) => node?.stopDrag());
+      groupHandleRef.current?.stopDrag();
+      stageRef.current?.batchDraw();
+    }, [clearLongPressTimer, clearTouchUnlockTimer, setTouchInteractionLock]);
+
+    const endTouchViewportGesture = useCallback(
+      (cooldownMs = 140) => {
+        clearTouchUnlockTimer();
+        touchInteractionCooldownUntilRef.current = Date.now() + cooldownMs;
+        touchUnlockTimerRef.current = window.setTimeout(() => {
+          setTouchInteractionLock(false);
+        }, cooldownMs);
+      },
+      [clearTouchUnlockTimer, setTouchInteractionLock]
+    );
 
     const isViewportTarget = (target: Konva.Node) =>
       target === target.getStage() ||
@@ -472,12 +526,17 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       const touches = event.evt.touches;
 
       if (touches.length === 2) {
+        beginTouchViewportGesture();
         pinchStateRef.current = {
           distance: getTouchDistance(touches),
           center: getTouchCenter(touches),
           viewport,
         };
         panStateRef.current = null;
+        return;
+      }
+
+      if (touchInteractionLockedRef.current) {
         return;
       }
 
@@ -548,6 +607,10 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         return;
       }
 
+      if (touchInteractionLockedRef.current) {
+        return;
+      }
+
       if (!panStateRef.current || touches.length !== 1) {
         return;
       }
@@ -561,17 +624,30 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       });
     };
 
-    const handleTouchEnd = () => {
-      if (pinchStateRef.current) {
+    const handleTouchEnd = (event: Konva.KonvaEventObject<TouchEvent>) => {
+      const remainingTouches = event.evt.touches.length;
+
+      if (remainingTouches < 2) {
         pinchStateRef.current = null;
       }
 
-      if (panStateRef.current) {
+      if (!remainingTouches) {
         panStateRef.current = null;
+      }
+
+      if (touchInteractionLockedRef.current && remainingTouches === 0) {
+        endTouchViewportGesture();
       }
     };
 
     const handlePointerDown = (event: Konva.KonvaEventObject<PointerEvent>) => {
+      if (
+        event.evt.pointerType === "touch" &&
+        isTouchInteractionSuppressed()
+      ) {
+        return;
+      }
+
       const stage = stageRef.current;
       const containerBounds = stage?.container().getBoundingClientRect();
       const point = containerBounds
@@ -617,6 +693,13 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
 
     const handlePointerMove = (event: Konva.KonvaEventObject<PointerEvent>) => {
       if (
+        event.evt.pointerType === "touch" &&
+        isTouchInteractionSuppressed()
+      ) {
+        return;
+      }
+
+      if (
         selectionRect &&
         selectionRect.pointerId === event.evt.pointerId
       ) {
@@ -653,6 +736,13 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     };
 
     const handlePointerUp = (event: Konva.KonvaEventObject<PointerEvent>) => {
+      if (
+        event.evt.pointerType === "touch" &&
+        isTouchInteractionSuppressed()
+      ) {
+        return;
+      }
+
       if (
         selectionRect &&
         selectionRect.pointerId === event.evt.pointerId
@@ -705,6 +795,13 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         clearLongPressTimer();
         longPressConsumedRef.current = null;
 
+        if (
+          event.evt.pointerType === "touch" &&
+          isTouchInteractionSuppressed()
+        ) {
+          return;
+        }
+
         if (event.evt.shiftKey && !selectedElementSet.has(id)) {
           onAddElementToSelection(id);
           longPressConsumedRef.current = id;
@@ -725,6 +822,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       },
       [
         clearLongPressTimer,
+        isTouchInteractionSuppressed,
         onAddElementToSelection,
         selectedElementIds.length,
         selectedElementSet,
@@ -736,7 +834,11 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     }, [clearLongPressTimer]);
 
     const handleElementSelect = useCallback(
-      (id: string) => {
+      (id: string, source: "mouse" | "touch") => {
+        if (source === "touch" && isTouchInteractionSuppressed()) {
+          return;
+        }
+
         if (longPressConsumedRef.current === id) {
           longPressConsumedRef.current = null;
           return;
@@ -748,7 +850,12 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
 
         onSelectElement(id);
       },
-      [onSelectElement, selectedElementIds.length, selectedElementSet]
+      [
+        isTouchInteractionSuppressed,
+        onSelectElement,
+        selectedElementIds.length,
+        selectedElementSet,
+      ]
     );
 
     const handleDragStart = useCallback(
@@ -993,6 +1100,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
@@ -1035,7 +1143,8 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                       onDragStart={(id, x, y) => handleDragStart(id, { x, y })}
                       onDragMove={handleDragMove}
                       onDragEnd={handleDragEnd}
-                      allowDrag
+                      interactive={!touchInteractionLocked}
+                      allowDrag={!touchInteractionLocked}
                     />
                   ))}
                 </Group>
@@ -1046,13 +1155,15 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                     nodeMapRef={nodeMapRef}
                     artboardWidth={fitArtboard.width}
                     artboardHeight={fitArtboard.height}
+                    interactive={!touchInteractionLocked}
                     onTransform={handleTransform}
                     onTransformEnd={handleTransformEnd}
                   />
                 ) : null}
 
-                {selectionBounds ? (
+                {selectionBounds && !touchInteractionLocked ? (
                   <Group
+                    ref={groupHandleRef}
                     x={
                       groupHandlePosition?.x ??
                       (-fitArtboard.width / 2 + selectionBounds.centerX * fitArtboard.width)

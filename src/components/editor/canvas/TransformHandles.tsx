@@ -10,6 +10,7 @@ type TransformHandlesProps = {
   nodeMapRef: MutableRefObject<Record<string, Konva.Image | null>>;
   artboardWidth: number;
   artboardHeight: number;
+  interactive?: boolean;
   onTransform: () => void;
   onTransformEnd: () => void;
 };
@@ -19,6 +20,7 @@ export function TransformHandles({
   nodeMapRef,
   artboardWidth,
   artboardHeight,
+  interactive = true,
   onTransform,
   onTransformEnd,
 }: TransformHandlesProps) {
@@ -35,6 +37,14 @@ export function TransformHandles({
     transformerRef.current.nodes(nodes);
     transformerRef.current.getLayer()?.batchDraw();
   }, [nodeMapRef, selectedElementIds]);
+
+  useEffect(() => {
+    if (interactive) {
+      return;
+    }
+
+    transformerRef.current?.stopTransform();
+  }, [interactive]);
 
   return (
     <Transformer
@@ -58,6 +68,7 @@ export function TransformHandles({
       borderStroke="#0d6b72"
       borderStrokeWidth={1}
       borderDash={[6, 4]}
+      listening={interactive}
       anchorSize={16}
       anchorStroke="#0d6b72"
       anchorFill="#ffffff"

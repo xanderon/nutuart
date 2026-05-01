@@ -12,7 +12,7 @@ type SvgElementProps = {
   isSelected: boolean;
   artboardWidth: number;
   artboardHeight: number;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, source: "mouse" | "touch") => void;
   onPointerDown?: (id: string, event: Konva.KonvaEventObject<PointerEvent>) => void;
   onPointerUp?: (id: string) => void;
   onDragStart?: (id: string, x: number, y: number) => void;
@@ -74,8 +74,8 @@ function SvgElementComponent({
       listening={interactive}
       draggable={allowDrag ?? (interactive && isSelected)}
       perfectDrawEnabled={false}
-      onClick={interactive ? () => onSelect(element.id) : undefined}
-      onTap={interactive ? () => onSelect(element.id) : undefined}
+      onClick={interactive ? () => onSelect(element.id, "mouse") : undefined}
+      onTap={interactive ? () => onSelect(element.id, "touch") : undefined}
       onMouseEnter={
         interactive
           ? (event) => {
