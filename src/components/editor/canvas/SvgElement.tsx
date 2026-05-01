@@ -77,7 +77,7 @@ function SvgElementComponent({
               const container = event.target.getStage()?.container();
 
               if (container) {
-                container.style.cursor = allowDrag ?? isSelected ? "move" : "pointer";
+                container.style.cursor = allowDrag ?? interactive ? "move" : "pointer";
               }
             }
           : undefined

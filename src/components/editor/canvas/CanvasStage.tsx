@@ -667,6 +667,12 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
       (id: string, originPoint?: Point) => {
         clearLongPressTimer();
 
+        if (id !== GROUP_DRAG_HANDLE_ID && !selectedElementIds.includes(id)) {
+          onSelectElement(id);
+          groupDragStateRef.current = null;
+          return;
+        }
+
         if (
           (id !== GROUP_DRAG_HANDLE_ID && !selectedElementIds.includes(id)) ||
           selectedElementIds.length < 2
@@ -712,6 +718,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
         clearLongPressTimer,
         fitArtboard.height,
         fitArtboard.width,
+        onSelectElement,
         selectedElementIds,
         selectionBounds,
       ]
@@ -915,7 +922,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
                       onDragStart={(id, x, y) => handleDragStart(id, { x, y })}
                       onDragMove={handleDragMove}
                       onDragEnd={handleDragEnd}
-                      allowDrag={selectedElementSet.has(element.id)}
+                      allowDrag
                     />
                   ))}
                 </Group>
