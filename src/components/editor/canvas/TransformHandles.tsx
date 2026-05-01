@@ -41,7 +41,7 @@ export function TransformHandles({
       ref={transformerRef}
       onTransform={onTransform}
       onTransformEnd={onTransformEnd}
-      padding={10}
+      padding={6}
       enabledAnchors={[
         "top-left",
         "top-center",
@@ -54,11 +54,11 @@ export function TransformHandles({
       ]}
       rotateEnabled
       rotateAnchorCursor="grab"
-      rotateAnchorOffset={34}
+      rotateAnchorOffset={28}
       borderStroke="#0d6b72"
-      borderStrokeWidth={1.2}
+      borderStrokeWidth={1}
       borderDash={[6, 4]}
-      anchorSize={20}
+      anchorSize={16}
       anchorStroke="#0d6b72"
       anchorFill="#ffffff"
       anchorCornerRadius={14}
@@ -72,33 +72,34 @@ export function TransformHandles({
         }
 
         if (anchor.hasName("top-center") || anchor.hasName("bottom-center")) {
-          anchor.width(24);
-          anchor.height(12);
-          anchor.offsetX(12);
-          anchor.offsetY(6);
+          anchor.width(20);
+          anchor.height(8);
+          anchor.offsetX(10);
+          anchor.offsetY(4);
           anchor.cornerRadius(999);
         } else if (
           anchor.hasName("middle-left") ||
           anchor.hasName("middle-right")
         ) {
-          anchor.width(12);
-          anchor.height(24);
-          anchor.offsetX(6);
-          anchor.offsetY(12);
+          anchor.width(8);
+          anchor.height(20);
+          anchor.offsetX(4);
+          anchor.offsetY(10);
           anchor.cornerRadius(999);
         } else {
-          anchor.width(20);
-          anchor.height(20);
-          anchor.offsetX(10);
-          anchor.offsetY(10);
+          anchor.width(14);
+          anchor.height(14);
+          anchor.offsetX(7);
+          anchor.offsetY(7);
           anchor.cornerRadius(999);
         }
 
-        anchor.fill("#ffffff");
-        anchor.stroke("#0d6b72");
-        anchor.strokeWidth(1.4);
+        anchor.fill("rgba(255,255,255,0.94)");
+        anchor.stroke("rgba(13,107,114,0.9)");
+        anchor.strokeWidth(1.2);
       }}
       keepRatio
+      centeredScaling={false}
       flipEnabled={false}
       ignoreStroke
       boundBoxFunc={(oldBox, nextBox) => {

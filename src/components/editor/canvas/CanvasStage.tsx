@@ -926,18 +926,8 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(
     }, [getNodePatch, onUpdateElements, selectedElementIds, setTransientElement]);
 
     const handleTransform = useCallback(() => {
-      if (selectedElementIds.length !== 1 || !selectedElementId) {
-        return;
-      }
-
-      const selectedNode = nodeMapRef.current[selectedElementId];
-
-      if (!selectedNode) {
-        return;
-      }
-
-      setTransientElement(selectedElementId, getNodePatch(selectedNode));
-    }, [getNodePatch, selectedElementId, selectedElementIds.length, setTransientElement]);
+      // Let Konva own the live resize interaction so the opposite anchor stays fixed.
+    }, []);
 
     const setCursor = useCallback((cursor: string) => {
       const container = stageRef.current?.container();
