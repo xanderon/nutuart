@@ -23,6 +23,12 @@ export function TransformHandles({
   onTransformEnd,
 }: TransformHandlesProps) {
   const transformerRef = useRef<Konva.Transformer>(null);
+  const CORNER_ANCHORS = new Set([
+    "top-left",
+    "top-right",
+    "bottom-left",
+    "bottom-right",
+  ]);
 
   useEffect(() => {
     if (!transformerRef.current) {
@@ -41,7 +47,7 @@ export function TransformHandles({
       ref={transformerRef}
       onTransform={onTransform}
       onTransformEnd={onTransformEnd}
-      padding={6}
+      padding={0}
       enabledAnchors={[
         "top-left",
         "top-center",
@@ -72,25 +78,25 @@ export function TransformHandles({
         }
 
         if (anchor.hasName("top-center") || anchor.hasName("bottom-center")) {
-          anchor.width(20);
-          anchor.height(8);
-          anchor.offsetX(10);
-          anchor.offsetY(4);
+          anchor.width(18);
+          anchor.height(6);
+          anchor.offsetX(9);
+          anchor.offsetY(3);
           anchor.cornerRadius(999);
         } else if (
           anchor.hasName("middle-left") ||
           anchor.hasName("middle-right")
         ) {
-          anchor.width(8);
-          anchor.height(20);
-          anchor.offsetX(4);
-          anchor.offsetY(10);
+          anchor.width(6);
+          anchor.height(18);
+          anchor.offsetX(3);
+          anchor.offsetY(9);
           anchor.cornerRadius(999);
         } else {
-          anchor.width(14);
-          anchor.height(14);
-          anchor.offsetX(7);
-          anchor.offsetY(7);
+          anchor.width(12);
+          anchor.height(12);
+          anchor.offsetX(6);
+          anchor.offsetY(6);
           anchor.cornerRadius(999);
         }
 
@@ -98,7 +104,7 @@ export function TransformHandles({
         anchor.stroke("rgba(13,107,114,0.9)");
         anchor.strokeWidth(1.2);
       }}
-      keepRatio
+      keepRatio={false}
       centeredScaling={false}
       flipEnabled={false}
       ignoreStroke
@@ -109,11 +115,49 @@ export function TransformHandles({
 
         const minWidth = Math.max(28, artboardWidth * 0.04);
         const minHeight = Math.max(28, artboardHeight * 0.04);
-        const width = Math.min(artboardWidth, Math.max(minWidth, nextBox.width));
-        const height = Math.min(
-          artboardHeight,
-          Math.max(minHeight, nextBox.height)
-        );
+        const activeAnchor = transformerRef.current?.getActiveAnchor() ?? "";
+        const oldRatio = oldBox.width / Math.max(oldBox.height, 0.001);
+
+        let x = nextBox.x;
+        let y = nextBox.y;
+        let width = Math.min(artboardWidth, Math.max(minWidth, nextBox.width));
+        let height = Math.min(artboardHeight, Math.max(minHeight, nextBox.height));
+
+        if (CORNER_ANCHORS.has(activeAnchor)) {
+          const widthScale = nextBox.width / Math.max(oldBox.width, 0.001);
+          const heightScale = nextBox.height / Math.max(oldBox.height, 0.001);
+
+          if (Math.abs(widthScale - 1) >= Math.abs(heightScale - 1)) {
+            width = Math.min(artboardWidth, Math.max(minWidth, nextBox.width));
+            height = Math.min(
+              artboardHeight,
+              Math.max(minHeight, width / Math.max(oldRatio, 0.001))
+            );
+          } else {
+            height = Math.min(artboardHeight, Math.max(minHeight, nextBox.height));
+            width = Math.min(
+              artboardWidth,
+              Math.max(minWidth, height * Math.max(oldRatio, 0.001))
+            );
+          }
+
+          const oldRight = oldBox.x + oldBox.width;
+          const oldBottom = oldBox.y + oldBox.height;
+
+          if (activeAnchor === "top-left") {
+            x = oldRight - width;
+            y = oldBottom - height;
+          } else if (activeAnchor === "top-right") {
+            x = oldBox.x;
+            y = oldBottom - height;
+          } else if (activeAnchor === "bottom-left") {
+            x = oldRight - width;
+            y = oldBox.y;
+          } else {
+            x = oldBox.x;
+            y = oldBox.y;
+          }
+        }
 
         if (!Number.isFinite(width) || !Number.isFinite(height)) {
           return oldBox;
@@ -121,6 +165,8 @@ export function TransformHandles({
 
         return {
           ...nextBox,
+          x,
+          y,
           width,
           height,
         };
